@@ -3,7 +3,6 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 
 import { defineCustomElements } from '@ionic/pwa-elements/loader';
-import { Capacitor } from '@capacitor/core';
 import { iniciarMarca } from './config/estudio';
 
 defineCustomElements(window);
@@ -12,8 +11,9 @@ defineCustomElements(window);
 // primer render, para que no se alcance a ver el color de fábrica.
 iniciarMarca();
 
-// Desregistrar Service Workers en apps nativas — WebView no debe servir desde caché stale
-if (Capacitor.isNativePlatform() && 'serviceWorker' in navigator) {
+// Este sitio no usa service worker. Si quedó alguno del primer despliegue (que
+// salió del repo de Be Fit con PWA), se da de baja y se borra su caché.
+if ('serviceWorker' in navigator) {
   navigator.serviceWorker.getRegistrations().then(regs => {
     regs.forEach(r => r.unregister());
   });
