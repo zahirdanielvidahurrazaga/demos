@@ -211,8 +211,8 @@ export default function IndiceDemos() {
             <a href={`mailto:${KAIZEN.correo}`} style={{ color: C.tenue, fontSize: '0.85rem', textDecoration: 'none' }}>{KAIZEN.correo}</a>
           </div>
           <p style={{ margin: 0, fontSize: '0.8rem', lineHeight: 1.6, color: C.tenue, maxWidth: 520 }}>
-            Las demos funcionan de verdad, con negocios y datos inventados: nada se conecta a un
-            negocio real y los pagos son de prueba. Se reinician solas cada noche, o desde su guía.
+            Las demos funcionan de verdad, con clientes y movimientos de ejemplo: nada se conecta al
+            sistema de un negocio y los pagos son de prueba. Se reinician solas cada noche, o desde su guía.
           </p>
         </footer>
       </main>

@@ -25,17 +25,22 @@ export const SECTORES = [
   {
     id: 'fitness',
     titulo: 'Estudios y gimnasios',
-    descripcion: 'Reservas, lista de espera automática, check-in con QR y cobros.',
+    descripcion: 'Reservas, lista de espera automática, control de acceso con QR, aforo en vivo y cobros.',
     demos: [
-      // GYM Fitness Manhattan (/gimnasio/manhattan) NO se lista: es un
-      // gimnasio real al que se le está vendiendo y la demo va por link directo.
-      // Si se vuelve cliente y da permiso, se agrega aquí con tipo: 'gimnasio'.
       {
         tipo: 'interna',
         clave: 'alma',
         nombre: 'Studio Alma',
         detalle: 'Pilates Reformer · Puebla',
         nota: 'estudio de ejemplo',
+      },
+      // Gimnasio REAL (prospecto): el negocio existe, pero socios y movimientos son de ejemplo.
+      {
+        tipo: 'gimnasio',
+        clave: 'manhattan',
+        nombre: 'GYM Fitness Manhattan',
+        detalle: 'Control de acceso con QR y aforo en vivo · Miahuatlán, Oax.',
+        nota: 'gimnasio',
       },
     ],
   },

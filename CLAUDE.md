@@ -36,7 +36,7 @@ El modo `demos` carga `.env.demos` (versionado a propósito: solo lleva la llave
 - `/` → índice (marca KaiZen).
 - `/demo/alma` → **Studio Alma** (pilates): la app real de Be Fit pintada con otra marca.
 - `/pedidos/hoja` → **Hoja · cocina fit** (pedidos en línea: recoger, a domicilio, en mesa con QR).
-- `/gimnasio/manhattan` → **GYM Fitness Manhattan** (control de acceso con QR y aforo en vivo). **Gimnasio REAL al que se le está vendiendo**: NO va en el índice (link directo) y el aviso no dice "negocio inventado". `?rol=socio|recepcion|dueno` abre directo en ese rol.
+- `/gimnasio/manhattan` → **GYM Fitness Manhattan** (control de acceso con QR y aforo en vivo). **Gimnasio REAL al que se le está vendiendo**: el aviso no dice "negocio inventado" (socios y movimientos sí son de ejemplo). Sí está en el índice, a petición del usuario. `?rol=socio|recepcion|dueno` abre directo en ese rol.
 
 | Qué | Dónde |
 |---|---|
@@ -77,7 +77,7 @@ El modo `demos` carga `.env.demos` (versionado a propósito: solo lleva la llave
 
 ## Pendientes
 
-0. Gimnasio: los colores de Manhattan (rojo #E30613, negro, cromo) salen de su Instagram y viven en `gym_negocios.marca`. El logo es PROVISIONAL (`Emblema` en `src/demo/gimnasio/ui.jsx`: skyline dibujado a mano + siglas en cromo); cuando pasen el suyo, reemplazarlo ahí. Si se vuelve cliente y da permiso, listarlo en `catalogo.js` con `tipo: 'gimnasio'`.
+0. Gimnasio: los colores de Manhattan (rojo #E30613, negro, cromo) salen de su Instagram y viven en `gym_negocios.marca`. El logo es PROVISIONAL (`Emblema` en `src/demo/gimnasio/ui.jsx`: skyline dibujado a mano + siglas en cromo); cuando pasen el suyo, reemplazarlo ahí. Ya está listado en `catalogo.js` (lo pidió el usuario).
 1. Ya que esto funcione en internet: quitar las demos de `be-fit-lab` (`src/demo/`, `AppDemos.jsx`, `IndiceDemos.jsx`, `Demo.jsx`, `.env.demos`, scripts `*:demos`, `supabase/demos/`).
 2. Limpieza opcional: `src/` aún trae páginas de Be Fit que ninguna demo usa (el bundler ya las deja fuera del build).
 3. Opcionales ya platicados: ejemplo de restaurante; en Alma, Reportes (`admin-analytics` no está desplegada en Demos y `AdminReportes` no tiene guardia), pasarela de prueba para membresías/eventos, `admin-create-client`.
