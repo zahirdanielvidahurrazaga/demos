@@ -77,8 +77,8 @@ export function CurvaHoras({ aforo, alto = 260 }) {
         <svg width={ancho} height={alto} style={{ display: 'block', overflow: 'visible' }} onMouseLeave={() => setFoco(null)}>
           <defs>
             <linearGradient id="gym-hoy" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#FFC531" stopOpacity="0.42" />
-              <stop offset="100%" stopColor="#FFC531" stopOpacity="0" />
+              <stop offset="0%" style={{ stopColor: 'var(--g-pri)' }} stopOpacity="0.42" />
+              <stop offset="100%" style={{ stopColor: 'var(--g-pri)' }} stopOpacity="0" />
             </linearGradient>
           </defs>
           {[0, Math.round(aforo.capacidad / 2), aforo.capacidad].map((v) => (
@@ -87,14 +87,14 @@ export function CurvaHoras({ aforo, alto = 260 }) {
               <text x={izq - 8} y={y(v) + 4} textAnchor="end" fontSize="11" fill="#9CA3AF">{v}</text>
             </g>
           ))}
-          <line x1={izq} x2={izq + w} y1={y(aforo.capacidad)} y2={y(aforo.capacidad)} stroke="#EF4444" strokeDasharray="5 5" />
-          <text x={izq + w} y={y(aforo.capacidad) - 6} textAnchor="end" fontSize="11" fill="#EF4444">Aforo máx. {aforo.capacidad}</text>
+          <line x1={izq} x2={izq + w} y1={y(aforo.capacidad)} y2={y(aforo.capacidad)} stroke="rgba(255,255,255,0.45)" strokeDasharray="5 5" />
+          <text x={izq + w} y={y(aforo.capacidad) - 6} textAnchor="end" fontSize="11" fill="rgba(255,255,255,0.7)">Aforo máx. {aforo.capacidad}</text>
           <line x1={izq} x2={izq + w} y1={y(alerta)} y2={y(alerta)} stroke="#F59E0B" strokeDasharray="2 6" />
           <path d={linea(prom)} fill="none" stroke="rgba(255,255,255,0.38)" strokeWidth="2" strokeLinejoin="round" />
           {hoyArea && <path d={hoyArea} fill="url(#gym-hoy)" />}
-          {hoyLinea.length > 1 && <path d={linea(hoyLinea)} fill="none" stroke="#FFC531" strokeWidth="3" strokeLinejoin="round" strokeLinecap="round" />}
+          {hoyLinea.length > 1 && <path d={linea(hoyLinea)} fill="none" style={{ stroke: 'var(--g-pri)' }} strokeWidth="3" strokeLinejoin="round" strokeLinecap="round" />}
           {hoyLinea.length > 0 && (
-            <circle cx={hoyLinea[hoyLinea.length - 1][0]} cy={hoyLinea[hoyLinea.length - 1][1]} r="5" fill="#FFC531" stroke="#0B0C0E" strokeWidth="2" />
+            <circle cx={hoyLinea[hoyLinea.length - 1][0]} cy={hoyLinea[hoyLinea.length - 1][1]} r="5" style={{ fill: 'var(--g-pri)', stroke: 'var(--g-fondo)' }} strokeWidth="2" />
           )}
           {puntos.map((p, i) => (p.h % 3 === 0 ? (
             <text key={p.h} x={x(i)} y={alto - 6} textAnchor="middle" fontSize="11" fill="#9CA3AF">{p.h}:00</text>
@@ -112,7 +112,7 @@ export function CurvaHoras({ aforo, alto = 260 }) {
           background: g.sup2, border: `1px solid ${g.linea}`, borderRadius: 12, padding: '8px 10px', fontSize: '0.8rem',
         }}>
           <b>{f.h}:30</b>
-          <div style={{ color: '#FFC531' }}>Hoy: {f.hoy ?? '—'}</div>
+          <div style={{ color: g.pri, fontWeight: 600 }}>Hoy: {f.hoy ?? '—'}</div>
           <div style={{ color: g.suave }}>Promedio: {f.promedio}</div>
         </div>
       )}

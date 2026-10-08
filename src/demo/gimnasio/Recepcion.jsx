@@ -5,7 +5,7 @@ import { CheckCircle2, Hand, Keyboard, LogIn, LogOut, ScanLine, Search, Smartpho
 import { supabase } from '../../lib/supabase';
 import { ESTADOS, errorLegible, fechaCorta, hora, nivelAforo, pesos, sonar, useAccesos, useRpc } from './datos';
 import Escaner from './Escaner';
-import { Avatar, Boton, Etiqueta, Segmentado, Tarjeta, g, useAncho } from './ui';
+import { Avatar, Boton, Etiqueta, Logo, Segmentado, Tarjeta, g, useAncho } from './ui';
 
 // Recepción / torniquete: escanea el pase (cámara o lector USB), dice al
 // instante si pasa o no y por qué, y resuelve ahí mismo (renovar, cobrar,
@@ -87,6 +87,10 @@ export default function Recepcion({ negocio }) {
 
   return (
     <div style={{ maxWidth: 1180, margin: '0 auto', padding: '8px 16px 48px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, margin: '4px 2px 16px' }}>
+        <Logo nombre={negocio.nombre} tamano={ancho ? 1 : 0.85} />
+        <div style={{ fontSize: '0.72rem', letterSpacing: '0.2em', color: g.suave, fontWeight: 600 }}>RECEPCIÓN</div>
+      </div>
       {ancho ? (
         <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 440px) minmax(0, 1fr)', gap: 18 }}>{columnaIzq}{columnaDer}</div>
       ) : (

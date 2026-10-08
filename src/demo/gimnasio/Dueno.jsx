@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { AlertTriangle, Ban, DoorOpen, MessageCircle, Search, Settings2, UsersRound, Wallet } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { ESTADOS, duracion, errorLegible, fechaCorta, hora, minutosDesde, nivelAforo, pesos, useAhora, useRpc } from './datos';
-import { Avatar, Boton, Etiqueta, Medidor, Numero, Tarjeta, g, useAncho } from './ui';
+import { Avatar, Boton, Etiqueta, Logo, Medidor, Numero, Tarjeta, g, useAncho } from './ui';
 import { CurvaHoras } from './graficas';
 
 // Tablero del dueño: aforo en vivo, entradas y negados de hoy, horas pico,
@@ -28,8 +28,8 @@ export default function Dueno({ negocio, alCambiarNegocio }) {
     <div style={{ maxWidth: 1240, margin: '0 auto', padding: '8px 16px 56px' }}>
       <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', margin: '4px 2px 16px' }}>
         <div>
-          <div style={{ fontSize: '0.72rem', letterSpacing: '0.2em', color: g.suave, fontWeight: 600 }}>TABLERO · EN VIVO</div>
-          <h1 style={{ margin: 0, color: g.texto, fontFamily: g.display, fontWeight: 800, fontSize: '2.2rem', letterSpacing: '0.02em', textTransform: 'uppercase' }}>{negocio.nombre}</h1>
+          <div style={{ fontSize: '0.72rem', letterSpacing: '0.2em', color: g.suave, fontWeight: 600, marginBottom: 10 }}>TABLERO · EN VIVO</div>
+          <Logo nombre={negocio.nombre} tamano={ancho ? 1.15 : 1} />
         </div>
         {nivel.pct >= a.alerta_pct && (
           <Etiqueta color={g.rojo} style={{ fontSize: '0.86rem', padding: '8px 14px' }}>
@@ -117,7 +117,7 @@ function MapaCalor({ celdas, capacidad }) {
               return (
                 <span key={h} title={`${d} ${h}:30 · ~${p} personas`} style={{
                   height: 24, borderRadius: 5,
-                  background: x < 0.05 ? 'rgba(255,255,255,0.04)' : `rgba(255, 197, 49, ${0.12 + x * 0.88})`,
+                  background: x < 0.05 ? 'rgba(255,255,255,0.04)' : `color-mix(in srgb, var(--g-pri) ${Math.round(12 + x * 88)}%, transparent)`,
                 }} />
               );
             })}
@@ -125,7 +125,7 @@ function MapaCalor({ celdas, capacidad }) {
         ))}
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 10, fontSize: '0.74rem', color: g.suave }}>
-        Vacío <span style={{ width: 90, height: 8, borderRadius: 8, background: 'linear-gradient(90deg, rgba(255,197,49,0.12), #FFC531)' }} /> Lleno
+        Vacío <span style={{ width: 90, height: 8, borderRadius: 8, background: 'linear-gradient(90deg, color-mix(in srgb, var(--g-pri) 12%, transparent), var(--g-pri))' }} /> Lleno
       </div>
     </div>
   );

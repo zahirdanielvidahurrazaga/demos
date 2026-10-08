@@ -12,9 +12,9 @@
 
 insert into public.gym_negocios (id, nombre, capacidad, alerta_pct, qr_segundos, marca) values
   ('manhattan', 'GYM Fitness Manhattan', 120, 85, 30, '{
-    "primario": "#FFC531", "primarioTexto": "#111111",
-    "fondo": "#0B0C0E", "superficie": "#16181B", "superficie2": "#1F2226",
-    "texto": "#F4F4F5", "suave": "#9CA3AF",
+    "primario": "#E30613", "primarioTexto": "#FFFFFF",
+    "fondo": "#0A0A0A", "superficie": "#151515", "superficie2": "#202020",
+    "texto": "#F5F5F5", "suave": "#A3A3A3",
     "verde": "#22C55E", "rojo": "#EF4444", "ambar": "#F59E0B"
   }')
 on conflict (id) do update set nombre = excluded.nombre, marca = excluded.marca, qr_segundos = excluded.qr_segundos;

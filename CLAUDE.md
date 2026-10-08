@@ -77,7 +77,7 @@ El modo `demos` carga `.env.demos` (versionado a propósito: solo lleva la llave
 
 ## Pendientes
 
-0. Gimnasio: si Manhattan pasa logo/colores, van en `gym_negocios.marca` (y el `Logo` de `src/demo/gimnasio/ui.jsx`). Si se vuelve cliente y da permiso, listarlo en `catalogo.js` con `tipo: 'gimnasio'`.
+0. Gimnasio: los colores de Manhattan (rojo #E30613, negro, cromo) salen de su Instagram y viven en `gym_negocios.marca`. El logo es PROVISIONAL (`Emblema` en `src/demo/gimnasio/ui.jsx`: skyline dibujado a mano + siglas en cromo); cuando pasen el suyo, reemplazarlo ahí. Si se vuelve cliente y da permiso, listarlo en `catalogo.js` con `tipo: 'gimnasio'`.
 1. Ya que esto funcione en internet: quitar las demos de `be-fit-lab` (`src/demo/`, `AppDemos.jsx`, `IndiceDemos.jsx`, `Demo.jsx`, `.env.demos`, scripts `*:demos`, `supabase/demos/`).
 2. Limpieza opcional: `src/` aún trae páginas de Be Fit que ninguna demo usa (el bundler ya las deja fuera del build).
 3. Opcionales ya platicados: ejemplo de restaurante; en Alma, Reportes (`admin-analytics` no está desplegada en Demos y `AdminReportes` no tiene guardia), pasarela de prueba para membresías/eventos, `admin-create-client`.

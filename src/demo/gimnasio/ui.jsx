@@ -1,4 +1,4 @@
-import { Dumbbell } from 'lucide-react';
+import { useId } from 'react';
 import { iniciales } from './datos';
 
 export { useAncho } from '../pedidos/ui';
@@ -20,24 +20,63 @@ export function cargarFuentesGym() {
   const link = document.createElement('link');
   link.id = 'fuentes-gym';
   link.rel = 'stylesheet';
-  link.href = 'https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,600;0,700;0,800;1,700&family=Inter:wght@400;500;600;700&display=swap';
+  link.href = 'https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@1,125,900&family=Barlow+Condensed:ital,wght@0,600;0,700;0,800;1,700&family=Inter:wght@400;500;600;700&display=swap';
   document.head.appendChild(link);
+}
+
+// Logo PROVISIONAL (Manhattan aún no nos da el suyo): skyline dibujado a mano sobre
+// las iniciales en cromo con filo de color de marca, al estilo de su Instagram.
+// Edificios: [x, ancho, alto] sobre una base en y=40 (viewBox de 120 de ancho).
+const EDIFICIOS = [
+  [0, 6, 10], [6, 6, 16], [12, 7, 13], [19, 5, 21], [24, 7, 15], [31, 6, 24], [37, 5, 18], [42, 7, 26],
+  [49, 4, 17], [53, 14, 22], [55, 10, 28], [57, 6, 32], [59, 2, 36], [59.6, 0.8, 40], [67, 5, 19],
+  [72, 8, 23], [80, 8, 30], [83, 2, 34], [88, 6, 20], [94, 7, 25], [101, 5, 15], [106, 7, 19], [113, 7, 11],
+];
+const SKYLINE = EDIFICIOS.map(([x, w, h]) => `M${x} 40V${40 - h}H${x + w}V40Z`).join('');
+// Ventanitas solo en los edificios anchos, para que se lea como ciudad y no como gráfica.
+const VENTANAS = EDIFICIOS.filter(([, w, h]) => w >= 6 && h >= 15).flatMap(([x, w, h]) => {
+  const filas = [];
+  for (let y = 40 - h + 3; y < 37; y += 3.4) filas.push(`M${x + 1.4} ${y}h1.3v1.5h-1.3ZM${x + w - 2.7} ${y}h1.3v1.5h-1.3Z`);
+  return filas;
+}).join('');
+
+export function Emblema({ siglas = 'GFM', ancho = 76 }) {
+  const id = useId().replace(/:/g, '');
+  return (
+    <svg viewBox="0 0 120 64" width={ancho} height={(ancho * 64) / 120} aria-hidden="true" style={{ display: 'block', flexShrink: 0, overflow: 'visible' }}>
+      <defs>
+        <linearGradient id={`cromo${id}`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#FFFFFF" />
+          <stop offset="0.42" stopColor="#E4E6EA" />
+          <stop offset="0.5" stopColor="#8B9099" />
+          <stop offset="0.56" stopColor="#5E636B" />
+          <stop offset="0.78" stopColor="#D3D6DB" />
+          <stop offset="1" stopColor="#F7F8FA" />
+        </linearGradient>
+      </defs>
+      <path d={SKYLINE} style={{ fill: 'var(--g-pri)' }} />
+      <path d={VENTANAS} style={{ fill: 'var(--g-fondo)' }} opacity="0.55" />
+      <text x="60" y="62" textAnchor="middle" textLength="114" lengthAdjust="spacingAndGlyphs" fill={`url(#cromo${id})`}
+        strokeWidth="2.4" strokeLinejoin="round" paintOrder="stroke"
+        style={{ stroke: 'var(--g-pri)', fontFamily: "'Archivo', 'Arial Black', sans-serif", fontWeight: 900, fontStretch: '125%', fontSize: 29, fontStyle: 'italic' }}>
+        {siglas}
+      </text>
+    </svg>
+  );
 }
 
 export function Logo({ nombre = 'GYM Fitness Manhattan', tamano = 1 }) {
   const partes = nombre.split(' ');
+  const siglas = partes.map((p) => p[0]).join('').toUpperCase();
   const grande = partes.pop();
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10 * tamano }}>
-      <div style={{
-        width: 38 * tamano, height: 38 * tamano, borderRadius: 10 * tamano, background: g.pri, color: g.priTexto,
-        display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-      }}><Dumbbell size={21 * tamano} strokeWidth={2.4} /></div>
-      <div style={{ lineHeight: 0.95 }}>
-        <div style={{ fontSize: `${0.62 * tamano}rem`, letterSpacing: '0.28em', color: g.suave, fontWeight: 600, fontFamily: g.texto2 }}>
-          {partes.join(' ').toUpperCase()}
+    <div role="img" aria-label={nombre} style={{ display: 'flex', alignItems: 'center', gap: 12 * tamano }}>
+      <Emblema siglas={siglas} ancho={84 * tamano} />
+      <div style={{ lineHeight: 0.95, paddingLeft: 12 * tamano, borderLeft: `2px solid ${g.pri}` }}>
+        <div style={{ fontSize: `${0.6 * tamano}rem`, letterSpacing: '0.3em', color: g.suave, fontWeight: 600, fontFamily: g.texto2 }}>
+          {partes.join(' · ').toUpperCase()}
         </div>
-        <div style={{ fontFamily: g.display, fontWeight: 800, fontSize: `${1.45 * tamano}rem`, letterSpacing: '0.04em', color: g.texto }}>
+        <div style={{ fontFamily: g.display, fontWeight: 800, fontSize: `${1.4 * tamano}rem`, letterSpacing: '0.06em', color: g.texto }}>
           {grande.toUpperCase()}
         </div>
       </div>
