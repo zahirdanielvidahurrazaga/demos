@@ -29,13 +29,14 @@ El modo `demos` carga `.env.demos` (versionado a propósito: solo lleva la llave
 - No necesita variables de entorno en Cloudflare: todo sale de `.env.demos`.
 - `public/_redirects` manda todas las rutas a `index.html` (SPA).
 - Sin service worker ni PWA (se quitó a propósito: una demo vieja en caché estorba).
-- `robots.txt` + `<meta name="robots" content="noindex">`: son negocios inventados, no deben salir en Google.
+- `robots.txt` + `<meta name="robots" content="noindex">`: son negocios inventados o prospectos reales, no deben salir en Google.
 
 ## Las demos
 
 - `/` → índice (marca KaiZen).
 - `/demo/alma` → **Studio Alma** (pilates): la app real de Be Fit pintada con otra marca.
 - `/pedidos/hoja` → **Hoja · cocina fit** (pedidos en línea: recoger, a domicilio, en mesa con QR).
+- `/gimnasio/manhattan` → **GYM Fitness Manhattan** (control de acceso con QR y aforo en vivo). **Gimnasio REAL al que se le está vendiendo**: NO va en el índice (link directo) y el aviso no dice "negocio inventado". `?rol=socio|recepcion|dueno` abre directo en ese rol.
 
 | Qué | Dónde |
 |---|---|
@@ -43,6 +44,7 @@ El modo `demos` carga `.env.demos` (versionado a propósito: solo lleva la llave
 | Índice | `src/pages/IndiceDemos.jsx` + `src/demo/catalogo.js` |
 | Studio Alma | `src/pages/Demo.jsx`, `src/demo/estudiosDemo.js`, `recolorearDemo.js`, `GuiaDemo.jsx` |
 | Hoja (pedidos) | `src/demo/pedidos/*` (no usa nada de Be Fit) |
+| Gimnasio (acceso y aforo) | `src/demo/gimnasio/*` — `Socio`, `Recepcion` (+ `Escaner`: cámara con qr-scanner y lector USB por velocidad de tecleo), `Dueno`, `graficas.jsx` (SVG a mano) |
 | Marca KaiZen y barra superior | `src/demo/kaizen/marca.jsx`, `src/demo/kaizen/BarraDemo.jsx` |
 | Pasarela de pago de PRUEBA | `src/demo/PasarelaPrueba.jsx`; tarjeta `4242…` aprueba, `4000000000000002` rechaza |
 | SQL de la base Demos | `supabase/demos/*.sql` |
@@ -51,11 +53,22 @@ El modo `demos` carga `.env.demos` (versionado a propósito: solo lleva la llave
 ## Base de datos
 
 - Supabase **"Demos"**, ref `qwqrbckivrkmeykiukug`. **Nunca** la de Be Fit (`fifaowaiokauhuqklzwe`).
-- Consultas: `supabase/demos/consulta.sh demos <archivo.sql|->`. Lee el PAT del llavero de macOS ("Supabase DEMOS"); esa cuenta también es la del POS → **verificar el ref antes de correr nada**. En Windows no corre tal cual (usa `security`).
+- Consultas en Windows o Mac: `node supabase/demos/sql.mjs <archivo.sql>` o `-e "<sql>"`. Token en `~/.supabase-demos-token` o `SUPABASE_DEMOS_TOKEN`; el ref va fijo y antes de correr comprueba que el proyecto se llame "Demos".
+- Consultas (Mac): `supabase/demos/consulta.sh demos <archivo.sql|->`. Lee el PAT del llavero de macOS ("Supabase DEMOS"); esa cuenta también es la del POS → **verificar el ref antes de correr nada**. En Windows no corre tal cual (usa `security`).
 - Edge functions: se despliegan por la Management API con curl (el CLI viejo rechaza tokens `sbp_v0_`):
   `POST https://api.supabase.com/v1/projects/<ref>/functions/deploy?slug=<nombre>` multipart (`metadata` + `file`).
-- Se reinician solas cada noche por pg_cron (`demo_reset` de Alma y `pedidos_reset_nocturno` de Hoja, 3:10 am MX).
-- Cuentas demo: contraseña `StudioAlma-Demo-2026` (Alma y `*@demo.hoja.mx`); el reset las restaura.
+- Se reinician solas cada noche por pg_cron (`demo_reset` de Alma, `pedidos_reset_nocturno` de Hoja 3:10 am MX, `gym_reset_nocturno` del gimnasio 3:20 am MX).
+- Cuentas demo: contraseña `StudioAlma-Demo-2026` (Alma, `*@demo.hoja.mx` y `*@demo.manhattan.mx`); el reset las restaura. Todas deben estar en `demo_cuentas` (el reset de Alma borra las demás).
+
+### Gimnasio (`20_gimnasio.sql` estructura y funciones · `21_gimnasio_manhattan.sql` datos y reinicio)
+
+- El QR del socio es un token `GYM1.<numero>.<ventana>.<hmac>` que cambia cada 30 s (`gym_mi_pase`); la llave vive en `gym_secretos` (sin políticas). Recepción acepta la ventana actual y la anterior; más vieja = "captura de pantalla".
+- Todo acceso pasa por `gym_evaluar`: congelada → vencida → adeudo → horario del plan → antipassback (solo en modo "Solo entrada") → aforo. La cámara lee en ráfaga: misma persona en < 12 s = `repetido`.
+- "Adentro" = último acceso permitido de las últimas 3 h es entrada (sin salida = salida automática a las 3 h).
+- Simulación: `gym_reset()` arma 855 socios (semilla fija), 4 semanas de visitas con picos 7 am / 7 pm (lunes el más lleno, ~86% de aforo) y la agenda de hoy; `gym_simular()` (cron cada minuto) la suelta pasando por las mismas reglas.
+- Socios de ejemplo para los "pases de prueba": 1001 Carlos (cuenta Socio), 1002 vencida, 1003 adeudo, 1004 plan matutino, 1005 congelada.
+- `recharts` NO carga con Vite 8 (su dependencia es-toolkit choca con rolldown): las gráficas van en SVG.
+- La CSP de `index.html` lleva `worker-src 'self' blob:`: qr-scanner crea su worker desde un blob (iPhone y Chrome de Windows no tienen BarcodeDetector). Sin eso la cámara no lee.
 
 ## Reglas
 
@@ -64,6 +77,7 @@ El modo `demos` carga `.env.demos` (versionado a propósito: solo lleva la llave
 
 ## Pendientes
 
+0. Gimnasio: si Manhattan pasa logo/colores, van en `gym_negocios.marca` (y el `Logo` de `src/demo/gimnasio/ui.jsx`). Si se vuelve cliente y da permiso, listarlo en `catalogo.js` con `tipo: 'gimnasio'`.
 1. Ya que esto funcione en internet: quitar las demos de `be-fit-lab` (`src/demo/`, `AppDemos.jsx`, `IndiceDemos.jsx`, `Demo.jsx`, `.env.demos`, scripts `*:demos`, `supabase/demos/`).
 2. Limpieza opcional: `src/` aún trae páginas de Be Fit que ninguna demo usa (el bundler ya las deja fuera del build).
 3. Opcionales ya platicados: ejemplo de restaurante; en Alma, Reportes (`admin-analytics` no está desplegada en Demos y `AdminReportes` no tiene guardia), pasarela de prueba para membresías/eventos, `admin-create-client`.

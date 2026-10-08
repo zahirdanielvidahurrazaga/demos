@@ -14,6 +14,8 @@
 //   tipo: 'interna' → `clave` apunta a un bloque de estudiosDemo.js
 //   tipo: 'pedidos' → `clave` es un negocio de la demo de pedidos en línea
 //                     (tabla pedidos_negocios, ruta /pedidos/<clave>)
+//   tipo: 'gimnasio' → `clave` es un gimnasio de la demo de control de acceso
+//                     (tabla gym_negocios, ruta /gimnasio/<clave>)
 //   tipo: 'externa' → `url` a una demo desplegada aparte
 //
 // Para agregar una: un bloque más aquí. Nada más se toca.
@@ -25,6 +27,9 @@ export const SECTORES = [
     titulo: 'Estudios y gimnasios',
     descripcion: 'Reservas, lista de espera automática, check-in con QR y cobros.',
     demos: [
+      // GYM Fitness Manhattan (/gimnasio/manhattan) NO se lista: es un
+      // gimnasio real al que se le está vendiendo y la demo va por link directo.
+      // Si se vuelve cliente y da permiso, se agrega aquí con tipo: 'gimnasio'.
       {
         tipo: 'interna',
         clave: 'alma',
@@ -82,5 +87,6 @@ export const TOTAL_DEMOS = SECTORES.reduce((n, s) => n + s.demos.length, 0);
 export function destinoDe(demo) {
   if (demo.tipo === 'externa') return demo.url;
   if (demo.tipo === 'pedidos') return `/pedidos/${demo.clave}`;
+  if (demo.tipo === 'gimnasio') return `/gimnasio/${demo.clave}`;
   return `/demo/${demo.clave}`;
 }
