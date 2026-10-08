@@ -1,0 +1,56 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# ==============================
+# SEGURIDAD: Archivos sensibles
+# ==============================
+.env
+.env.local
+.env.production
+.env.bak*
+*.sql
+old_admin.txt
+cotizacion.html
+check_error.js
+
+# Certificados y llaves privadas (NUNCA al repo)
+*.key
+*.p12
+*.pem
+*.cer
+*.csr
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Archivos duplicados generados por cap sync (basura)
+**/config [0-9]*.xml
+
+# Fotos fuente pesadas (no versionar; los assets servidos van en public/)
+Fotos/
+
+# Respaldos de base de datos (script scripts/backup_supabase.sh)
+backups/
+scripts/.backup.env
+
+# Los SQL de la base Demos sí se versionan
+!supabase/demos/*.sql
