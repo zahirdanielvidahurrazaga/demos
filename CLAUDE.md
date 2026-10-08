@@ -22,6 +22,9 @@ El modo `demos` carga `.env.demos` (versionado a propósito: solo lleva la llave
 
 ## Despliegue (Cloudflare Pages)
 
+- **En vivo: https://demos-zahirv.pages.dev** — cada push a `main` redespliega solo.
+  Si cambia el dominio, actualizar `og:url` / `og:image` en `index.html` (van con URL completa por WhatsApp).
+
 - Build command: `npm run build` · Output: `dist` · Node ≥ 20.19 (Vite 8).
 - No necesita variables de entorno en Cloudflare: todo sale de `.env.demos`.
 - `public/_redirects` manda todas las rutas a `index.html` (SPA).
@@ -61,10 +64,7 @@ El modo `demos` carga `.env.demos` (versionado a propósito: solo lleva la llave
 
 ## Pendientes
 
-1. Conectar este repo al proyecto de Cloudflare Pages y ponerle el dominio.
-2. Con el dominio definido, poner la URL absoluta en `og:image` de `index.html` (WhatsApp no siempre lee rutas relativas).
-3. Revisar a ojo en celular, ya publicado.
-4. Ya que esto funcione en internet: quitar las demos de `be-fit-lab` (`src/demo/`, `AppDemos.jsx`, `IndiceDemos.jsx`, `Demo.jsx`, `.env.demos`, scripts `*:demos`, `supabase/demos/`).
-5. Limpieza opcional: `src/` aún trae páginas de Be Fit que ninguna demo usa (el bundler ya las deja fuera del build).
-6. Opcionales ya platicados: ejemplo de restaurante; en Alma, Reportes (`admin-analytics` no está desplegada en Demos y `AdminReportes` no tiene guardia), pasarela de prueba para membresías/eventos, `admin-create-client`.
-7. Visto en Alma (sin tocar): "Tu semana" dice "2 asistidas" pero las tarjetas marcan 0 clases / 0 racha / 0 puntos. En `Coach.jsx`, "Alumnas hoy" muestra el día seleccionado y la lista de clases no se ordena por hora.
+1. Ya que esto funcione en internet: quitar las demos de `be-fit-lab` (`src/demo/`, `AppDemos.jsx`, `IndiceDemos.jsx`, `Demo.jsx`, `.env.demos`, scripts `*:demos`, `supabase/demos/`).
+2. Limpieza opcional: `src/` aún trae páginas de Be Fit que ninguna demo usa (el bundler ya las deja fuera del build).
+3. Opcionales ya platicados: ejemplo de restaurante; en Alma, Reportes (`admin-analytics` no está desplegada en Demos y `AdminReportes` no tiene guardia), pasarela de prueba para membresías/eventos, `admin-create-client`.
+4. Visto en Alma (sin tocar): "Tu semana" dice "2 asistidas" pero las tarjetas marcan 0 clases / 0 racha / 0 puntos. En `Coach.jsx`, "Alumnas hoy" muestra el día seleccionado y la lista de clases no se ordena por hora.
