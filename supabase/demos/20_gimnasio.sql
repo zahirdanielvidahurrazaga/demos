@@ -27,8 +27,10 @@ create table if not exists public.gym_negocios (
   capacidad int not null default 120,        -- aforo máximo
   alerta_pct int not null default 85,        -- % de aforo que enciende la alerta
   qr_segundos int not null default 30,       -- cada cuánto cambia el QR del socio
-  marca jsonb not null default '{}'
+  marca jsonb not null default '{}',
+  info jsonb not null default '{}'            -- dirección, redes, clases (lo que enseña la app)
 );
+alter table public.gym_negocios add column if not exists info jsonb not null default '{}';
 
 create table if not exists public.gym_miembros (
   negocio text not null references public.gym_negocios(id) on delete cascade,
@@ -151,7 +153,8 @@ drop policy if exists gym_accesos_leer on public.gym_accesos;
 create policy gym_accesos_leer on public.gym_accesos for select to authenticated
   using (gym_es_staff(negocio) or socio_id in (select id from gym_socios where user_id = auth.uid()));
 drop policy if exists gym_pagos_leer on public.gym_pagos;
-create policy gym_pagos_leer on public.gym_pagos for select to authenticated using (gym_es_staff(negocio));
+create policy gym_pagos_leer on public.gym_pagos for select to authenticated
+  using (gym_es_staff(negocio) or socio_id in (select id from public.gym_socios where user_id = auth.uid()));
 
 do $$ begin
   begin alter publication supabase_realtime add table public.gym_accesos; exception when duplicate_object then null; end;
@@ -509,14 +512,15 @@ end $$;
 
 -- Mapa de calor de las últimas 4 semanas: personas adentro en promedio por día
 -- de la semana y hora. No cambia en el día, así que va aparte del tablero (que
--- se recalcula con cada acceso).
+-- se recalcula con cada acceso). Lo ve cualquier miembro: al socio le dice a
+-- qué hora le conviene ir.
 create or replace function public.gym_calor(p_negocio text) returns jsonb
 language plpgsql stable security definer set search_path to 'public' as $$
 declare
   v_hoy date := gym_hoy();
   v_res jsonb;
 begin
-  if not gym_es_staff(p_negocio) then raise exception 'Solo personal del gimnasio'; end if;
+  if gym_rol(p_negocio) is null then raise exception 'Sin acceso'; end if;
   with muestras as (
     select (v_hoy - k) as d, h, gym_momento(v_hoy - k, h * 60 + 30) as t
     from generate_series(1, 28) k cross join generate_series(5, 22) h),

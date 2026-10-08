@@ -44,7 +44,7 @@ El modo `demos` carga `.env.demos` (versionado a propósito: solo lleva la llave
 | Índice | `src/pages/IndiceDemos.jsx` + `src/demo/catalogo.js` |
 | Studio Alma | `src/pages/Demo.jsx`, `src/demo/estudiosDemo.js`, `recolorearDemo.js`, `GuiaDemo.jsx` |
 | Hoja (pedidos) | `src/demo/pedidos/*` (no usa nada de Be Fit) |
-| Gimnasio (acceso y aforo) | `src/demo/gimnasio/*` — `Socio`, `Recepcion` (+ `Escaner`: cámara con qr-scanner y lector USB por velocidad de tecleo), `Dueno`, `graficas.jsx` (SVG a mano) |
+| Gimnasio (acceso y aforo) | `src/demo/gimnasio/*` — estilo "Pulso" (negro + degradado de marca que brilla). `ui.jsx` (piezas: Tarjeta, Anillo, NumeroVivo, Hoja, Segmentado…), `marco.jsx` (AppMarco: pestañas abajo en celular / menú lateral en compu, Notificaciones en vivo), `Socio` (Inicio · En vivo · Visitas · Membresía + pase en hoja), `Recepcion` (Escanear · En vivo · Socios con ficha; + `Escaner`: qr-scanner y lector USB), `Dueno` (Hoy · Aforo · Socios · Dinero · Ajustes), `graficas.jsx` (SVG a mano) |
 | Marca KaiZen y barra superior | `src/demo/kaizen/marca.jsx`, `src/demo/kaizen/BarraDemo.jsx` |
 | Pasarela de pago de PRUEBA | `src/demo/PasarelaPrueba.jsx`; tarjeta `4242…` aprueba, `4000000000000002` rechaza |
 | SQL de la base Demos | `supabase/demos/*.sql` |
@@ -77,7 +77,7 @@ El modo `demos` carga `.env.demos` (versionado a propósito: solo lleva la llave
 
 ## Pendientes
 
-0. Gimnasio: los colores de Manhattan (rojo #E30613, negro, cromo) salen de su Instagram y viven en `gym_negocios.marca`. El logo es PROVISIONAL (`Emblema` en `src/demo/gimnasio/ui.jsx`: skyline dibujado a mano + siglas en cromo); cuando pasen el suyo, reemplazarlo ahí. Ya está listado en `catalogo.js` (lo pidió el usuario).
+0. Gimnasio: los colores de Manhattan (rojo de su Instagram llevado a degradado #FF2E3B → #FF7A50, negro, cromo) viven en `gym_negocios.marca` (`primario`, `primario2`, `tenue`…); dirección, Instagram y clases en `gym_negocios.info`. El socio ve sus propios pagos (RLS) y el mapa de calor (`gym_calor` abierto a cualquier miembro). Siguiente paso acordado: un perfil "Sitio web" con inscripción en línea (pago de prueba → pase al instante → recepción → dueño). El logo es PROVISIONAL (`Emblema` en `src/demo/gimnasio/ui.jsx`: skyline dibujado a mano + siglas en cromo); cuando pasen el suyo, reemplazarlo ahí. Ya está listado en `catalogo.js` (lo pidió el usuario).
 1. Ya que esto funcione en internet: quitar las demos de `be-fit-lab` (`src/demo/`, `AppDemos.jsx`, `IndiceDemos.jsx`, `Demo.jsx`, `.env.demos`, scripts `*:demos`, `supabase/demos/`).
 2. Limpieza opcional: `src/` aún trae páginas de Be Fit que ninguna demo usa (el bundler ya las deja fuera del build).
 3. Opcionales ya platicados: ejemplo de restaurante; en Alma, Reportes (`admin-analytics` no está desplegada en Demos y `AdminReportes` no tiene guardia), pasarela de prueba para membresías/eventos, `admin-create-client`.

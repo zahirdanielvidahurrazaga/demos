@@ -24,7 +24,8 @@ export function diaRelativo(iso) {
   const dia = f(new Date(iso));
   if (dia === f(new Date())) return 'Hoy';
   if (dia === f(new Date(Date.now() - 86400000))) return 'Ayer';
-  return new Date(iso).toLocaleDateString('es-MX', { weekday: 'short', day: 'numeric', month: 'short', timeZone: ZONA }).replace(/\./g, '');
+  const t = new Date(iso).toLocaleDateString('es-MX', { weekday: 'short', day: 'numeric', month: 'short', timeZone: ZONA }).replace(/[.,]/g, '');
+  return t.charAt(0).toUpperCase() + t.slice(1);
 }
 
 export function errorLegible(error) {
@@ -114,6 +115,64 @@ export function useAccesos(negocio, { socio, limite = 40 } = {}) {
   useEffect(() => { cargar(); }, [cargar]);
   useAlCambiarAccesos(negocio, cargar, { espera: 600 });
   return { accesos, recargar: cargar };
+}
+
+// Cobros (dueño: todos los del rango; socio: la RLS le deja ver solo los suyos).
+export function usePagos(negocio, { desde, limite = 500 } = {}) {
+  const [pagos, setPagos] = useState(null);
+  const cargar = useCallback(async () => {
+    let q = supabase.from('gym_pagos').select('id, monto, concepto, creado, socio_id, gym_socios(nombre, numero)')
+      .eq('negocio', negocio).order('creado', { ascending: false }).limit(limite);
+    if (desde) q = q.gte('creado', desde);
+    const { data, error } = await q;
+    if (!error) setPagos(data || []);
+  }, [negocio, desde, limite]);
+  useEffect(() => { cargar(); }, [cargar]);
+  useAlCambiarAccesos(negocio, cargar, { espera: 900 });
+  return { pagos, recargar: cargar };
+}
+
+// ── Fechas en hora de México ────────────────────────────────────────────────
+export const diaMx = (d) => new Date(d).toLocaleDateString('en-CA', { timeZone: ZONA });
+export const horaMx = (d = Date.now()) => Number(new Date(d).toLocaleString('en-US', { hour: 'numeric', hourCycle: 'h23', timeZone: ZONA }));
+// 1 = lunes … 7 = domingo
+export function diaSemanaMx(d = Date.now()) {
+  const n = new Date(`${diaMx(d)}T12:00:00Z`).getUTCDay();
+  return n === 0 ? 7 : n;
+}
+export function saludo() {
+  const h = horaMx();
+  return h < 12 ? 'Buenos días' : h < 19 ? 'Buenas tardes' : 'Buenas noches';
+}
+// Inicio del día / del mes de hoy en México, como ISO (para filtrar en la base).
+export function inicioMx(tipo = 'dia') {
+  const [a, m, d] = diaMx(Date.now()).split('-').map(Number);
+  return new Date(Date.UTC(a, m - 1, tipo === 'mes' ? 1 : d, 6)).toISOString(); // México = UTC-6 todo el año
+}
+
+// Visitas (entrada permitida → su salida) con lo que duraron, la más reciente primero.
+export function visitasDe(accesos) {
+  const orden = accesos.filter((a) => a.permitido).sort((a, b) => new Date(a.creado) - new Date(b.creado));
+  const lista = [];
+  let abierta = null;
+  for (const a of orden) {
+    if (a.tipo === 'entrada') {
+      if (abierta) lista.push(abierta);
+      abierta = { entra: a.creado, sale: null };
+    } else if (abierta) {
+      abierta.sale = a.creado;
+      lista.push(abierta);
+      abierta = null;
+    }
+  }
+  if (abierta) lista.push(abierta);
+  return lista.reverse().map((v) => ({ ...v, min: v.sale ? minutosDesde(v.entra, new Date(v.sale).getTime()) : null }));
+}
+
+// La hora con menos gente que queda hoy (según el promedio), hasta las 21 h.
+export function mejorHora(aforo) {
+  const resto = (aforo?.promedio || []).filter((x) => x.h > aforo.hora && x.h <= 21);
+  return resto.length ? resto.reduce((a, b) => (b.personas < a.personas ? b : a)) : null;
 }
 
 // Pitido de recepción (Web Audio, sin archivos): agudo si pasa, grave si no.

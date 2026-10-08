@@ -10,14 +10,22 @@
 -- Los ~850 socios NO son cuentas: son filas de gym_socios.
 -- ─────────────────────────────────────────────────────────────────────────────
 
-insert into public.gym_negocios (id, nombre, capacidad, alerta_pct, qr_segundos, marca) values
-  ('manhattan', 'GYM Fitness Manhattan', 120, 85, 30, '{
-    "primario": "#E30613", "primarioTexto": "#FFFFFF",
-    "fondo": "#0A0A0A", "superficie": "#151515", "superficie2": "#202020",
-    "texto": "#F5F5F5", "suave": "#A3A3A3",
-    "verde": "#22C55E", "rojo": "#EF4444", "ambar": "#F59E0B"
+-- Colores: el rojo de su Instagram, llevado al estilo "Pulso" (degradado rojo →
+-- coral que brilla sobre negro). Info: lo público de su Instagram.
+insert into public.gym_negocios (id, nombre, ciudad, capacidad, alerta_pct, qr_segundos, marca, info) values
+  ('manhattan', 'GYM Fitness Manhattan', 'Miahuatlán, Oax.', 120, 85, 30, '{
+    "primario": "#FF2E3B", "primario2": "#FF7A50", "primarioTexto": "#FFFFFF",
+    "fondo": "#0B0B0D", "superficie": "#151518", "superficie2": "#222226",
+    "texto": "#F4F4F5", "suave": "#9A9AA3", "tenue": "#6E6E76",
+    "verde": "#34D399", "rojo": "#FF4D4F", "ambar": "#FBBF24"
+  }', '{
+    "direccion": "Calle 3 de Octubre 420B, Centro",
+    "ciudad": "Miahuatlán de Porfirio Díaz, Oax.",
+    "instagram": "gymfitnesssmanhattan",
+    "clases": ["CrossFit", "Spinning", "Cardio", "Zumba"]
   }')
-on conflict (id) do update set nombre = excluded.nombre, marca = excluded.marca, qr_segundos = excluded.qr_segundos;
+on conflict (id) do update set nombre = excluded.nombre, ciudad = excluded.ciudad, marca = excluded.marca,
+  info = excluded.info, qr_segundos = excluded.qr_segundos;
 
 insert into public.gym_secretos (negocio) values ('manhattan') on conflict (negocio) do nothing;
 

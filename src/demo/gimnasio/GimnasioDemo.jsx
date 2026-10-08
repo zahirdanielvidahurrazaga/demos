@@ -31,21 +31,21 @@ const ROLES = [
 
 const GUIA = {
   socio: [
-    'Tu pase de acceso: el QR cambia cada 30 segundos, así que una captura de pantalla no le sirve a nadie más.',
-    'Abre "Recepción" en otra pestaña (o en otra compu) y escanea este QR con la cámara: aquí te llega la bienvenida al instante.',
-    'Abajo ves qué tan lleno está el gimnasio ahora y a qué hora suele haber menos gente.',
+    'El botón rojo de abajo abre tu pase: el QR cambia cada 30 segundos, así que una captura de pantalla no le sirve a nadie más.',
+    'Abre "Recepción" en otra pestaña (o en otra compu) y escanea tu QR con la cámara: aquí te llega la bienvenida al instante.',
+    '"En vivo" te dice qué tan lleno está y a qué hora conviene ir; "Visitas" lleva tu racha del mes.',
   ],
   recepcion: [
     'Activa la cámara y escanea el pase del socio, o toca un "pase de prueba" para ver cada caso: vencida, adeudo, plan matutino, congelada.',
     'Si alguien no puede pasar, se resuelve ahí: renovar, cobrar el adeudo o dejarlo pasar con autorización.',
     'Cambia a "Solo entrada" (torniquete) y escanea dos veces al mismo socio: el antipassback no deja prestar el pase.',
-    'Con el código de "Pruébalo con tu celular" abres el pase en tu teléfono y lo escaneas aquí.',
+    '"En vivo" es la bitácora que se mueve sola; en "Socios" buscas a quien olvidó el celular y lo registras a mano.',
   ],
   dueno: [
-    'Aforo en vivo: la gente simulada entra y sale sola cada minuto, y lo que escanea recepción aparece aquí al momento.',
-    'Horas pico de las últimas 4 semanas, accesos negados por motivo y quién está adentro ahora.',
-    'Baja el aforo máximo y mira cómo recepción empieza a negar entradas por "aforo completo".',
-    '"Por cobrar": vencidas y adeudos con recordatorio por WhatsApp en un toque.',
+    'Todo se mueve solo: la gente simulada entra y sale cada minuto, y lo que escanea recepción te llega como aviso.',
+    '"Aforo" trae las horas pico de las últimas 4 semanas y quién está adentro; "Dinero", lo cobrado día por día.',
+    'En "Ajustes" baja el aforo máximo y mira cómo recepción empieza a negar entradas por "aforo completo".',
+    '"Socios": vencidas y adeudos con recordatorio por WhatsApp en un toque.',
   ],
 };
 
@@ -101,7 +101,7 @@ export default function GimnasioDemo() {
     const previoTitulo = document.title;
     const previoFondo = document.body.style.background;
     document.title = `${negocio.nombre} — control de acceso (demostración)`;
-    document.body.style.background = negocio.marca?.fondo || '#0B0C0E';
+    document.body.style.background = negocio.marca?.fondo || '#0B0B0D';
     return () => { document.title = previoTitulo; document.body.style.background = previoFondo; };
   }, [negocio]);
 
@@ -114,14 +114,14 @@ export default function GimnasioDemo() {
 
   if (negocio === null) return <Navigate to="/" replace />;
   if (negocio === undefined) {
-    return <div style={{ minHeight: '100vh', background: '#0B0C0E', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9CA3AF' }}><Loader2 size={26} style={{ animation: 'spin 1s linear infinite' }} /></div>;
+    return <div style={{ minHeight: '100vh', background: '#0B0B0D', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9A9AA3' }}><Loader2 size={26} style={{ animation: 'spin 1s linear infinite' }} /></div>;
   }
 
   const m = negocio.marca || {};
   const vars = {
-    '--g-pri': m.primario, '--g-pri-texto': m.primarioTexto, '--g-fondo': m.fondo, '--g-sup': m.superficie,
-    '--g-sup2': m.superficie2, '--g-texto': m.texto, '--g-suave': m.textoSuave || m.suave,
-    '--g-verde': m.verde, '--g-rojo': m.rojo, '--g-ambar': m.ambar,
+    '--g-pri': m.primario, '--g-pri2': m.primario2 || m.primario, '--g-pri-texto': m.primarioTexto, '--g-fondo': m.fondo,
+    '--g-sup': m.superficie, '--g-sup2': m.superficie2, '--g-texto': m.texto, '--g-suave': m.textoSuave || m.suave,
+    '--g-tenue': m.tenue || m.suave, '--g-verde': m.verde, '--g-rojo': m.rojo, '--g-ambar': m.ambar,
   };
 
   const reiniciar = async () => {
@@ -136,7 +136,8 @@ export default function GimnasioDemo() {
 
   return (
     <div style={{
-      ...vars, minHeight: '100vh', background: g.fondo, color: g.texto, fontFamily: g.texto2, WebkitFontSmoothing: 'antialiased',
+      ...vars, minHeight: '100vh', color: g.texto, fontFamily: g.fuente, WebkitFontSmoothing: 'antialiased',
+      background: 'radial-gradient(900px 500px at 0% 0%, color-mix(in srgb, var(--g-pri) 9%, transparent), transparent 70%), var(--g-fondo)',
     }}>
       <div ref={encabezado} style={{ position: 'sticky', top: 0, zIndex: 9300, paddingBottom: 8, background: 'linear-gradient(var(--g-fondo) 62%, transparent)' }}>
         <BarraDemo roles={ROLES} rol={rol} alCambiar={setRol}
@@ -183,8 +184,8 @@ export default function GimnasioDemo() {
       {listo && !reiniciando ? (
         <main>
           {rol === 'socio' && <Socio negocio={negocio} />}
-          {rol === 'recepcion' && <Recepcion negocio={negocio} />}
-          {rol === 'dueno' && <Dueno negocio={negocio} alCambiarNegocio={cargarNegocio} />}
+          {rol === 'recepcion' && <Recepcion negocio={negocio} arriba={alto} />}
+          {rol === 'dueno' && <Dueno negocio={negocio} arriba={alto} alCambiarNegocio={cargarNegocio} />}
         </main>
       ) : (
         <div style={{ minHeight: `calc(100vh - ${alto}px)`, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, color: g.suave, padding: 24, textAlign: 'center' }}>
