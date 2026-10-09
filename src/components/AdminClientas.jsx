@@ -1010,6 +1010,9 @@ export default function AdminClientas() {
   const load = async () => {
     const { data } = await supabase.from('users')
       .select('id, full_name, email, role, membership_status, membership_plan, classes_remaining, plan_started_at, plan_expires_at, birth_date, phone, avatar_url, created_at')
+      // Solo roles del estudio: la base de demos la comparten otras maquetas
+      // (rol PEDIDOS de Hoja, GYM del gimnasio) y no deben salir aquí.
+      .in('role', ROLES.map((r) => r.value))
       .order('full_name', { ascending: true });
     setUsers(data || []);
   };

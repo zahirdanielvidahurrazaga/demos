@@ -23,6 +23,7 @@ import { supabase } from '../lib/supabase';
 import { EVENTO_NAVEGAR } from '../demo/navegacionDemo';
 import { recolorearDemo } from '../demo/recolorearDemo';
 import AlmaApp from '../demo/alma/AlmaApp';
+import EquipoAlma from '../demo/alma/staff/Equipo';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // MAQUETA DE VENTA
@@ -362,10 +363,17 @@ export default function Demo() {
           {vista === 'cumpleanos' && <Cumpleanos />}
         </>
       )}
+      {/* Con app propia, el equipo también usa el panel de Alma (src/demo/alma/staff/). */}
+      {cfg.appClienta === 'alma' && rol !== 'clienta' && EquipoAlma.roles.includes(rol) ? (
+        <EquipoAlma cfg={cfg} rol={rol} altoEncabezado={altoEncabezado} />
+      ) : (
+        <>
       {rol === 'recepcion' && <Recepcion />}
       {rol === 'coach' && <Coach />}
       {rol === 'barista' && <Barista />}
       {rol === 'admin' && <Admin />}
+        </>
+      )}
     </>
   );
 

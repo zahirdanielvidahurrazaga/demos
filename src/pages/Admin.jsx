@@ -45,7 +45,10 @@ const SPECIAL_COLORS = ['#FF914D', '#E0679C', '#9B7BEA', '#4AA6E8', '#33BFA6', '
 // `recepcion` = modo mostrador: reutiliza esta misma pantalla pero limitada a
 // las pestañas que el personal de recepción necesita (QR, Clases y Ventas).
 // Oculta el resto de la navegación y rebranda el header. Ver /recepcion.
-function Admin({ recepcion = false }) {
+// Demos (Studio Alma): `seccion` controla la pestaña desde fuera e `incrustado`
+// esconde el menú lateral, el encabezado y la barra de abajo, para vivir dentro
+// del panel de Alma (src/demo/alma/staff/Direccion.jsx).
+function Admin({ recepcion = false, seccion = null, incrustado = false }) {
   const { user, logout, globalClasses, recipes, updateClassSpots, checkInClient, addClass, deleteClass, updateClass, addRecipe, deleteRecipe, allUsers, coaches, activatePlan, fetchAllUsers, fetchClassesByDayOfWeek, fetchGlobalClasses, assignCustomBadge, removeCustomBadge, badgeConfigs, createBadgeConfig, updateBadgeConfig, deleteBadgeConfig, addMultipleClasses, setNotifOpen,
     categories, addCategory, updateCategory, deleteCategory,
     classTemplates, saveTemplate, deleteTemplate, applyTemplate,
@@ -56,7 +59,8 @@ function Admin({ recepcion = false }) {
   // (para cobrar a una clienta cuyo plan se ocultó). Listas usan `plans` (activos).
   const PLANS = plans || [];
   const PLAN_BY_NAME = Object.fromEntries((allPlans || []).map(p => [p.name, p]));
-  const [activeTab, setActiveTab] = useState('mostrador');
+  const [tabPropia, setActiveTab] = useState('mostrador');
+  const activeTab = seccion || tabPropia;
   const [showTopMenu, setShowTopMenu] = useState(false);
   
   // Gestión de días
@@ -509,7 +513,7 @@ function Admin({ recepcion = false }) {
   ];
 
   return (
-    <div className="admin-app-container">
+    <div className={`admin-app-container${incrustado ? ' admin-incrustado' : ''}`}>
       {/* HEADER PREMIUM (MOBILE ONLY) */}
       <header className="ios-header mobile-only-header" style={{ background: 'var(--surface-lowest)', paddingBottom: '10px', borderBottom: '1px solid rgba(0,0,0,0.05)', position: 'relative', zIndex: 50 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
