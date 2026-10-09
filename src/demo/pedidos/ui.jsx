@@ -29,8 +29,8 @@ export function Foto({ src, alt, style, redonda = 16 }) {
   if (falla) {
     return (
       <div aria-hidden="true" style={{
-        background: 'linear-gradient(135deg, #DCE5D2, #B9C9A9)', borderRadius: redonda,
-        display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6E8A62', ...style,
+        background: 'linear-gradient(135deg, var(--p-pri-blanco-12), var(--p-pri-blanco-28))', borderRadius: redonda,
+        display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--p-pri)', ...style,
       }}>
         <Leaf size={28} />
       </div>
@@ -47,9 +47,9 @@ export function Boton({ children, variante = 'primario', style, ...resto }) {
     justifyContent: 'center', gap: 8, opacity: resto.disabled ? 0.55 : 1, transition: 'transform .12s ease',
   };
   const variantes = {
-    primario: { background: t.pri, color: '#fff', boxShadow: '0 10px 24px rgba(47,66,41,0.25)' },
+    primario: { background: t.pri, color: '#fff', boxShadow: '0 10px 24px var(--p-osc-25)' },
     oscuro: { background: t.priOsc, color: '#fff' },
-    suave: { background: 'rgba(79,107,71,0.1)', color: t.priOsc },
+    suave: { background: 'var(--p-pri-10)', color: t.priOsc },
     borde: { background: 'transparent', color: t.texto, border: `1px solid ${t.linea}` },
     peligro: { background: 'rgba(185,28,28,0.08)', color: '#9B1C1C' },
   };
@@ -70,7 +70,7 @@ export function Chip({ children, activo, onClick, style }) {
   );
 }
 
-export function Etiqueta({ children, color = '#4F6B47', fondo = 'rgba(79,107,71,0.1)' }) {
+export function Etiqueta({ children, color = 'var(--p-pri-osc)', fondo = 'var(--p-pri-10)' }) {
   return (
     <span style={{
       display: 'inline-block', fontSize: '0.68rem', fontWeight: 800, letterSpacing: '0.02em',

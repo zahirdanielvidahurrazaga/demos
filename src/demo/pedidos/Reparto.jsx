@@ -106,7 +106,7 @@ function Entrega({ o, ahora, accion, textoAccion, alCambiar }) {
       <div style={{ display: 'flex', gap: 8 }}>
         <a href={mapa} target="_blank" rel="noreferrer" style={{
           display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '12px 14px', borderRadius: 16,
-          background: 'rgba(79,107,71,0.1)', color: t.priOsc, fontWeight: 800, textDecoration: 'none', fontSize: '0.9rem',
+          background: 'var(--p-pri-10)', color: t.priOsc, fontWeight: 800, textDecoration: 'none', fontSize: '0.9rem',
         }}><Navigation size={16} /> Mapa</a>
         <Boton onClick={avanzar} disabled={enviando} style={{ flex: 1, fontSize: '0.92rem' }}>
           {enviando && <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} />} {textoAccion}

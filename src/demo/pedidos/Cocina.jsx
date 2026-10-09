@@ -85,7 +85,7 @@ export default function Cocina({ negocio }) {
           {COLUMNAS.filter((c) => !movil || c.estado === columnaMovil).map((c) => {
             const lista = porEstado(c.estado);
             return (
-              <div key={c.estado} style={{ background: 'rgba(79,107,71,0.06)', borderRadius: 22, padding: 12, minHeight: 200 }}>
+              <div key={c.estado} style={{ background: 'var(--p-pri-6)', borderRadius: 22, padding: 12, minHeight: 200 }}>
                 {!movil && (
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '2px 6px 10px' }}>
                     <span style={{ fontWeight: 800, color: t.texto }}>{c.titulo}</span>
@@ -128,7 +128,7 @@ function Ticket({ o, col, ahora, negocio, nuevo, alCambiar }) {
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
         <strong style={{ fontSize: '1.15rem', color: t.texto }}>#{o.folio}</strong>
-        <Etiqueta color="#fff" fondo={o.modalidad === 'mesa' ? '#4F6B47' : o.modalidad === 'domicilio' ? '#9A6A1F' : '#2F4229'}>
+        <Etiqueta color="#fff" fondo={o.modalidad === 'mesa' ? 'var(--p-pri)' : o.modalidad === 'domicilio' ? '#9A6A1F' : 'var(--p-pri-osc)'}>
           <Icono size={11} style={{ verticalAlign: '-1px', marginRight: 3 }} />{modalidadDe(o)}
         </Etiqueta>
         {nuevo && <Etiqueta color="#7A4A12" fondo="rgba(226,165,74,0.25)">Nuevo</Etiqueta>}
@@ -146,7 +146,7 @@ function Ticket({ o, col, ahora, negocio, nuevo, alCambiar }) {
           </div>
         ))}
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.8rem', fontWeight: 700, color: o.metodo_pago === 'tarjeta' ? '#2F4229' : '#9A3412', marginBottom: 10 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.8rem', fontWeight: 700, color: o.metodo_pago === 'tarjeta' ? 'var(--p-pri-osc)' : '#9A3412', marginBottom: 10 }}>
         {o.metodo_pago === 'tarjeta' ? <><CreditCard size={14} /> Pagado</> : <><Wallet size={14} /> Cobrar {pesos(o.total)} en efectivo</>}
       </div>
       {error && <p role="alert" style={{ margin: '0 0 8px', color: '#9B1C1C', fontSize: '0.82rem', fontWeight: 600 }}>{error}</p>}

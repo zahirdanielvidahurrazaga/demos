@@ -107,8 +107,11 @@ begin
   values (v_negocio, 'Hoja', 'Cocina fit y café', 'Puebla', 'Av. Juárez 2915, La Paz, Puebla', '222 000 0000',
     jsonb_build_object(
       'lema', 'Cocina fit, sin culpa',
-      'primario', '#4F6B47', 'primarioOscuro', '#2F4229', 'acento', '#E2A54A',
-      'fondo', '#F5F0E6', 'superficie', '#FFFFFF', 'texto', '#22301E', 'textoSuave', '#6B7564',
+      -- Estilo "Tinta" (Cliente.jsx), paleta de bosque: oliva #55613A, bosque #354123,
+      -- salvia #808B5C y casi negro #0F1309 sobre crema. textoSuave es salvia más oscura para que se lea.
+      'primario', '#55613A', 'primarioOscuro', '#354123', 'acento', '#808B5C',
+      'fondo', '#EFEEE6', 'superficie', '#FBFBF7', 'texto', '#0F1309', 'textoSuave', '#5E6845',
+      'horario', '7 am – 8 pm',
       'portada', v_fotos || 'portada-local.jpg'),
     '{recoger,mesa,domicilio}', 35, 300, 12, 15, true)
   on conflict (id) do update set nombre = excluded.nombre, giro = excluded.giro, ciudad = excluded.ciudad,

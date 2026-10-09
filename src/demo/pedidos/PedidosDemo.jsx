@@ -50,6 +50,28 @@ const GUIA = {
   ],
 };
 
+// Transparencias y aclarados de la marca, calculados aquí en vez de con
+// color-mix(): Safari anterior a 16.2 no lo entiende y dejaba sin bordes ni
+// fondo la app del cliente.
+function rgb(hex) {
+  const h = String(hex || '').replace('#', '');
+  if (!/^[0-9a-f]{6}$/i.test(h)) return null;
+  return [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16));
+}
+function tonosDeMarca(m) {
+  const pri = rgb(m.primario);
+  const osc = rgb(m.primarioOscuro);
+  const sup = rgb(m.superficie);
+  const tonos = {};
+  if (pri) {
+    for (const a of [6, 8, 10, 22, 30, 35, 45, 60]) tonos[`--p-pri-${a}`] = `rgba(${pri.join(', ')}, ${a / 100})`;
+    for (const a of [12, 28]) tonos[`--p-pri-blanco-${a}`] = `rgb(${pri.map((c) => Math.round(255 - (255 - c) * a / 100)).join(', ')})`;
+  }
+  if (osc) tonos['--p-osc-25'] = `rgba(${osc.join(', ')}, 0.25)`;
+  if (sup) tonos['--p-sup-92'] = `rgba(${sup.join(', ')}, 0.92)`;
+  return tonos;
+}
+
 export default function PedidosDemo() {
   const { negocio: clave } = useParams();
   const [negocio, setNegocio] = useState(undefined);
@@ -127,13 +149,18 @@ export default function PedidosDemo() {
   const vars = {
     '--p-pri': m.primario, '--p-pri-osc': m.primarioOscuro, '--p-acento': m.acento, '--p-fondo': m.fondo,
     '--p-sup': m.superficie, '--p-texto': m.texto, '--p-suave': m.textoSuave, '--p-alto-encabezado': `${alto}px`,
+    ...tonosDeMarca(m),
   };
 
   const reiniciar = async () => {
     setReiniciando(true);
     const { error } = await supabase.rpc('pedidos_reset');
     if (error) { setReiniciando(false); setErrorSesion(errorLegible(error)); return; }
-    try { localStorage.removeItem(`pedidos_carrito_${negocio.id}`); } catch { /* sin almacenamiento */ }
+    try {
+      localStorage.removeItem(`pedidos_carrito_${negocio.id}`);
+      // Que vuelvan a salir la carga y la bienvenida (Cliente.jsx), como la primera vez.
+      sessionStorage.removeItem(`pedidos_bienvenida_${negocio.id}`);
+    } catch { /* sin almacenamiento */ }
     window.location.href = `/pedidos/${negocio.id}`;
   };
 
