@@ -22,6 +22,7 @@ import Admin from './Admin';
 import { supabase } from '../lib/supabase';
 import { EVENTO_NAVEGAR } from '../demo/navegacionDemo';
 import { recolorearDemo } from '../demo/recolorearDemo';
+import AlmaApp from '../demo/alma/AlmaApp';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // MAQUETA DE VENTA
@@ -323,6 +324,8 @@ export default function Demo() {
   // función que corre cada noche) y recarga para leer todo de nuevo.
   const reiniciar = async () => {
     setReiniciando(true);
+    // Que la app de clienta propia vuelva a enseñar su portada (ver src/demo/alma/AlmaApp.jsx).
+    try { sessionStorage.removeItem('alma_portada_vista'); } catch { /* sin almacenamiento */ }
     const { error } = await supabase.rpc('demo_reset');
     if (error) {
       setReiniciando(false);
@@ -341,9 +344,14 @@ export default function Demo() {
 
   if (!cfg) return <Navigate to="/" replace />;
 
+  const appPropia = cfg.appClienta === 'alma' && ['portal', 'agenda', 'evolucion', 'yo'].includes(vista);
+
   const contenido = (
     <>
-      {rol === 'clienta' && (
+      {/* Estudios con app propia de clienta (cfg.appClienta): Inicio, Clases,
+          Progreso y Yo son pantallas nuevas (src/demo/alma/); el resto sigue siendo Be Fit. */}
+      {rol === 'clienta' && appPropia && <AlmaApp cfg={cfg} vista={vista} alVista={setVista} altoEncabezado={altoEncabezado} />}
+      {rol === 'clienta' && !appPropia && (
         <>
           {vista === 'portal' && <Portal />}
           {vista === 'agenda' && <Agenda />}

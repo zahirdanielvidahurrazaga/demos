@@ -36,6 +36,9 @@ export const ESTUDIOS_DEMO = {
     nombreMayusculas: 'STUDIO ALMA',
     nombrePanel: 'Panel Alma',
     giro: 'Pilates Reformer',
+    // App de clienta propia (no la de Be Fit): Inicio con foto + vidrio,
+    // Clases, Yo y pase. Ver src/demo/alma/.
+    appClienta: 'alma',
     nombreCafeteria: 'Café Alma',
     nombreNutricion: 'Alma Nutrición',
     prefijoContrasena: 'Alma',
