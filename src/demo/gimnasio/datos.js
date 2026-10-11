@@ -171,7 +171,7 @@ export function visitasDe(accesos) {
 
 // La hora con menos gente que queda hoy (según el promedio), hasta las 21 h.
 export function mejorHora(aforo) {
-  const resto = (aforo?.promedio || []).filter((x) => x.h > aforo.hora && x.h <= 21);
+  const resto = (aforo?.promedio || []).filter((x) => x.h > aforo.hora && x.h >= 6 && x.h <= 21);
   return resto.length ? resto.reduce((a, b) => (b.personas < a.personas ? b : a)) : null;
 }
 

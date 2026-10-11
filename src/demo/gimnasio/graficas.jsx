@@ -61,7 +61,7 @@ export function Onda({ aforo, alto = 110, compacto = false }) {
         <svg width={ancho} height={alto} style={{ display: 'block', overflow: 'visible' }} onMouseLeave={() => setFoco(null)}>
           <defs>
             <linearGradient id={`r${id}`} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0" style={{ stopColor: 'var(--g-pri)' }} stopOpacity="0.42" />
+              <stop offset="0" style={{ stopColor: 'var(--g-pri)' }} stopOpacity="0.28" />
               <stop offset="1" style={{ stopColor: 'var(--g-pri)' }} stopOpacity="0" />
             </linearGradient>
             <linearGradient id={`l${id}`} x1="0" y1="0" x2="1" y2="0">
@@ -88,8 +88,7 @@ export function Onda({ aforo, alto = 110, compacto = false }) {
               <motion.path d={`${suave(linea)}L${ult[0]} ${arr + h}L${linea[0][0]} ${arr + h}Z`} fill={`url(#r${id})`}
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.8 }} />
               <motion.path d={suave(linea)} fill="none" stroke={`url(#l${id})`} strokeWidth="3.5" strokeLinecap="round"
-                initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-                style={{ filter: 'drop-shadow(0 0 6px color-mix(in srgb, var(--g-pri) 80%, transparent))' }} />
+                initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }} />
             </>
           )}
           {ult && (
@@ -101,7 +100,7 @@ export function Onda({ aforo, alto = 110, compacto = false }) {
               <circle cx={ult[0]} cy={ult[1]} r="5.5" style={{ fill: 'var(--g-pri2)', stroke: 'var(--g-fondo)' }} strokeWidth="2.5" />
               <g transform={`translate(${Math.min(ult[0], izq + w - 17) - 17} ${ult[1] - 31})`}>
                 <rect width="34" height="20" rx="7" style={{ fill: 'var(--g-pri)' }} />
-                <text x="17" y="14" fontSize="11" fontWeight="700" fill="#fff" textAnchor="middle">{aforo.adentro}</text>
+                <text x="17" y="14" fontSize="11" fontWeight="700" style={{ fill: 'var(--g-pri-texto)' }} textAnchor="middle">{aforo.adentro}</text>
               </g>
             </g>
           )}
@@ -118,11 +117,11 @@ export function Onda({ aforo, alto = 110, compacto = false }) {
       {!compacto && f && (
         <div style={{
           position: 'absolute', top: 0, left: Math.min(Math.max(0, x(foco) - 70), ancho - 140), width: 140, pointerEvents: 'none',
-          background: 'color-mix(in srgb, var(--g-sup2), white 4%)', border: `1px solid ${g.linea}`, borderRadius: 14, padding: '8px 11px', fontSize: 12.5,
+          background: '#fff', color: '#0A0A0A', borderRadius: 14, padding: '8px 11px', fontSize: 12.5,
         }}>
           <b>{f.h}:30</b>
-          {f.hoy != null && <div style={{ color: g.pri2, fontWeight: 600 }}>Hoy: {f.hoy}</div>}
-          <div style={{ color: g.suave }}>Promedio: {f.promedio}</div>
+          {f.hoy != null && <div style={{ fontWeight: 600 }}>Hoy: {f.hoy}</div>}
+          <div style={{ color: '#6B6B66' }}>Promedio: {f.promedio}</div>
         </div>
       )}
     </div>
@@ -153,7 +152,7 @@ export function MapaCalor({ celdas, capacidad, desde = 6, hasta = 22, diaHoy, ho
                 style={{
                   aspectRatio: '1 / 1.15', borderRadius: 5,
                   background: x < 0.06 ? 'rgba(255,255,255,0.04)' : `color-mix(in srgb, color-mix(in srgb, var(--g-pri), var(--g-pri2) ${Math.round(x * 60)}%) ${Math.round(14 + x * 86)}%, transparent)`,
-                  boxShadow: ahora ? '0 0 0 2px #fff' : x > 0.75 ? '0 0 10px color-mix(in srgb, var(--g-pri) 45%, transparent)' : undefined,
+                  boxShadow: ahora ? '0 0 0 2px #fff' : undefined,
                 }} />
             );
           }),
@@ -177,8 +176,7 @@ export function Barritas({ valores, alto = 70, resaltar, etiquetas }) {
             transition={{ duration: 0.7, delay: i * 0.02, ease: [0.16, 1, 0.3, 1] }}
             style={{
               flex: '1 1 0', maxWidth: 14, borderRadius: 99, minWidth: 3,
-              background: i === resaltar ? g.grad : v ? 'color-mix(in srgb, var(--g-pri) 38%, var(--g-sup2))' : 'rgba(255,255,255,0.06)',
-              boxShadow: i === resaltar ? '0 0 12px color-mix(in srgb, var(--g-pri) 60%, transparent)' : undefined,
+              background: i === resaltar ? g.pri : v ? '#5E5E5A' : 'rgba(255,255,255,0.06)',
             }} />
         ))}
       </div>
@@ -187,6 +185,45 @@ export function Barritas({ valores, alto = 70, resaltar, etiquetas }) {
           {etiquetas.map((e, i) => <span key={i} style={{ flex: '1 1 0', maxWidth: 14, fontSize: 10, color: g.tenue, textAlign: 'center', overflow: 'visible', whiteSpace: 'nowrap' }}>{e}</span>)}
         </div>
       )}
+    </div>
+  );
+}
+
+// Personas adentro por hora en barras: lo usual de fondo (gris oscuro), hoy en
+// gris y la hora actual en el acento con su globo. Las horas que faltan solo
+// muestran lo usual.
+export function BarrasHora({ aforo, alto = 260, desde = 6, hasta = 22 }) {
+  const hoy = new Map(aforo.hoy.map((x) => [x.h, x.personas]));
+  const horas = aforo.promedio.filter((x) => x.h >= desde && x.h <= hasta).map((x) => ({
+    h: x.h, usual: x.personas, hoy: x.h === aforo.hora ? aforo.adentro : x.h < aforo.hora ? (hoy.get(x.h) ?? 0) : null,
+  }));
+  const max = Math.max(1, ...horas.map((x) => Math.max(x.usual, x.hoy ?? 0))) * 1.12;
+  return (
+    <div>
+      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${horas.length}, minmax(0, 1fr))`, gap: 6, alignItems: 'end', height: alto }}>
+        {horas.map((x, i) => {
+          const ahora = x.h === aforo.hora;
+          return (
+            <div key={x.h} title={`${x.h}:00 · hoy ${x.hoy ?? '—'} · lo usual ${x.usual}`} style={{ position: 'relative', height: '100%', display: 'flex', alignItems: 'flex-end', zIndex: ahora ? 2 : 1 }}>
+              <motion.div initial={{ height: 0 }} animate={{ height: `${(x.usual / max) * 100}%` }} transition={{ duration: 0.8, delay: i * 0.02, ease: [0.16, 1, 0.3, 1] }}
+                style={{ position: 'absolute', left: 0, right: 0, bottom: 0, borderRadius: 8, background: '#202020' }} />
+              {x.hoy != null && (
+                <motion.div initial={{ height: 0 }} animate={{ height: `${Math.max(1.5, (x.hoy / max) * 100)}%` }} transition={{ duration: 0.9, delay: 0.1 + i * 0.02, ease: [0.16, 1, 0.3, 1] }}
+                  style={{ position: 'relative', width: '100%', borderRadius: 8, background: ahora ? 'var(--g-pri)' : '#5E5E5A' }}>
+                  {ahora && (
+                    <span style={{ position: 'absolute', left: '50%', bottom: 'calc(100% + 8px)', transform: 'translateX(-50%)', background: '#fff', color: '#0A0A0A', fontSize: 12, fontWeight: 700, padding: '4px 9px', borderRadius: 99, whiteSpace: 'nowrap' }}>
+                      {aforo.adentro} ahora
+                    </span>
+                  )}
+                </motion.div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${horas.length}, minmax(0, 1fr))`, gap: 6, marginTop: 8 }}>
+        {horas.map((x) => <span key={x.h} style={{ fontSize: 11, color: x.h === aforo.hora ? g.texto : g.suave, textAlign: 'center' }}>{x.h}h</span>)}
+      </div>
     </div>
   );
 }

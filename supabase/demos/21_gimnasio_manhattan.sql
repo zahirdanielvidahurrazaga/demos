@@ -231,6 +231,9 @@ begin
   from gym_socios s join gym_planes p on p.negocio = s.negocio and p.id = s.plan
   where s.negocio = v_neg and s.vence - p.dias between v_hoy - 45 and v_hoy
     and (s.vence - p.dias < v_hoy or now() > gym_momento(v_hoy, 425));
+
+  -- Lo de la v2 (equipo, báscula, ex-socios y 6 meses de cobros): 22_gimnasio_v2.sql.
+  if to_regprocedure('public.gym_reset_v2()') is not null then perform gym_reset_v2(); end if;
 end $$;
 
 revoke all on function public.gym_reset() from public, anon;

@@ -5,7 +5,7 @@ import { supabase } from '../../lib/supabase';
 import BarraDemo from '../kaizen/BarraDemo';
 import { KAIZEN } from '../kaizen/marca';
 import { errorLegible } from './datos';
-import { cargarFuentesGym, g } from './ui';
+import { cargarFuentesGym, g, TEMA, variablesTema } from './ui';
 import Socio from './Socio';
 import Recepcion from './Recepcion';
 import Dueno from './Dueno';
@@ -31,18 +31,18 @@ const ROLES = [
 
 const GUIA = {
   socio: [
-    'El botón rojo de abajo abre tu pase: el QR cambia cada 30 segundos, así que una captura de pantalla no le sirve a nadie más.',
-    'Abre "Recepción" en otra pestaña (o en otra compu) y escanea tu QR con la cámara: aquí te llega la bienvenida al instante.',
+    '"Pase" abre tu QR: cambia cada 30 segundos, así que una captura de pantalla no le sirve a nadie más.',
+    'Abre "Recepción" en otra pestaña (o en otra compu) y presiona 1: es como pasar tu pase por el lector, y aquí te llega la bienvenida al instante.',
     '"En vivo" te dice qué tan lleno está y a qué hora conviene ir; "Visitas" lleva tu racha del mes.',
   ],
   recepcion: [
-    'Activa la cámara y escanea el pase del socio, o toca un "pase de prueba" para ver cada caso: vencida, adeudo, plan matutino, congelada.',
+    'El QR se lee con lector USB. Aquí presiona 1, 2, 3, 4 o 5 (o toca un "pase de prueba") para ver cada caso: al corriente, vencida, adeudo, plan matutino, congelada.',
     'Si alguien no puede pasar, se resuelve ahí: renovar, cobrar el adeudo o dejarlo pasar con autorización.',
-    'Cambia a "Solo entrada" (torniquete) y escanea dos veces al mismo socio: el antipassback no deja prestar el pase.',
+    'Cambia a "Solo entrada" (torniquete) y pasa dos veces al mismo socio: el antipassback no deja prestar el pase.',
     '"En vivo" es la bitácora que se mueve sola; en "Socios" buscas a quien olvidó el celular y lo registras a mano.',
   ],
   dueno: [
-    'Todo se mueve solo: la gente simulada entra y sale cada minuto, y lo que escanea recepción te llega como aviso.',
+    'Todo se mueve solo: la gente simulada entra y sale cada minuto, y lo que lee el lector de recepción te llega como aviso.',
     '"Aforo" trae las horas pico de las últimas 4 semanas y quién está adentro; "Dinero", lo cobrado día por día.',
     'En "Ajustes" baja el aforo máximo y mira cómo recepción empieza a negar entradas por "aforo completo".',
     '"Socios": vencidas y adeudos con recordatorio por WhatsApp en un toque.',
@@ -101,7 +101,7 @@ export default function GimnasioDemo() {
     const previoTitulo = document.title;
     const previoFondo = document.body.style.background;
     document.title = `${negocio.nombre} — control de acceso (demostración)`;
-    document.body.style.background = negocio.marca?.fondo || '#0B0B0D';
+    document.body.style.background = TEMA.fondo;
     return () => { document.title = previoTitulo; document.body.style.background = previoFondo; };
   }, [negocio]);
 
@@ -114,15 +114,11 @@ export default function GimnasioDemo() {
 
   if (negocio === null) return <Navigate to="/" replace />;
   if (negocio === undefined) {
-    return <div style={{ minHeight: '100vh', background: '#0B0B0D', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9A9AA3' }}><Loader2 size={26} style={{ animation: 'spin 1s linear infinite' }} /></div>;
+    return <div style={{ minHeight: '100vh', background: TEMA.fondo, display: 'flex', alignItems: 'center', justifyContent: 'center', color: TEMA.suave }}><Loader2 size={26} style={{ animation: 'spin 1s linear infinite' }} /></div>;
   }
 
-  const m = negocio.marca || {};
-  const vars = {
-    '--g-pri': m.primario, '--g-pri2': m.primario2 || m.primario, '--g-pri-texto': m.primarioTexto, '--g-fondo': m.fondo,
-    '--g-sup': m.superficie, '--g-sup2': m.superficie2, '--g-texto': m.texto, '--g-suave': m.textoSuave || m.suave,
-    '--g-tenue': m.tenue || m.suave, '--g-verde': m.verde, '--g-rojo': m.rojo, '--g-ambar': m.ambar,
-  };
+  // Paleta "Volt" (ui.jsx → TEMA); gym_negocios.marca ya no pinta la app.
+  const vars = variablesTema;
 
   const reiniciar = async () => {
     setReiniciando(true);
@@ -137,7 +133,7 @@ export default function GimnasioDemo() {
   return (
     <div style={{
       ...vars, minHeight: '100vh', color: g.texto, fontFamily: g.fuente, WebkitFontSmoothing: 'antialiased',
-      background: 'radial-gradient(900px 500px at 0% 0%, color-mix(in srgb, var(--g-pri) 9%, transparent), transparent 70%), var(--g-fondo)',
+      background: 'var(--g-fondo)',
     }}>
       <div ref={encabezado} style={{ position: 'sticky', top: 0, zIndex: 9300, paddingBottom: 8, background: 'linear-gradient(var(--g-fondo) 62%, transparent)' }}>
         <BarraDemo roles={ROLES} rol={rol} alCambiar={setRol}
@@ -183,7 +179,7 @@ export default function GimnasioDemo() {
 
       {listo && !reiniciando ? (
         <main>
-          {rol === 'socio' && <Socio negocio={negocio} />}
+          {rol === 'socio' && <Socio negocio={negocio} arriba={alto} />}
           {rol === 'recepcion' && <Recepcion negocio={negocio} arriba={alto} />}
           {rol === 'dueno' && <Dueno negocio={negocio} arriba={alto} alCambiarNegocio={cargarNegocio} />}
         </main>

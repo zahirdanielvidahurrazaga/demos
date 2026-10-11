@@ -1,20 +1,20 @@
 import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
-  Activity, AlertTriangle, Ban, CheckCircle2, LayoutDashboard, LogIn, LogOut, MessageCircle, Search, Settings2, Timer,
-  Users, UsersRound, Wallet, XCircle,
+  Activity, AlertTriangle, BarChart3, CheckCircle2, IdCard, LayoutDashboard, MessageCircle, Search, Settings2, Tags, Timer, UserPlus, Users, Wallet,
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import {
   ESTADOS, diaMx, diaRelativo, diaSemanaMx, duracion, errorLegible, fechaCorta, hora, horaMx, inicioMx, minutosDesde,
-  nivelAforo, pesos, saludo, useAccesos, useAhora, usePagos, useRpc,
+  nivelAforo, pesos, useAccesos, useAhora, usePagos, useRpc,
 } from './datos';
 import {
-  Anillo, Avatar, Boton, Cargando, Chip, EnVivo, Fila, IconoCirculo, Logo, NumeroVivo, Segmentado, Tarjeta, Titulo, Vacio,
-  degradadoTexto, g, useAncho,
+  Anillo, Avatar, Boton, Cargando, Chip, EnVivo, Flecha, Grande, Hoja, Logo, NumeroVivo, Segmentado, Tarjeta, Titulo, Vacio,
+  fotoSocio, g, titular, useAncho,
 } from './ui';
-import { Barritas, MapaCalor, Onda } from './graficas';
+import { Barritas, BarrasHora, MapaCalor, Onda } from './graficas';
 import { AforoMini, AppMarco, Notificaciones } from './marco';
+import { Directorio, Equipo, FichaSocio, FormSocio, Planes, Reportes } from './admin';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Tablero del dueño: Hoy (aforo, entradas, cobros y lo que pasa en vivo),
@@ -26,7 +26,10 @@ const PESTANAS = [
   { id: 'hoy', etiqueta: 'Hoy', icono: LayoutDashboard },
   { id: 'aforo', etiqueta: 'Aforo', icono: Activity },
   { id: 'socios', etiqueta: 'Socios', icono: Users },
+  { id: 'planes', etiqueta: 'Planes', icono: Tags },
+  { id: 'equipo', etiqueta: 'Equipo', icono: IdCard },
   { id: 'dinero', etiqueta: 'Dinero', icono: Wallet },
+  { id: 'reportes', etiqueta: 'Reportes', icono: BarChart3 },
   { id: 'ajustes', etiqueta: 'Ajustes', icono: Settings2 },
 ];
 
@@ -34,6 +37,11 @@ const dinero = (n) => pesos(n);
 
 export default function Dueno({ negocio, alCambiarNegocio, arriba }) {
   const [tab, setTab] = useState('hoy');
+  const [ficha, setFicha] = useState(null);
+  const [alta, setAlta] = useState(false);
+  const [version, setVersion] = useState(0);
+  const [ocupado, setOcupado] = useState(false);
+  const [avisoFicha, setAvisoFicha] = useState('');
   const { datos: t, error, recargar } = useRpc('gym_tablero', { p_negocio: negocio.id }, { enVivo: true, cada: 60000 });
   const { accesos } = useAccesos(negocio.id, { limite: 30 });
   const porCobrar = t?.avisos?.length ?? 0;
@@ -41,19 +49,50 @@ export default function Dueno({ negocio, alCambiarNegocio, arriba }) {
   return (
     <>
       <AppMarco lateral arriba={arriba} pestanas={PESTANAS.map((p) => (p.id === 'socios' ? { ...p, globo: porCobrar } : p))}
-        activa={tab} alCambiar={setTab} logo={<Logo nombre={negocio.nombre} />} pie={<AforoMini aforo={t?.aforo} />}>
+        activa={tab} alCambiar={setTab} logo={<Logo nombre={negocio.nombre} sub="Dirección" />} pie={<AforoMini aforo={t?.aforo} />}>
         {error && !t && <div style={{ padding: 40, textAlign: 'center', color: g.suave }}>{error}</div>}
         {!t ? <Cargando /> : (
           <>
             {tab === 'hoy' && <Hoy negocio={negocio} t={t} accesos={accesos} alIr={setTab} />}
             {tab === 'aforo' && <Aforo negocio={negocio} t={t} />}
-            {tab === 'socios' && <Socios negocio={negocio} t={t} />}
+            {tab === 'socios' && <Socios negocio={negocio} t={t} version={version} alVerFicha={setFicha} alNuevo={() => setAlta(true)} />}
+            {tab === 'planes' && <Planes negocio={negocio} />}
+            {tab === 'equipo' && <Equipo negocio={negocio} />}
             {tab === 'dinero' && <Dinero negocio={negocio} t={t} />}
+            {tab === 'reportes' && <Reportes negocio={negocio} alVerFicha={setFicha} />}
             {tab === 'ajustes' && <Ajustes negocio={negocio} aforo={t.aforo} alGuardar={() => { recargar(); alCambiarNegocio?.(); }} />}
           </>
         )}
       </AppMarco>
       <Notificaciones accesos={accesos} arriba={arriba} />
+
+      <Hoja abierta={!!ficha} alCerrar={() => { setFicha(null); setAvisoFicha(''); }} titulo="Ficha del socio" ancho={560}>
+        {avisoFicha && <div style={{ color: g.rojo, fontSize: 13, marginBottom: 10 }}>{avisoFicha}</div>}
+        {ficha && (
+          <FichaSocio key={ficha} negocio={negocio} id={ficha} ocupado={ocupado} alCambio={() => { setVersion((v) => v + 1); recargar(); }}
+            alRegistrar={async (tipo) => {
+              setOcupado(true);
+              const { error: e } = await supabase.rpc('gym_registrar_manual', { p_negocio: negocio.id, p_socio: ficha, p_tipo: tipo, p_forzar: false });
+              setOcupado(false);
+              if (e) { setAvisoFicha(errorLegible(e)); return; }
+              setFicha(null); recargar();
+            }}
+            alRegularizar={async () => {
+              // Se cierra la ficha al cobrar: si se quedara abierta, mostraría el estado
+              // viejo y un segundo toque volvería a cobrar.
+              setOcupado(true);
+              const { error: e } = await supabase.rpc('gym_regularizar', { p_negocio: negocio.id, p_socio: ficha });
+              if (!e) await supabase.rpc('gym_registrar_manual', { p_negocio: negocio.id, p_socio: ficha, p_tipo: 'entrada', p_forzar: false });
+              setOcupado(false);
+              if (e) { setAvisoFicha(errorLegible(e)); return; }
+              setFicha(null); setVersion((v) => v + 1); recargar();
+            }} />
+        )}
+      </Hoja>
+
+      <Hoja abierta={alta} alCerrar={() => setAlta(false)} titulo="Nuevo socio">
+        {alta && <FormSocio negocio={negocio} alListo={(s) => { setAlta(false); setVersion((v) => v + 1); recargar(); setFicha(s.id); }} />}
+      </Hoja>
     </>
   );
 }
@@ -63,54 +102,80 @@ function Hoy({ negocio, t, accesos, alIr }) {
   const compu = useAncho(1000);
   const a = t.aforo;
   const nivel = nivelAforo(a.adentro, a.capacidad, a.alerta_pct);
-  const usual = a.promedio.find((x) => x.h === a.hora)?.personas ?? 0;
-  const sumaProm = a.promedio.filter((x) => x.h <= a.hora).length;
+  const dia = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábados', 'domingos'][diaSemanaMx() - 1];
+  const fecha = new Date().toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'America/Mexico_City' });
+  const s = t.socios;
 
-  const tarjetaAforo = (
-    <Tarjeta brillo titulo="Aforo ahora" accion={<Chip color={nivel.color} punto>{nivel.texto}</Chip>} style={{ height: '100%' }}>
-      <div style={{ display: 'grid', justifyItems: 'center', gap: 12 }}>
-        <Anillo valor={a.adentro / a.capacidad} tamano={compu ? 230 : 220} grosor={16} interior={{ valor: usual / a.capacidad }}>
-          <span style={{ fontSize: 12.5, color: g.suave }}>personas adentro</span>
-          <span style={{ fontSize: 62, fontWeight: 800, letterSpacing: '-0.04em', lineHeight: 1.05 }}><NumeroVivo valor={a.adentro} /></span>
-          <Chip>de {a.capacidad} · {nivel.pct}%</Chip>
-        </Anillo>
-        <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', justifyContent: 'center', fontSize: 12, color: g.suave }}>
-          <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><i style={{ width: 9, height: 9, borderRadius: 9, background: g.grad }} /> Ahora</span>
-          <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><i style={{ width: 9, height: 9, borderRadius: 9, background: 'var(--g-pri2)', opacity: 0.8 }} /> Lo usual ({usual})</span>
-          <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Timer size={13} /> Estancia {t.estancia_min ? duracion(t.estancia_min) : '—'}</span>
+  const kpi = (etiqueta, valor, sub, destino, color) => (
+    <Tarjeta onClick={() => alIr(destino)} pad={18} style={{ minHeight: compu ? 150 : 128, display: 'flex' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '100%', minHeight: compu ? 112 : 90 }}>
+        <div style={{ fontSize: 13, color: g.suave }}>{etiqueta}</div>
+        <div>
+          <Grande tamano={compu ? 58 : 44} style={{ color: color || g.texto }}>{valor}</Grande>
+          <div style={{ fontSize: 12, color: g.suave, marginTop: 6 }}>{sub}</div>
         </div>
       </div>
     </Tarjeta>
   );
 
-  const kpis = (
-    <div style={{ display: 'grid', gap: 10, alignContent: 'start' }}>
-      <Fila icono={LogIn} etiqueta="Entradas hoy" valor={<NumeroVivo valor={t.hoy.entradas} />} sub={`${t.hoy.unicos} socios · ${t.hoy.manuales} a mano`} onClick={() => alIr('aforo')} />
-      <Fila icono={Wallet} etiqueta="Cobrado hoy" valor={<NumeroVivo valor={Number(t.ingresos.hoy)} formato={dinero} />} sub={`${pesos(t.ingresos.mes)} en el mes`} onClick={() => alIr('dinero')} />
-      <Fila icono={Ban} etiqueta="Accesos negados" valor={<NumeroVivo valor={t.hoy.denegados} />} sub={t.motivos[0] ? `${t.motivos[0].n} por ${t.motivos[0].motivo.toLowerCase()}` : 'nadie se quedó afuera'} onClick={() => alIr('socios')} />
-      <Fila icono={UsersRound} etiqueta="Socios activos" valor={<NumeroVivo valor={t.socios.activos} />} sub={`${t.socios.por_vencer} vencen esta semana`} onClick={() => alIr('socios')} />
-    </div>
-  );
+  const pendientes = [
+    { n: s.por_vencer, e: 'Vencen esta semana', sub: 'Mándales recordatorio' },
+    { n: s.adeudo, e: 'Con adeudo', sub: 'Cobrar en recepción', rojo: true },
+    { n: s.vencidos, e: 'Vencidos (30 días)', sub: 'Para recuperar' },
+    { n: s.congelados, e: 'Congelados', sub: 'Membresía en pausa' },
+  ];
 
   return (
-    <div style={{ display: 'grid', gap: 14 }}>
-      <Titulo chico={`${saludo()} 👋`} accion={<EnVivo />}>Tu gimnasio hoy</Titulo>
+    <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 14 }}>
+      <Titulo chico={<span style={{ textTransform: 'capitalize' }}>{fecha}</span>} accion={<EnVivo />}>Tu gimnasio hoy</Titulo>
       {nivel.pct >= a.alerta_pct && (
         <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} style={{
-          display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', borderRadius: 20,
-          background: 'color-mix(in srgb, var(--g-rojo) 14%, transparent)', border: '1px solid color-mix(in srgb, var(--g-rojo) 35%, transparent)', color: g.rojo, fontWeight: 600, fontSize: 14,
+          display: 'flex', alignItems: 'center', gap: 12, padding: '14px 18px', borderRadius: 20, background: g.pri, color: g.priTexto, fontWeight: 600, fontSize: 14,
         }}><AlertTriangle size={20} /> Aforo al {nivel.pct}%: considera pausar los pases de día.</motion.div>
       )}
-      {compu ? (
-        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: 14 }}>{tarjetaAforo}{kpis}</div>
-      ) : <>{tarjetaAforo}{kpis}</>}
-      <div style={{ display: 'grid', gridTemplateColumns: compu ? 'minmax(0, 1.6fr) minmax(0, 1fr)' : 'minmax(0, 1fr)', gap: 14 }}>
-        <Tarjeta titulo="Personas adentro por hora" accion={<span style={{ fontSize: 11.5, color: g.tenue }}>hoy vs. promedio de {sumaProm ? 'los últimos 4' : ''} {['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábados', 'domingos'][diaSemanaMx() - 1]}</span>}>
-          <Onda aforo={a} alto={240} />
+      <div style={{ display: 'grid', gridTemplateColumns: compu ? '1.25fr 1fr 1fr 1fr' : '1fr 1fr', gap: 12 }}>
+        <Tarjeta acento onClick={() => alIr('aforo')} pad={18} style={{ minHeight: compu ? 150 : 128, gridColumn: compu ? undefined : '1 / -1' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, fontWeight: 500 }}><span>Personas adentro</span><span>Cupo {a.capacidad}</span></div>
+          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 10, marginTop: compu ? 18 : 10 }}>
+            <Grande tamano={compu ? 76 : 64}><NumeroVivo valor={a.adentro} /></Grande>
+            <div style={{ fontSize: 12.5, fontWeight: 500, textAlign: 'right' }}>{nivel.texto}<br />{nivel.pct}% del cupo</div>
+          </div>
         </Tarjeta>
-        <Tarjeta titulo="Movimientos" accion={<EnVivo />} pad={14}>
-          <MiniFeed accesos={accesos.slice(0, 7)} />
+        {kpi('Entradas hoy', <NumeroVivo valor={t.hoy.entradas} />, `${t.hoy.unicos} socios · ${t.hoy.manuales} a mano`, 'aforo')}
+        {kpi('Cobrado hoy', <NumeroVivo valor={Number(t.ingresos.hoy)} formato={dinero} />, `${pesos(t.ingresos.mes)} en el mes`, 'dinero')}
+        {kpi('Accesos negados', <NumeroVivo valor={t.hoy.denegados} />, t.motivos[0] ? `${t.motivos[0].n} por ${t.motivos[0].motivo.toLowerCase()}` : 'Nadie se quedó afuera', 'socios', t.hoy.denegados ? 'var(--g-rojo)' : undefined)}
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: compu ? 'minmax(0, 1fr) 360px' : 'minmax(0, 1fr)', gap: 14, alignItems: 'start' }}>
+        <Tarjeta titulo="Personas adentro por hora" accion={<span style={{ fontSize: 12, color: g.suave }}>hoy contra el promedio de los últimos 4 {dia}</span>}>
+          <div style={{ paddingTop: 18 }}><BarrasHora aforo={a} alto={compu ? 330 : 200} /></div>
+          <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginTop: 14, fontSize: 12, color: g.suave }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><i style={{ width: 12, height: 10, borderRadius: 3, background: '#5E5E5A' }} /> Hoy</span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><i style={{ width: 12, height: 10, borderRadius: 3, background: '#202020', border: '1px solid #333' }} /> Lo usual</span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><i style={{ width: 12, height: 10, borderRadius: 3, background: g.pri }} /> Ahora</span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Timer size={13} /> Estancia {t.estancia_min ? duracion(t.estancia_min) : '—'}</span>
+          </div>
         </Tarjeta>
+        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 14 }}>
+          <Tarjeta titulo="Para atender" pad={10} style={{ paddingTop: 16 }}>
+            <div style={{ display: 'grid' }}>
+              {pendientes.map((x) => (
+                <button key={x.e} type="button" onClick={() => alIr('socios')} style={{
+                  display: 'flex', alignItems: 'center', gap: 14, padding: '10px 8px', borderRadius: 16, border: 'none', background: 'transparent', color: g.texto, cursor: 'pointer', textAlign: 'left',
+                }}>
+                  <Grande tamano={34} style={{ width: 52, color: x.rojo && x.n ? 'var(--g-rojo)' : g.texto }}>{x.n}</Grande>
+                  <span style={{ flex: 1, minWidth: 0 }}>
+                    <span style={{ display: 'block', fontSize: 14, fontWeight: 500 }}>{x.e}</span>
+                    <span style={{ display: 'block', fontSize: 12, color: g.suave }}>{x.sub}</span>
+                  </span>
+                  <Flecha />
+                </button>
+              ))}
+            </div>
+          </Tarjeta>
+          <Tarjeta titulo="Movimientos" accion={<EnVivo />} pad={14}>
+            <MiniFeed accesos={accesos.slice(0, 5)} />
+          </Tarjeta>
+        </div>
       </div>
       {!compu && <div style={{ fontSize: 12, color: g.tenue, textAlign: 'center' }}>{negocio.nombre} · se actualiza solo</div>}
     </div>
@@ -120,21 +185,18 @@ function Hoy({ negocio, t, accesos, alIr }) {
 function MiniFeed({ accesos }) {
   return (
     <div style={{ display: 'grid' }}>
-      {accesos.map((a, i) => {
-        const color = !a.permitido ? 'var(--g-rojo)' : a.tipo === 'entrada' ? 'var(--g-verde)' : g.azul;
-        const Icono = !a.permitido ? XCircle : a.tipo === 'entrada' ? LogIn : LogOut;
-        return (
-          <motion.div key={a.id} layout initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }}
-            style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 2px', borderTop: i ? `1px solid ${g.linea}` : 'none' }}>
-            <IconoCirculo icono={Icono} color={color} tamano={32} />
-            <div style={{ flex: 1, minWidth: 0, fontSize: 13 }}>
-              <div style={{ fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.gym_socios?.nombre || 'QR desconocido'}</div>
-              <div style={{ color: a.permitido ? g.suave : g.rojo, fontSize: 11.5, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.permitido ? (a.tipo === 'entrada' ? 'Entró' : 'Salió') : a.motivo}</div>
-            </div>
-            <span style={{ fontSize: 12, color: g.tenue }}>{hora(a.creado)}</span>
-          </motion.div>
-        );
-      })}
+      {accesos.map((a) => (
+        <motion.div key={a.id} layout initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }}
+          style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 2px' }}>
+          <Avatar nombre={a.gym_socios?.nombre || '?'} foto={fotoSocio(a.gym_socios?.numero)} tamano={34} />
+          <div style={{ flex: 1, minWidth: 0, fontSize: 13 }}>
+            <div style={{ fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.gym_socios?.nombre || 'QR desconocido'}</div>
+            <div style={{ color: a.permitido ? g.suave : g.rojo, fontSize: 11.5, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.permitido ? (a.tipo === 'entrada' ? 'Entró' : 'Salió') : a.motivo}</div>
+          </div>
+          <span style={{ fontSize: 12, color: g.suave }}>{hora(a.creado)}</span>
+          <span style={{ width: 8, height: 8, borderRadius: 9, background: !a.permitido ? 'var(--g-rojo)' : a.tipo === 'entrada' ? g.texto : '#5E5E5A' }} />
+        </motion.div>
+      ))}
     </div>
   );
 }
@@ -146,12 +208,12 @@ function Aforo({ negocio, t }) {
   const a = t.aforo;
   const pico = a.promedio.reduce((m, x) => (x.personas > m.personas ? x : m), a.promedio[0] || { h: 0, personas: 0 });
   return (
-    <div style={{ display: 'grid', gap: 14 }}>
+    <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 14 }}>
       <Titulo chico="Ocupación" accion={<EnVivo />}>Aforo</Titulo>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 10 }}>
-        <Tarjeta pad={14}><div style={{ fontSize: 11.5, color: g.suave }}>Adentro</div><div style={{ fontSize: 26, fontWeight: 700 }}><NumeroVivo valor={a.adentro} degradado /></div></Tarjeta>
-        <Tarjeta pad={14}><div style={{ fontSize: 11.5, color: g.suave }}>Pico usual</div><div style={{ fontSize: 26, fontWeight: 700 }}>{pico.h}:00</div></Tarjeta>
-        <Tarjeta pad={14}><div style={{ fontSize: 11.5, color: g.suave }}>Estancia</div><div style={{ fontSize: 26, fontWeight: 700, whiteSpace: 'nowrap' }}>{t.estancia_min ? duracion(t.estancia_min) : '—'}</div></Tarjeta>
+        <Tarjeta pad={16} acento><div style={{ fontSize: 12.5, fontWeight: 500 }}>Adentro</div><Grande tamano={44} style={{ marginTop: 8 }}><NumeroVivo valor={a.adentro} /></Grande></Tarjeta>
+        <Tarjeta pad={16}><div style={{ fontSize: 12.5, color: g.suave }}>Pico usual</div><Grande tamano={44} style={{ marginTop: 8 }}>{pico.h}:00</Grande></Tarjeta>
+        <Tarjeta pad={16}><div style={{ fontSize: 12.5, color: g.suave }}>Estancia</div><Grande tamano={36} style={{ marginTop: 8, whiteSpace: 'nowrap' }}>{t.estancia_min ? duracion(t.estancia_min) : '—'}</Grande></Tarjeta>
       </div>
       <Tarjeta titulo="Hoy contra lo usual" accion={<span style={{ fontSize: 11.5, color: g.tenue }}>pasa el dedo por la gráfica</span>}>
         <Onda aforo={a} alto={compu ? 280 : 230} />
@@ -204,7 +266,7 @@ const FILTROS = [
   { id: 'activa', etiqueta: 'Por vencer' },
 ];
 
-function Socios({ negocio, t }) {
+function Socios({ negocio, t, version, alVerFicha, alNuevo }) {
   const compu = useAncho(1000);
   const [filtro, setFiltro] = useState('todos');
   const s = t.socios;
@@ -223,11 +285,11 @@ function Socios({ negocio, t }) {
       : `Hola ${x.nombre.split(' ')[0]}, tu membresía ${x.plan} en ${negocio.nombre} vence el ${fechaCorta(x.vence)}. Renuévala para no perder tu acceso.`);
 
   return (
-    <div style={{ display: 'grid', gap: 14 }}>
-      <Titulo chico={`${s.total} en total`}>Socios</Titulo>
-      <Tarjeta brillo>
+    <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 14 }}>
+      <Titulo chico={`${s.total} registrados`} accion={<Boton onClick={alNuevo}><UserPlus size={16} /> Nuevo socio</Boton>}>Socios</Titulo>
+      <Tarjeta>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-          <span style={{ fontSize: 48, fontWeight: 800, letterSpacing: '-0.04em' }}><NumeroVivo valor={s.activos} degradado /></span>
+          <span style={{ ...titular, fontSize: 64 }}><NumeroVivo valor={s.activos} /></span>
           <span style={{ color: g.suave }}>activos al día</span>
         </div>
         <div style={{ display: 'flex', height: 12, borderRadius: 99, overflow: 'hidden', gap: 3, margin: '14px 0 12px' }}>
@@ -250,7 +312,7 @@ function Socios({ negocio, t }) {
       <div style={{ display: 'grid', gridTemplateColumns: compu ? 'minmax(0, 1.6fr) minmax(0, 1fr)' : 'minmax(0, 1fr)', gap: 14, alignItems: 'start' }}>
         <Tarjeta titulo="Por cobrar y por renovar" accion={<Chip>{t.avisos.length}</Chip>}>
           <div style={{ marginBottom: 12 }}><Segmentado id="cobrar" opciones={FILTROS} valor={filtro} alCambiar={setFiltro} /></div>
-          {!avisos.length && <Vacio icono={CheckCircle2}>Nadie en esta lista. 🎉</Vacio>}
+          {!avisos.length && <Vacio icono={CheckCircle2}>Nadie en esta lista.</Vacio>}
           <div className="g-sin-barra" style={{ display: 'grid', gap: 8, maxHeight: 460, overflowY: 'auto' }}>
             {avisos.map((x) => {
               const e = ESTADOS[x.estado];
@@ -258,7 +320,7 @@ function Socios({ negocio, t }) {
                 <motion.div key={x.id} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                   style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 10px 10px 12px', borderRadius: 18, background: g.sup2, minWidth: 0 }}>
                   <Avatar nombre={x.nombre} tamano={38} color={e.color} />
-                  <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ flex: 1, minWidth: 0, cursor: 'pointer' }} onClick={() => alVerFicha(x.id)}>
                     <div style={{ fontSize: 14, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{x.nombre}</div>
                     <div style={{ fontSize: 12, color: e.color }}>
                       {x.estado === 'vencida' ? `Venció ${fechaCorta(x.vence)}` : x.estado === 'adeudo' ? `Debe ${pesos(x.adeudo)}` : x.dias === 0 ? 'Vence hoy' : `Vence en ${x.dias} d`} · {x.plan}
@@ -275,7 +337,7 @@ function Socios({ negocio, t }) {
         </Tarjeta>
         <Tarjeta titulo="Accesos negados hoy" accion={<Chip color={g.rojo}>{t.hoy.denegados}</Chip>}>
           {!t.motivos.length && <Vacio icono={CheckCircle2}>Nadie se ha quedado afuera hoy.</Vacio>}
-          <div style={{ display: 'grid', gap: 14 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 14 }}>
             {t.motivos.map((m, i) => (
               <div key={m.motivo}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13.5, marginBottom: 6 }}>
@@ -283,13 +345,14 @@ function Socios({ negocio, t }) {
                 </div>
                 <div style={{ height: 8, borderRadius: 8, background: 'rgba(255,255,255,0.06)' }}>
                   <motion.div initial={{ width: 0 }} animate={{ width: `${(m.n / t.motivos[0].n) * 100}%` }} transition={{ duration: 0.8, delay: i * 0.1 }}
-                    style={{ height: '100%', borderRadius: 8, background: 'linear-gradient(90deg, var(--g-rojo), var(--g-pri2))' }} />
+                    style={{ height: '100%', borderRadius: 8, background: 'var(--g-rojo)' }} />
                 </div>
               </div>
             ))}
           </div>
         </Tarjeta>
       </div>
+      <Directorio negocio={negocio} alVerFicha={alVerFicha} alNuevo={alNuevo} version={version} />
     </div>
   );
 }
@@ -316,12 +379,12 @@ function Dinero({ negocio, t }) {
   const promedio = Number(t.ingresos.mes) / Math.max(1, dias);
 
   return (
-    <div style={{ display: 'grid', gap: 14 }}>
+    <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 14 }}>
       <Titulo chico="Cobros" accion={<EnVivo />}>Dinero</Titulo>
       <div style={{ display: 'grid', gridTemplateColumns: compu ? 'minmax(0, 1.4fr) minmax(0, 1fr)' : 'minmax(0, 1fr)', gap: 14 }}>
-        <Tarjeta brillo>
+        <Tarjeta>
           <div style={{ fontSize: 13, color: g.suave }}>Cobrado hoy</div>
-          <div style={{ fontSize: 52, fontWeight: 800, letterSpacing: '-0.04em', lineHeight: 1.1 }}><NumeroVivo valor={Number(t.ingresos.hoy)} formato={dinero} degradado /></div>
+          <Grande tamano={72} style={{ marginTop: 6 }}><NumeroVivo valor={Number(t.ingresos.hoy)} formato={dinero} /></Grande>
           <div style={{ display: 'flex', gap: 18, marginTop: 6, fontSize: 13, color: g.suave, flexWrap: 'wrap' }}>
             <span>En el mes <b style={{ color: g.texto }}>{pesos(t.ingresos.mes)}</b></span>
             <span>Promedio diario <b style={{ color: g.texto }}>{pesos(promedio)}</b></span>
@@ -331,7 +394,7 @@ function Dinero({ negocio, t }) {
           </div>
         </Tarjeta>
         <Tarjeta titulo="Por plan" accion={<span style={{ fontSize: 11.5, color: g.tenue }}>este mes</span>}>
-          <div style={{ display: 'grid', gap: 14 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 14 }}>
             {planes.map(([k, v], i) => (
               <div key={k}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13.5, marginBottom: 6 }}>
@@ -355,7 +418,7 @@ function Dinero({ negocio, t }) {
               <div style={{ fontSize: 14, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.gym_socios?.nombre}</div>
               <div style={{ fontSize: 12, color: g.suave }}>{p.concepto} · {diaRelativo(p.creado)} {hora(p.creado)}</div>
             </div>
-            <b style={{ fontSize: 15, ...degradadoTexto }}>{pesos(p.monto)}</b>
+            <b style={{ fontSize: 15 }}>{pesos(p.monto)}</b>
           </div>
         ))}
       </Tarjeta>
@@ -380,7 +443,7 @@ function Ajustes({ negocio, aforo, alGuardar }) {
   return (
     <div style={{ display: 'grid', gap: 14, maxWidth: 640 }}>
       <Titulo chico="Configuración">Ajustes</Titulo>
-      <Tarjeta brillo titulo="Aforo máximo" accion={<Settings2 size={18} color="var(--g-suave)" />}>
+      <Tarjeta titulo="Aforo máximo" accion={<Settings2 size={18} color="var(--g-suave)" />}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 18, flexWrap: 'wrap' }}>
           <Anillo valor={aforo.adentro / Math.max(1, capacidad)} tamano={140} grosor={12} color={pct >= 100 ? 'var(--g-rojo)' : undefined}>
             <span style={{ fontSize: 30, fontWeight: 800, lineHeight: 1 }}>{pct}%</span>
