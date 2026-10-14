@@ -2,6 +2,7 @@ import { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import './index.css';
 import { AuthProvider } from './context/AuthContext';
+import Puerta, { EntrarConCodigo } from './demo/acceso/Puerta';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // APLICACIÓN DEL DESPLIEGUE DE MAQUETAS
@@ -16,6 +17,9 @@ import { AuthProvider } from './context/AuthContext';
 // AuthProvider va SOLO en la ruta de la maqueta: entra con cuentas de prueba a
 // la base de DEMOSTRACIONES (.env.demos), nunca a la de Be Fit Lab. El índice
 // no necesita sesión.
+//
+// Todo pasa por la Puerta (src/demo/acceso): sin código de acceso válido solo
+// se ve el candado.
 // ─────────────────────────────────────────────────────────────────────────────
 
 const IndiceDemos = lazy(() => import('./pages/IndiceDemos'));
@@ -45,18 +49,27 @@ export default function AppDemos() {
         </div>
       }>
         <Routes>
-          <Route path="/" element={<IndiceDemos />} />
-          <Route path="/demo/:estudio" element={<AuthProvider><Demo /></AuthProvider>} />
-          <Route path="/pago-prueba" element={<RegresoPago />} />
-          {/* Pedidos en línea (cafeterías y restaurantes). Sin AuthProvider de
-              Be Fit: la maqueta lleva su propia sesión por rol. */}
-          <Route path="/pedidos/:negocio" element={<PedidosDemo />} />
-          {/* Gimnasio: control de acceso con QR y aforo en vivo. También con
-              sesión propia por rol, sin el AuthProvider de Be Fit. */}
-          <Route path="/gimnasio/:negocio" element={<GimnasioDemo />} />
-          {/* Cualquier otra dirección regresa al índice: si una prospecta borra
-              el path del link, aterriza en algo tuyo y no en otra marca. */}
-          <Route path="*" element={<Navigate to="/" replace />} />
+          {/* Link personal de cada prospecto: valida el código y lo manda a su demo. */}
+          <Route path="/d/:codigo" element={<EntrarConCodigo />} />
+          {/* Todo lo demás, índice incluido, pasa por el candado (src/demo/acceso). */}
+          <Route path="*" element={
+            <Puerta>
+              <Routes>
+                <Route path="/" element={<IndiceDemos />} />
+                <Route path="/demo/:estudio" element={<AuthProvider><Demo /></AuthProvider>} />
+                <Route path="/pago-prueba" element={<RegresoPago />} />
+                {/* Pedidos en línea (cafeterías y restaurantes). Sin AuthProvider de
+                    Be Fit: la maqueta lleva su propia sesión por rol. */}
+                <Route path="/pedidos/:negocio" element={<PedidosDemo />} />
+                {/* Gimnasio: control de acceso con QR y aforo en vivo. También con
+                    sesión propia por rol, sin el AuthProvider de Be Fit. */}
+                <Route path="/gimnasio/:negocio" element={<GimnasioDemo />} />
+                {/* Cualquier otra dirección regresa al índice: si una prospecta borra
+                    el path del link, aterriza en algo tuyo y no en otra marca. */}
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+            </Puerta>
+          } />
         </Routes>
       </Suspense>
     </Router>

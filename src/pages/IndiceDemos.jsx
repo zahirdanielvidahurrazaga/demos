@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, ArrowUpRight, MessageCircle } from 'lucide-react';
-import { SECTORES, TOTAL_DEMOS, destinoDe } from '../demo/catalogo';
+import { SECTORES, destinoDe } from '../demo/catalogo';
+import { permite, useAcceso } from '../demo/acceso/acceso';
 import { KAIZEN, PALETA, KaizenWordmark, cargarFuentesKaizen } from '../demo/kaizen/marca';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -38,6 +39,16 @@ const MENSAJE = 'Hola KaiZen, vi sus demos y me interesa algo así para mi negoc
 export default function IndiceDemos() {
   const [tema, setTema] = useState(temaInicial);
   const C = PALETA[tema];
+
+  // Solo las demos que abre su código (un código "de todas" las ve todas).
+  const acceso = useAcceso();
+  const sectores = SECTORES
+    .map((s) => ({ ...s, demos: s.demos.filter((d) => permite(acceso, destinoDe(d))) }))
+    .filter((s) => s.demos.length);
+  const totalDemos = sectores.reduce((n, s) => n + s.demos.length, 0);
+  const vence = acceso?.vence
+    ? new Date(acceso.vence).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })
+    : null;
 
   useEffect(() => { cargarFuentesKaizen(); }, []);
 
@@ -128,8 +139,8 @@ export default function IndiceDemos() {
         {/* Encabezado editorial */}
         <section style={{ padding: 'clamp(56px, 9vw, 110px) 0 clamp(40px, 6vw, 72px)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, paddingBottom: 12, borderBottom: `1px solid ${C.borde}` }}>
-            <span style={etiqueta}>Demos · en vivo</span>
-            <span style={etiqueta}>{TOTAL_DEMOS} {TOTAL_DEMOS === 1 ? 'demo' : 'demos'} — 2026</span>
+            <span style={etiqueta}>{acceso?.prospecto && acceso.demos ? `Para ${acceso.prospecto}` : 'Demos · en vivo'}</span>
+            <span style={etiqueta}>{totalDemos} {totalDemos === 1 ? 'demo' : 'demos'}{vence ? ` · hasta el ${vence}` : ' — 2026'}</span>
           </div>
           <h1 style={{
             fontFamily: KAIZEN.display, fontWeight: 700, letterSpacing: '-0.045em', lineHeight: 0.95,
@@ -154,7 +165,7 @@ export default function IndiceDemos() {
         </section>
 
         {/* Demos por sector, como lista editorial numerada */}
-        {SECTORES.map((s, i) => (
+        {sectores.map((s, i) => (
           <section key={s.id} className="kz-sector" style={{
             display: 'grid', gridTemplateColumns: 'minmax(0, 0.9fr) minmax(0, 1.4fr)', gap: 40,
             padding: '36px 0', borderTop: `1px solid ${C.borde}`,

@@ -31,6 +31,20 @@ El modo `demos` carga `.env.demos` (versionado a propósito: solo lleva la llave
 - Sin service worker ni PWA (se quitó a propósito: una demo vieja en caché estorba).
 - `robots.txt` + `<meta name="robots" content="noindex">`: son negocios inventados o prospectos reales, no deben salir en Google.
 
+## Candado (códigos de acceso)
+
+Desde el 13-oct-2026 **todo el sitio, índice incluido, está cerrado**: sin código válido solo se ve la pantalla del candado (pide código + botón "Pide tu demo" por WhatsApp). Motivo: la URL salió en un TikTok.
+
+- Cada prospecto recibe un **link personal `/d/<CÓDIGO>`** (8 caracteres, sin 0/O/1/I/L) que vence en **7 días** por default. El link guarda el código en el navegador y lo manda directo a su demo (si abre solo una) o al índice, que solo enseña las demos de su código. También puede teclearlo en el candado (`XXXX-XXXX`).
+- Se revalida contra la base en cada cambio de ruta: apagar o vencer un código cierra la demo al instante.
+- Administración SOLO por terminal (`supabase/demos/accesos.mjs`; token como `sql.mjs`, en Mac lo toma del llavero):
+  `nuevo "<prospecto>" [gimnasio/manhattan …] [--dias 7] [--nota "…"]` (sin demos = todas + índice; imprime link y mensaje para WhatsApp) · `lista [--todos]` · `ver CODIGO` (visitas) · `extender CODIGO [dias]` · `apagar|prender CODIGO`.
+- Base: `40_accesos.sql` → `demo_accesos`, `demo_visitas` (RLS sin políticas, sin grants: el navegador no las puede leer) y la RPC `demo_entrar(codigo, ruta, registrar)` (única puerta, `security definer`). Freno a fuerza bruta: 20 intentos fallidos por IP en 10 min → `espera`. Las visitas fallidas se borran a los 30 días (cron `demo_visitas_limpieza`). Ningún reinicio nocturno las toca.
+- Front: `src/demo/acceso/` (`acceso.js` lógica y contexto `useAcceso`, `Puerta.jsx` envuelve las rutas en `AppDemos.jsx` + `EntrarConCodigo`, `Candado.jsx` pantalla).
+- Es candado de puerta, no de bóveda: el JS publicado se puede leer. Protege de curiosos, evita que ensucien las demos y dice quién entró.
+- Códigos vigentes: el maestro de Zahir "Zahir (ventas)" (todas, vence 13-oct-2027) y "GYM Fitness Manhattan" (vence 20-oct-2026). Ver con `lista`.
+- **Al mandar una demo a un prospecto, crearle su código con `nuevo`; los links viejos sin código ya no abren.**
+
 ## Las demos
 
 - `/` → índice (marca KaiZen).
@@ -55,7 +69,7 @@ El modo `demos` carga `.env.demos` (versionado a propósito: solo lleva la llave
 ## Base de datos
 
 - Supabase **"Demos"**, ref `qwqrbckivrkmeykiukug`. **Nunca** la de Be Fit (`fifaowaiokauhuqklzwe`).
-- Consultas en Windows o Mac: `node supabase/demos/sql.mjs <archivo.sql>` o `-e "<sql>"`. Token en `~/.supabase-demos-token` o `SUPABASE_DEMOS_TOKEN`; el ref va fijo y antes de correr comprueba que el proyecto se llame "Demos".
+- Consultas en Windows o Mac: `node supabase/demos/sql.mjs <archivo.sql>` o `-e "<sql>"`. Token en `~/.supabase-demos-token`, `SUPABASE_DEMOS_TOKEN` o (Mac) el llavero "Supabase DEMOS" (`api.mjs`); el ref va fijo y antes de correr comprueba que el proyecto se llame "Demos".
 - Consultas (Mac): `supabase/demos/consulta.sh demos <archivo.sql|->`. Lee el PAT del llavero de macOS ("Supabase DEMOS"); esa cuenta también es la del POS → **verificar el ref antes de correr nada**. En Windows no corre tal cual (usa `security`).
 - Edge functions: se despliegan por la Management API con curl (el CLI viejo rechaza tokens `sbp_v0_`):
   `POST https://api.supabase.com/v1/projects/<ref>/functions/deploy?slug=<nombre>` multipart (`metadata` + `file`).
