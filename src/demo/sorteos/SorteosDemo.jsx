@@ -1,10 +1,11 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { LayoutDashboard, MessageCircle, RotateCcw, Smartphone } from 'lucide-react';
+import { LayoutDashboard, MessageCircle, RotateCcw, Smartphone, Tv } from 'lucide-react';
 import BarraDemo from '../kaizen/BarraDemo';
 import { KAIZEN } from '../kaizen/marca';
 import { NEGOCIO, liberarVencidos, reiniciarDemo, simularCompradores } from './datos';
 import Sitio from './Sitio';
 import Panel from './Panel';
+import Transmision from './Transmision';
 import './sorteos.css';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -21,9 +22,15 @@ import './sorteos.css';
 const ROLES = [
   { id: 'comprador', etiqueta: 'Comprador', Icon: Smartphone },
   { id: 'panel', etiqueta: 'Verificador', Icon: LayoutDashboard },
+  { id: 'vivo', etiqueta: 'En vivo', Icon: Tv },
 ];
 
 const GUIA = {
+  vivo: [
+    'Es la pantalla que el dueño pone en su live de Facebook: se captura en OBS o compartiendo pantalla (botón de pantalla completa).',
+    'Escribe el segundo lugar y el premio mayor de la Lotería Nacional y dale "Revelar": los rodillos paran uno por uno, con suspenso, y aparece el ganador.',
+    '"Ensayo" cae en un boleto pagado al azar, para practicar antes del sorteo.',
+  ],
   comprador: [
     'Entra a la camioneta y elige tus números: por bloques, con el buscador ("termina con 7") o con la maquinita de la suerte.',
     'Cada boleto trae sus oportunidades extra y el precio baja solo con los paquetes.',
@@ -108,6 +115,7 @@ export default function SorteosDemo() {
       {/* el sitio se queda montado: al regresar del verificador sigue donde estaba */}
       <div hidden={rol !== 'comprador'}><Sitio /></div>
       {rol === 'panel' && <Panel />}
+      {rol === 'vivo' && <Transmision />}
     </div>
   );
 }

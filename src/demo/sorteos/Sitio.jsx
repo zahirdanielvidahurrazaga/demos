@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
-import { Check, Copy, Dices, Search, ShieldCheck, Ticket, Trophy, Upload, X } from 'lucide-react';
+import { Check, Copy, Dices, Search, ShieldCheck, Ticket, Upload, X } from 'lucide-react';
 import {
   ESTADOS, GANADORES, HORAS_APARTADO, NEGOCIO, SORTEOS,
   apartar, buscarPorTelefono, claveRastreo, fmtNum, fmtOp, oportunidadesDe, pesos, precioDe, resumen, subirComprobante, useSorteos, verificarAuto,
 } from './datos';
-import { CuentaRegresiva, ESTADO_TXT, Progreso, Restante, fechaLarga, hora, miniatura } from './comun';
+import { CuentaRegresiva, ESTADO_TXT, Restante, fechaLarga, hora, miniatura } from './comun';
+import { MaquinaCasino } from './Maquina';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // EL SITIO PÚBLICO (rol Comprador). Navegación interna por estado: inicio,
@@ -44,18 +45,18 @@ export default function Sitio() {
 
       <Ticker />
       <footer className="so-pie">
-        <p><b>{NEGOCIO.nombre}</b> · {NEGOCIO.lema}</p>
-        <p>{NEGOCIO.permiso} · Los sorteos se juegan con los resultados de la Lotería Nacional.</p>
-        <p className="so-pie-chico">Aviso de privacidad · Términos y condiciones</p>
+        <p><b>FORTUNA</b> sorteos</p>
+        <p className="so-pie-chico">{NEGOCIO.permiso} · Aviso de privacidad · Términos</p>
       </footer>
     </div>
   );
 }
 
 // ── Inicio ──────────────────────────────────────────────────────────────────
+// Poco texto: el premio, cuándo, cuánto y un botón. Lo demás se descubre.
 function Inicio({ ir }) {
   const e = useSorteos();
-  const [destacado, ...otros] = SORTEOS;
+  const [destacado] = SORTEOS;
   const r = resumen(e, destacado);
   return (
     <main>
@@ -63,14 +64,15 @@ function Inicio({ ir }) {
         <img src={destacado.foto} alt={destacado.titulo} />
         <div className="so-hero-velo" />
         <div className="so-hero-texto">
-          <p className="so-sello">Sorteo destacado · {fechaLarga(destacado.fecha)}</p>
+          <span className="so-pildora-vidrio">{fechaLarga(destacado.fecha)}</span>
           <h1>{destacado.titulo}</h1>
-          <p className="so-hero-sub">{destacado.subtitulo} · Boleto a {pesos(destacado.precio)}</p>
           <CuentaRegresiva hasta={destacado.fecha} />
-          <Progreso pct={r.pct} />
-          <button className="so-boton so-boton-oro" onClick={() => ir({ v: 'sorteo', id: destacado.id })}>
-            <Ticket size={19} /> Elegir mis boletos
-          </button>
+          <div className="so-hero-pie">
+            <button className="so-boton so-boton-oro" onClick={() => ir({ v: 'sorteo', id: destacado.id })}>
+              Elegir mis boletos · {pesos(destacado.precio)}
+            </button>
+            <span className="so-hero-vendido"><i style={{ width: `${Math.round(r.pct * 100)}%` }} />{Math.round(r.pct * 100)}% vendido</span>
+          </div>
         </div>
       </section>
 
@@ -81,33 +83,30 @@ function Inicio({ ir }) {
         </div>
       </section>
 
-      <section className="so-seccion">
-        <h2 className="so-h2">Así de fácil</h2>
+      <section className="so-seccion so-seccion-chica">
         <ol className="so-pasos">
-          <li><b>1</b><strong>Elige tus números</strong><span>Tú escoges o deja que la maquinita escoja por ti.</span></li>
-          <li><b>2</b><strong>Apártalos</strong><span>Con tu WhatsApp. Te los guardamos {HORAS_APARTADO} horas.</span></li>
-          <li><b>3</b><strong>Paga y sube tu comprobante</strong><span>Transferencia o depósito; subes la foto aquí mismo.</span></li>
-          <li><b>4</b><strong>Listo, ya participas</strong><span>Verificamos tu pago y tu boleto queda pagado. Lo checas cuando quieras.</span></li>
+          <li><b>1</b>Elige tus números</li>
+          <li><b>2</b>Apártalos con tu WhatsApp</li>
+          <li><b>3</b>Sube tu comprobante</li>
+          <li><b>4</b>Listo, ya participas</li>
         </ol>
       </section>
 
       <section className="so-seccion">
-        <h2 className="so-h2"><Trophy size={26} /> Últimos ganadores</h2>
+        <h2 className="so-h2">Ganadores</h2>
         <div className="so-ganadores">
           {GANADORES.map((g) => (
             <article key={g.numero} className="so-ganador">
               <img src={g.foto} alt="" />
               <div>
                 <p className="so-ganador-premio">{g.premio}</p>
-                <p><b>{g.nombre}</b> · {g.lugar}</p>
-                <p>Boleto <b className="so-num-oro">{g.numero}</b> · {fechaLarga(g.fecha)}</p>
+                <p>{g.nombre} · boleto <b className="so-num-oro">{g.numero}</b></p>
               </div>
             </article>
           ))}
         </div>
-        <p className="so-confianza"><ShieldCheck size={18} /> Todos los sorteos se juegan con la Lotería Nacional y se transmiten en vivo por Facebook.</p>
+        <p className="so-confianza"><ShieldCheck size={16} /> Con Lotería Nacional y transmisión en vivo</p>
       </section>
-      {otros.length === 0 && null}
     </main>
   );
 }
@@ -116,21 +115,19 @@ function TarjetaSorteo({ s, ir }) {
   const e = useSorteos();
   const r = resumen(e, s);
   return (
-    <article className="so-tarjeta">
-      <button className="so-tarjeta-foto" onClick={() => ir({ v: 'sorteo', id: s.id })}>
-        <img src={s.foto} alt={s.titulo} loading="lazy" />
-        <span className="so-chip-fecha">{fechaLarga(s.fecha)}</span>
-      </button>
-      <div className="so-tarjeta-cuerpo">
-        <h3>{s.titulo}</h3>
-        <p>{s.subtitulo}</p>
-        <Progreso pct={r.pct} />
-        <div className="so-tarjeta-acciones">
-          <span className="so-precio">{pesos(s.precio)} <small>por boleto</small></span>
-          <button className="so-boton so-boton-oro so-boton-chico" onClick={() => ir({ v: 'sorteo', id: s.id })}>Ver boletos</button>
-        </div>
-      </div>
-    </article>
+    <button className="so-tarjeta" onClick={() => ir({ v: 'sorteo', id: s.id })}>
+      <img src={s.foto} alt="" loading="lazy" />
+      <span className="so-tarjeta-velo" />
+      <span className="so-tarjeta-cuerpo">
+        <span className="so-pildora-vidrio">{fechaLarga(s.fecha)}</span>
+        <span className="so-tarjeta-titulo">{s.titulo}</span>
+        <span className="so-tarjeta-pie">
+          <span className="so-precio">{pesos(s.precio)}</span>
+          <span className="so-tarjeta-barra"><i style={{ width: `${Math.round(r.pct * 100)}%` }} /></span>
+          <span className="so-tarjeta-pct">{Math.round(r.pct * 100)}%</span>
+        </span>
+      </span>
+    </button>
   );
 }
 
@@ -178,36 +175,41 @@ function Sorteo({ id, ir }) {
     <main className="so-sorteo">
       <section className="so-sorteo-cabeza">
         <img src={s.foto} alt={s.titulo} />
-        <div>
-          <button className="so-volver" onClick={() => ir({ v: 'inicio' })}>← Todos los sorteos</button>
+        <div className="so-hero-velo" />
+        <div className="so-sorteo-texto">
+          <button className="so-volver" onClick={() => ir({ v: 'inicio' })}>← Sorteos</button>
           <h1>{s.titulo}</h1>
-          <p className="so-hero-sub">{s.subtitulo}</p>
-          <p className="so-sello">Se juega el {fechaLarga(s.fecha)} · {hora(s.fecha)}</p>
+          <p className="so-sorteo-cuando">{fechaLarga(s.fecha)} · {hora(s.fecha)}</p>
           <CuentaRegresiva hasta={s.fecha} chica />
-          <Progreso pct={r.pct} />
-          <p className="so-dato-chico">{r.libres.toLocaleString('es-MX')} boletos disponibles de {s.total.toLocaleString('es-MX')}</p>
         </div>
       </section>
 
-      <section className="so-sorteo-info">
-        <div className="so-caja">
-          <h2 className="so-h3">Precios</h2>
-          <ul className="so-paquetes">
-            {s.paquetes.map(([c, p]) => (
-              <li key={c}><b>{c} boleto{c > 1 ? 's' : ''}</b><span>{pesos(p)}</span>{c > 1 && p < c * s.precio && <em>ahorras {pesos(c * s.precio - p)}</em>}</li>
-            ))}
-          </ul>
+      <section className="so-resumen-vidrio">
+        <div>
+          <span>Boleto</span>
+          <b>{pesos(s.precio)}</b>
         </div>
-        <div className="so-caja">
-          <h2 className="so-h3">Cómo se juega</h2>
-          <p>Con la <b>Lotería Nacional</b> del {fechaLarga(s.fecha)}: las últimas cifras del segundo lugar y del premio mayor forman el número ganador.</p>
-          {s.oportunidades > 0 && <p>Cada boleto trae <b>{s.oportunidades} oportunidad{s.oportunidades > 1 ? 'es' : ''} extra</b>: más números jugando por el mismo precio.</p>}
-          {s.bonos.map((b) => <p key={b.titulo} className="so-bono"><b>{b.titulo}:</b> {b.detalle}</p>)}
+        <div>
+          <span>Disponibles</span>
+          <b>{r.libres.toLocaleString('es-MX')}</b>
         </div>
+        <div className="so-resumen-paquetes">
+          <span>Paquetes</span>
+          <p>{s.paquetes.filter(([c]) => c > 1).slice(0, 4).map(([c, p]) => <em key={c}>{c} × {pesos(p)}</em>)}</p>
+        </div>
+        <details className="so-reglas">
+          <summary>Cómo se juega{s.bonos.length ? ' y bonos' : ''}</summary>
+          <p>Con la Lotería Nacional del {fechaLarga(s.fecha)}: las últimas cifras del segundo lugar y del premio mayor forman el número ganador.</p>
+          {s.oportunidades > 0 && <p>Cada boleto trae {s.oportunidades} oportunidad{s.oportunidades > 1 ? 'es' : ''} extra sin costo.</p>}
+          {s.bonos.map((b) => <p key={b.titulo}><b>{b.titulo}:</b> {b.detalle}</p>)}
+        </details>
       </section>
 
       <section className="so-elegir">
-        <h2 className="so-h2">Elige tus números</h2>
+        <div className="so-elegir-cabeza">
+          <h2 className="so-h2">Elige tus números</h2>
+          <button className="so-boton so-boton-maquina" onClick={() => setMaquina(true)}><Dices size={19} /> Maquinita de la suerte</button>
+        </div>
         <div className="so-herramientas">
           <div className="so-buscador">
             <select value={modo} onChange={(ev) => setModo(ev.target.value)} aria-label="Cómo buscar">
@@ -219,7 +221,6 @@ function Sorteo({ id, ir }) {
             <input inputMode="numeric" placeholder="Tu número de la suerte" value={busca} onChange={(ev) => setBusca(ev.target.value.replace(/\D/g, '').slice(0, String(s.total).length))} />
             {busca ? <button onClick={() => setBusca('')} aria-label="Borrar búsqueda"><X size={18} /></button> : <Search size={18} />}
           </div>
-          <button className="so-boton so-boton-maquina" onClick={() => setMaquina(true)}><Dices size={19} /> Maquinita de la suerte</button>
           <label className="so-check"><input type="checkbox" checked={soloLibres} onChange={(ev) => setSoloLibres(ev.target.checked)} /> Solo disponibles</label>
         </div>
 
@@ -227,18 +228,11 @@ function Sorteo({ id, ir }) {
           <div className="so-bloques" role="tablist" aria-label="Bloques de números">
             {Array.from({ length: bloques }, (_, b) => (
               <button key={b} role="tab" aria-selected={bloque === b} onClick={() => setBloque(b)}>
-                {fmtNum(s, b * BLOQUE)}–{fmtNum(s, Math.min(s.total - 1, (b + 1) * BLOQUE - 1))}
+                {fmtNum(s, b * BLOQUE)}
               </button>
             ))}
           </div>
         )}
-
-        <div className="so-leyenda">
-          <span><i className="so-l-libre" /> Disponible</span>
-          <span><i className="so-l-apartado" /> Apartado</span>
-          <span><i className="so-l-pagado" /> Vendido</span>
-          <span><i className="so-l-mio" /> Tu selección</span>
-        </div>
 
         <div className="so-cuadricula">
           {visibles.map((n) => {
@@ -253,6 +247,11 @@ function Sorteo({ id, ir }) {
           })}
           {visibles.length === 0 && <p className="so-vacio">No hay números con esa búsqueda.</p>}
         </div>
+        <div className="so-leyenda">
+          <span><i className="so-l-libre" /> Libre</span>
+          <span><i className="so-l-apartado" /> Apartado</span>
+          <span><i className="so-l-pagado" /> Vendido</span>
+        </div>
       </section>
 
       {sel.length > 0 && (
@@ -263,12 +262,9 @@ function Sorteo({ id, ir }) {
             ))}
             {sel.length > 40 && <span>+{sel.length - 40}</span>}
           </div>
-          {s.oportunidades > 0 && (
-            <p className="so-carrito-op">+{sel.length * s.oportunidades} oportunidades extra: {oportunidadesDe(s, sel[0]).map((o) => fmtOp(s, o)).join(', ')}{sel.length > 1 ? '…' : ''}</p>
-          )}
           <div className="so-carrito-total">
             <div>
-              <b>{sel.length} boleto{sel.length > 1 ? 's' : ''}</b>
+              <b>{sel.length} boleto{sel.length > 1 ? 's' : ''}{s.oportunidades > 0 && ` · +${sel.length * s.oportunidades} oportunidades`}</b>
               <span>{pesos(total)}{total < sinPaquete && <s>{pesos(sinPaquete)}</s>}</span>
             </div>
             <button className="so-boton so-boton-oro" onClick={() => setApartando(true)}>Apartar</button>
@@ -277,7 +273,7 @@ function Sorteo({ id, ir }) {
       )}
 
       {maquina && (
-        <Maquinita s={s} ocupados={ocupados} yaElegidos={sel}
+        <MaquinaCasino s={s} ocupados={ocupados} yaElegidos={sel}
           alCerrar={() => setMaquina(null)}
           alElegir={(nums) => { setSel((x) => [...new Set([...x, ...nums])]); setMaquina(null); }} />
       )}
@@ -286,65 +282,6 @@ function Sorteo({ id, ir }) {
           alListo={(folio) => { setApartando(false); setSel([]); ir({ v: 'pago', folio }); }} />
       )}
     </main>
-  );
-}
-
-// ── Maquinita de la suerte ──────────────────────────────────────────────────
-function Maquinita({ s, ocupados, yaElegidos, alCerrar, alElegir }) {
-  const [cant, setCant] = useState(5);
-  const [rodando, setRodando] = useState(false);
-  const [vista, setVista] = useState([]);
-  const [listos, setListos] = useState(null);
-
-  const libresAlAzar = (k) => {
-    const out = new Set();
-    for (let i = 0; i < k * 40 && out.size < k; i++) {
-      const n = Math.floor(Math.random() * s.total);
-      if (ocupados[n] == null && !yaElegidos.includes(n)) out.add(n);
-    }
-    return [...out];
-  };
-
-  const girar = () => {
-    setRodando(true); setListos(null);
-    let vueltas = 0;
-    const id = setInterval(() => {
-      setVista(Array.from({ length: Math.min(cant, 10) }, () => Math.floor(Math.random() * s.total)));
-      if (++vueltas > 16) {
-        clearInterval(id);
-        const final = libresAlAzar(cant);
-        setVista(final.slice(0, 10)); setListos(final); setRodando(false);
-      }
-    }, 80);
-  };
-
-  return (
-    <div className="so-modal-fondo" onClick={alCerrar}>
-      <div className="so-modal so-maquina" onClick={(ev) => ev.stopPropagation()}>
-        <button className="so-modal-x" onClick={alCerrar} aria-label="Cerrar"><X size={20} /></button>
-        <p className="so-sello">Maquinita de la suerte</p>
-        <h2>¿Cuántos boletos quieres?</h2>
-        <div className="so-cantidades">
-          {[1, 3, 5, 10, 20, 50].map((c) => (
-            <button key={c} aria-pressed={cant === c} onClick={() => setCant(c)}>{c}</button>
-          ))}
-        </div>
-        <div className={`so-rodillos ${rodando ? 'so-rodando' : ''}`}>
-          {(vista.length ? vista : Array.from({ length: Math.min(cant, 10) }, () => null)).map((n, i) => (
-            <span key={i}>{n == null ? '?'.repeat(String(s.total - 1).length) : fmtNum(s, n)}</span>
-          ))}
-          {listos && listos.length > 10 && <span className="so-rodillo-mas">+{listos.length - 10}</span>}
-        </div>
-        {listos ? (
-          <div className="so-maquina-acciones">
-            <button className="so-boton so-boton-claro" onClick={girar}>Otra vez</button>
-            <button className="so-boton so-boton-oro" onClick={() => alElegir(listos)}><Check size={18} /> Quiero estos</button>
-          </div>
-        ) : (
-          <button className="so-boton so-boton-oro so-boton-ancho" disabled={rodando} onClick={girar}><Dices size={19} /> {rodando ? 'Girando…' : '¡Girar!'}</button>
-        )}
-      </div>
-    </div>
   );
 }
 
