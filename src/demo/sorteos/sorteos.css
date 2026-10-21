@@ -659,3 +659,69 @@
   .so-confeti { display: none; }
   .so-confeti, .so-confeti i, .so-ticker, .so-carrito, .tx-vivo i, .tx-fase-girando .tx-rodillos { animation: none !important; }
 }
+
+/* ── bienvenida: pantalla de carga ───────────────────────────────────────── */
+.bv-carga {
+  position: fixed; inset: 0; z-index: 9200; display: grid; place-content: center; justify-items: center; gap: 6px;
+  background: radial-gradient(60% 50% at 50% 42%, rgba(255, 190, 60, .16), transparent 70%), #07080C;
+  transition: opacity .42s ease;
+}
+.bv-sale { opacity: 0; }
+.bv-estrella { width: 120px; height: 120px; fill: none; stroke: var(--so-oro); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 12px rgba(255, 190, 60, .55)); margin-bottom: 14px; }
+.bv-estrella circle { stroke-dasharray: 1; stroke-dashoffset: 1; animation: bv-trazo 1s .05s ease forwards; stroke: rgba(255, 200, 61, .45); }
+.bv-estrella path { stroke-dasharray: 1; stroke-dashoffset: 1; animation: bv-trazo 1.1s .45s ease forwards, bv-llena .5s 1.45s ease forwards; }
+@keyframes bv-trazo { to { stroke-dashoffset: 0; } }
+@keyframes bv-llena { to { fill: var(--so-oro); } }
+.bv-marca { font-family: var(--so-titulo); font-size: 2.6rem; letter-spacing: .18em; line-height: 1; animation: so-aparece .6s .3s both; }
+.bv-sub { font-size: .7rem; font-weight: 600; letter-spacing: .5em; text-transform: uppercase; color: var(--so-oro); margin-left: .5em; animation: so-aparece .6s .45s both; }
+.bv-barra { width: 180px; height: 3px; margin-top: 26px; border-radius: 9px; background: rgba(255, 255, 255, .1); overflow: hidden; }
+.bv-barra i { display: block; height: 100%; background: linear-gradient(90deg, var(--so-oro2), var(--so-oro)); }
+.bv-pct { font-family: var(--so-titulo); font-size: 1.2rem; color: var(--so-oro); font-variant-numeric: tabular-nums; margin-top: 4px; }
+
+/* ── bienvenida: anuncio de la promoción ─────────────────────────────────── */
+.bv-fondo { overflow-y: auto; padding: 24px 16px; }
+.bv-promo {
+  position: relative; width: min(880px, 100%); display: grid; grid-template-columns: 1.05fr 1fr; overflow: hidden;
+  border-radius: 32px; border: 1px solid rgba(255, 200, 61, .35);
+  background: radial-gradient(90% 90% at 100% 0%, rgba(255, 190, 60, .2), transparent 60%), radial-gradient(70% 80% at 0% 100%, rgba(120, 90, 255, .2), transparent 60%), #0e0f16;
+  box-shadow: 0 40px 100px rgba(0, 0, 0, .7), inset 0 1px 0 rgba(255, 255, 255, .1);
+  animation: bv-entra .55s cubic-bezier(.2, 1.3, .4, 1) both;
+}
+@keyframes bv-entra { from { opacity: 0; transform: translateY(24px) scale(.94); } }
+.bv-x { position: absolute; right: 14px; top: 14px; z-index: 3; width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; border: 1px solid rgba(255, 255, 255, .2); background: rgba(10, 10, 14, .65); color: #fff; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+.bv-foto { position: relative; min-height: 460px; }
+.bv-foto img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.bv-foto::after { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, transparent 55%, #0e0f16 100%), linear-gradient(0deg, rgba(14, 15, 22, .6), transparent 40%); }
+.bv-sello { position: absolute; left: 22px; top: 22px; z-index: 2; width: 118px; height: 118px; border-radius: 50%; display: grid; place-items: center; background: radial-gradient(circle, #1a1a22 58%, #0b0b10 60%); box-shadow: 0 0 0 4px #fff, 0 0 0 7px #0b0b10, 0 12px 30px rgba(0, 0, 0, .5); transform: rotate(-10deg); }
+.bv-sello svg { position: absolute; inset: 0; width: 100%; height: 100%; animation: bv-gira 14s linear infinite; }
+.bv-sello text { font-family: var(--so-letra); font-weight: 800; font-size: 9px; fill: #fff; }
+.bv-sello b { font-family: var(--so-titulo); font-weight: 400; font-size: 1.5rem; color: var(--so-oro); line-height: .9; text-align: center; }
+.bv-sello small { display: block; font-family: var(--so-letra); font-size: .55rem; letter-spacing: .14em; text-transform: uppercase; color: #ddd; font-weight: 700; }
+@keyframes bv-gira { to { transform: rotate(360deg); } }
+.bv-texto { position: relative; display: grid; gap: 12px; align-content: center; padding: 44px 40px 34px 18px; }
+.bv-cuando { font-family: var(--so-titulo); font-size: 1.5rem; letter-spacing: .02em; color: #8fffb0; text-shadow: 0 0 18px rgba(80, 255, 140, .45); text-transform: uppercase; }
+.bv-premio { font-family: var(--so-titulo); font-size: 3rem; line-height: .95; }
+.bv-oferta { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 10px; margin-top: 6px; }
+.bv-cant { font-family: var(--so-titulo); font-size: 2.1rem; color: #fff; }
+.bv-por { font-weight: 700; color: var(--so-tenue); }
+.bv-precio { font-family: var(--so-titulo); font-size: 4.4rem; line-height: 1.05; padding-bottom: .06em; background: linear-gradient(180deg, #fff3c4, var(--so-oro) 55%, var(--so-oro2)); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 4px 18px rgba(255, 170, 40, .4)); }
+.bv-ahorro { display: inline-flex; justify-self: start; padding: 6px 12px; border-radius: 999px; background: rgba(46, 212, 122, .14); color: var(--so-verde); font-weight: 700; font-size: .85rem; }
+.bv-bono { color: #d9d4c6; font-size: .9rem; }
+.bv-texto .so-cuenta { margin-top: 4px; }
+.bv-cta { justify-self: start; margin-top: 6px; padding: 16px 30px; font-size: 1.05rem; }
+.bv-legal { font-size: .7rem; color: var(--so-tenue); line-height: 1.5; margin-top: 4px; }
+@media (max-width: 760px) {
+  .bv-promo { grid-template-columns: 1fr; border-radius: 26px; }
+  .bv-foto { min-height: 230px; }
+  .bv-foto::after { background: linear-gradient(0deg, #0e0f16 0%, transparent 60%); }
+  .bv-texto { padding: 6px 22px 26px; gap: 10px; }
+  .bv-premio { font-size: 2.4rem; }
+  .bv-precio { font-size: 3.6rem; }
+  .bv-sello { width: 96px; height: 96px; left: 16px; top: 16px; }
+  .bv-sello b { font-size: 1.2rem; }
+  .bv-cta { justify-self: stretch; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bv-estrella circle, .bv-estrella path { animation: none; stroke-dashoffset: 0; fill: var(--so-oro); }
+  .bv-sello svg, .bv-promo { animation: none; }
+}

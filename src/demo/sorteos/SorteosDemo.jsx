@@ -6,6 +6,7 @@ import { NEGOCIO, liberarVencidos, procesarAutos, reiniciarDemo, simularComprado
 import Sitio from './Sitio';
 import Panel from './Panel';
 import Transmision from './Transmision';
+import { olvidarBienvenida } from './Bienvenida';
 import './sorteos.css';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -110,7 +111,7 @@ export default function SorteosDemo() {
           <a className="so-guia-boton" href={`https://wa.me/${KAIZEN.whatsapp}?text=${encodeURIComponent(mensaje)}`} target="_blank" rel="noreferrer">
             <MessageCircle size={17} /> Quiero esto para mis sorteos
           </a>
-          <button type="button" className="so-guia-boton so-guia-boton-claro" onClick={() => { reiniciarDemo(); setGuia(false); }}>
+          <button type="button" className="so-guia-boton so-guia-boton-claro" onClick={() => { reiniciarDemo(); olvidarBienvenida(); window.location.reload(); }}>
             <RotateCcw size={16} /> Reiniciar la demo
           </button>
         </aside>

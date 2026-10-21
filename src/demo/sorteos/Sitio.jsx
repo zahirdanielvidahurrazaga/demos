@@ -7,6 +7,7 @@ import {
 } from './datos';
 import { CuentaRegresiva, ESTADO_TXT, Restante, fechaLarga, hora, miniatura, useAhora, useDialogo } from './comun';
 import { MaquinaCasino } from './Maquina';
+import { Carga, Promo, useBienvenida } from './Bienvenida';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // EL SITIO PÚBLICO (rol Comprador). Navegación interna por estado: inicio,
@@ -17,6 +18,7 @@ export default function Sitio() {
   const [vista, setVista] = useState({ v: 'inicio' });
   const ir = (v) => { setVista(v); window.scrollTo({ top: 0, behavior: 'instant' }); };
   const e = useSorteos();
+  const bienvenida = useBienvenida();
 
   return (
     <div className="so-sitio">
@@ -43,7 +45,9 @@ export default function Sitio() {
       {vista.v === 'mis' && <Mis ir={ir} />}
       {vista.v === 'faq' && <Preguntas />}
 
-      <Ticker />
+      {bienvenida.fase !== 'carga' && <Ticker />}
+      {bienvenida.fase === 'carga' && <Carga alTerminar={bienvenida.aPromo} />}
+      {bienvenida.fase === 'promo' && <Promo alCerrar={bienvenida.cerrar} alVer={() => { bienvenida.cerrar(); ir({ v: 'sorteo', id: SORTEOS[0].id }); }} />}
       <footer className="so-pie">
         <p><b>FORTUNA</b> sorteos</p>
         <p className="so-pie-chico">{NEGOCIO.permiso} · Aviso de privacidad · Términos</p>
