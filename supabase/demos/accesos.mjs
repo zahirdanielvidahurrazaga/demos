@@ -51,7 +51,7 @@ async function nuevo(args) {
   const { libres: [prospecto, ...demos], op } = opciones(args);
   if (!prospecto) { console.error('uso: nuevo "<prospecto>" [demo/ruta …] [--dias 7] [--nota "…"]'); process.exit(1); }
   for (const d of demos) {
-    if (!/^(demo|pedidos|gimnasio)\/[a-z0-9-]+$/.test(d)) { console.error(`Demo no válida: ${d} (ej. gimnasio/manhattan)`); process.exit(1); }
+    if (!/^(demo|pedidos|gimnasio|sorteos)\/[a-z0-9-]+$/.test(d)) { console.error(`Demo no válida: ${d} (ej. gimnasio/manhattan)`); process.exit(1); }
   }
   const n = dias(op.dias, DIAS);
   const codigo = Array.from({ length: 8 }, () => ALFABETO[randomInt(ALFABETO.length)]).join('');

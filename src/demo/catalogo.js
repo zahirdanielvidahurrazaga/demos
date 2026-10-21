@@ -59,6 +59,21 @@ export const SECTORES = [
     ],
   },
 
+  {
+    id: 'sorteos',
+    titulo: 'Sorteos y rifas',
+    descripcion: 'Boletos en línea: elegir números, apartar, subir comprobante y verificar pagos, con maquinita de la suerte.',
+    demos: [
+      {
+        tipo: 'sorteos',
+        clave: 'fortuna',
+        nombre: 'Sorteos Fortuna',
+        detalle: 'Camioneta, efectivo y moto · Puebla',
+        nota: 'negocio de ejemplo',
+      },
+    ],
+  },
+
   // ── Plantillas para cuando existan. Se dejan comentadas a propósito: un
   // ── catálogo con enlaces muertos vende peor que uno corto.
   //
@@ -93,5 +108,6 @@ export function destinoDe(demo) {
   if (demo.tipo === 'externa') return demo.url;
   if (demo.tipo === 'pedidos') return `/pedidos/${demo.clave}`;
   if (demo.tipo === 'gimnasio') return `/gimnasio/${demo.clave}`;
+  if (demo.tipo === 'sorteos') return `/sorteos/${demo.clave}`;
   return `/demo/${demo.clave}`;
 }

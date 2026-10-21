@@ -26,6 +26,7 @@ const IndiceDemos = lazy(() => import('./pages/IndiceDemos'));
 const Demo = lazy(() => import('./pages/Demo'));
 const PedidosDemo = lazy(() => import('./demo/pedidos/PedidosDemo'));
 const GimnasioDemo = lazy(() => import('./demo/gimnasio/GimnasioDemo'));
+const SorteosDemo = lazy(() => import('./demo/sorteos/SorteosDemo'));
 
 // Regreso de la pasarela de prueba (src/demo/PasarelaPrueba.jsx): el pago se
 // "cobra" dentro de la maqueta de la que salió la compra.
@@ -64,6 +65,8 @@ export default function AppDemos() {
                 {/* Gimnasio: control de acceso con QR y aforo en vivo. También con
                     sesión propia por rol, sin el AuthProvider de Be Fit. */}
                 <Route path="/gimnasio/:negocio" element={<GimnasioDemo />} />
+                {/* Sorteos con boletos: sin base de datos, todo en el navegador. */}
+                <Route path="/sorteos/:negocio" element={<SorteosDemo />} />
                 {/* Cualquier otra dirección regresa al índice: si una prospecta borra
                     el path del link, aterriza en algo tuyo y no en otra marca. */}
                 <Route path="*" element={<Navigate to="/" replace />} />
