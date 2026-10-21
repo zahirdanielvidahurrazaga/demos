@@ -1,6 +1,7 @@
 import { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import { Check, X } from 'lucide-react';
 import { digitos, fmtNum } from './datos';
+import { useDialogo } from './comun';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Rodillos de tragamonedas: un rodillo por dígito. Cada uno es una tira con el
@@ -56,6 +57,8 @@ export function MaquinaCasino({ s, ocupados, yaElegidos, alCerrar, alElegir }) {
   const [listos, setListos] = useState(null);
   const [palanca, setPalanca] = useState(false);
   const rodillos = useRef(null);
+  const caja = useRef(null);
+  useDialogo(caja, alCerrar);
 
   const libresAlAzar = (k) => {
     const out = new Set();
@@ -78,7 +81,7 @@ export function MaquinaCasino({ s, ocupados, yaElegidos, alCerrar, alElegir }) {
 
   return (
     <div className="so-modal-fondo" onClick={alCerrar}>
-      <div className="mq" onClick={(ev) => ev.stopPropagation()} role="dialog" aria-label="Maquinita de la suerte">
+      <div ref={caja} className="mq" onClick={(ev) => ev.stopPropagation()} role="dialog" aria-modal="true" aria-label="Maquinita de la suerte">
         <button className="mq-x" onClick={alCerrar} aria-label="Cerrar"><X size={18} /></button>
 
         <div className="mq-gabinete">

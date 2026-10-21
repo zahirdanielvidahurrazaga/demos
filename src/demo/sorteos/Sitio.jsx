@@ -1,11 +1,11 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { Check, Copy, Dices, Search, ShieldCheck, Ticket, Upload, X } from 'lucide-react';
 import {
-  ESTADOS, GANADORES, HORAS_APARTADO, NEGOCIO, SORTEOS,
-  apartar, buscarPorTelefono, claveRastreo, fmtNum, fmtOp, oportunidadesDe, pesos, precioDe, resumen, subirComprobante, useSorteos, verificarAuto,
+  ESTADOS, GANADORES, HORAS_APARTADO, NEGOCIO, SEGUNDOS_AUTO, SORTEOS,
+  apartar, buscarPorTelefono, claveRastreo, fmtNum, fmtOp, oportunidadesDe, pesos, precioDe, resumen, programarAuto, subirComprobante, useSorteos,
 } from './datos';
-import { CuentaRegresiva, ESTADO_TXT, Restante, fechaLarga, hora, miniatura } from './comun';
+import { CuentaRegresiva, ESTADO_TXT, Restante, fechaLarga, hora, miniatura, useAhora, useDialogo } from './comun';
 import { MaquinaCasino } from './Maquina';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -289,6 +289,8 @@ function Sorteo({ id, ir }) {
 function Apartar({ s, numeros, total, alCerrar, alListo }) {
   const [d, setD] = useState({ tel: '', nombre: '', apellidos: '', lugar: 'Puebla' });
   const [error, setError] = useState('');
+  const caja = useRef(null);
+  useDialogo(caja, alCerrar);
   const poner = (k) => (ev) => setD((x) => ({ ...x, [k]: ev.target.value }));
   const enviar = (ev) => {
     ev.preventDefault();
@@ -301,7 +303,7 @@ function Apartar({ s, numeros, total, alCerrar, alListo }) {
   };
   return (
     <div className="so-modal-fondo" onClick={alCerrar}>
-      <form className="so-modal" onClick={(ev) => ev.stopPropagation()} onSubmit={enviar}>
+      <form ref={caja} className="so-modal" role="dialog" aria-modal="true" aria-label={`Apartar boletos de ${s.titulo}`} onClick={(ev) => ev.stopPropagation()} onSubmit={enviar}>
         <button type="button" className="so-modal-x" onClick={alCerrar} aria-label="Cerrar"><X size={20} /></button>
         <p className="so-sello">{s.titulo}</p>
         <h2>Aparta tus {numeros.length} boleto{numeros.length > 1 ? 's' : ''}</h2>
@@ -327,7 +329,6 @@ function Pago({ folio, ir }) {
   const [copiado, setCopiado] = useState('');
   const [subiendo, setSubiendo] = useState(false);
   const [error, setError] = useState('');
-  const [verificando, setVerificando] = useState(false);
   if (!p) return <main className="so-seccion"><p>No encontramos ese folio.</p></main>;
   const s = SORTEOS.find((x) => x.id === p.sorteo);
 
@@ -337,8 +338,11 @@ function Pago({ folio, ir }) {
     if (!f) return;
     setSubiendo(true); setError('');
     try {
-      subirComprobante(folio, { img: await miniatura(f), nombre: f.name });
-      if (e.auto) setVerificando(true);
+      const img = await miniatura(f);
+      // se valida al guardar: si el apartado venció o se liberó mientras se
+      // leía la foto, no se acepta (revisión de Codex)
+      if (!subirComprobante(folio, { img, nombre: f.name })) setError('Este apartado ya venció o se liberó. Vuelve a elegir tus números.');
+      else if (e.auto) programarAuto(folio);
     } catch { setError('No pudimos leer esa imagen. Intenta con otra foto.'); }
     setSubiendo(false);
   };
@@ -386,10 +390,8 @@ function Pago({ folio, ir }) {
               {error && <p className="so-error">{error}</p>}
             </>
           )}
-          {p.estado === 'revision' && verificando && (
-            <Verificando p={p} alTerminar={() => { verificarAuto(p.folio); setVerificando(false); }} />
-          )}
-          {p.estado === 'revision' && !verificando && (
+          {p.estado === 'revision' && p.autoListo && <Verificando p={p} />}
+          {p.estado === 'revision' && !p.autoListo && (
             <div className="so-caja">
               <h2 className="so-h3">Estamos revisando tu pago</h2>
               {p.comprobante?.img && <img className="so-comprobante" src={p.comprobante.img} alt="Tu comprobante" />}
@@ -417,8 +419,11 @@ function Pago({ folio, ir }) {
 }
 
 // La comprobación automática, paso a paso (en la demo, simulada).
-function Verificando({ p, alTerminar }) {
-  const [paso, setPaso] = useState(0);
+// La comprobación automática, paso a paso. Solo ANIMA: el trabajo está
+// agendado en el almacén (programarAuto) y lo termina SorteosDemo aunque el
+// comprador se vaya de esta pantalla.
+function Verificando({ p }) {
+  const ahora = useAhora(250);
   const cuenta = NEGOCIO.cuentas[0];
   const pasos = [
     'Leyendo tu comprobante',
@@ -427,11 +432,9 @@ function Verificando({ p, alTerminar }) {
     `Cuenta destino: ${cuenta.banco} ••• ${cuenta.clabe.replace(/\D/g, '').slice(-4)}`,
     'Consultando el comprobante oficial en Banxico (CEP)',
   ];
-  useEffect(() => {
-    if (paso >= pasos.length) { const id = setTimeout(alTerminar, 700); return () => clearTimeout(id); }
-    const id = setTimeout(() => setPaso((x) => x + 1), paso === pasos.length - 1 ? 1600 : 750);
-    return () => clearTimeout(id);
-  }, [paso]); // eslint-disable-line react-hooks/exhaustive-deps
+  const total = SEGUNDOS_AUTO * 1000;
+  const avance = Math.min(1, Math.max(0, 1 - (p.autoListo - ahora) / total));
+  const paso = Math.min(pasos.length - 1, Math.floor(avance * pasos.length));
   return (
     <div className="so-caja so-verificando">
       <h2 className="so-h3"><ShieldCheck size={19} /> Comprobando tu pago</h2>

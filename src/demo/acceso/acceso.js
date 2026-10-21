@@ -66,11 +66,17 @@ export function demoDeRuta(ruta) {
 
 // ¿El acceso abre esta ruta? demos = null → todas. El índice lo ve cualquiera
 // con código válido (solo con las demos que le tocan).
+// Links que son la misma demo (el gimnasio se volvió genérico el 20-oct-2026:
+// `gimnasio/atlas` es por dentro `gimnasio/manhattan`). Un código que abre uno
+// abre el otro, y el índice lo enseña con cualquiera de los dos.
+const MISMA_DEMO = { 'gimnasio/manhattan': 'gimnasio/atlas' };
+export const canonica = (demo) => MISMA_DEMO[demo] || demo;
+
 export function permite(acceso, ruta) {
   if (!acceso) return false;
   const demo = demoDeRuta(ruta);
   if (!demo) return true;
-  return !acceso.demos || acceso.demos.includes(demo);
+  return !acceso.demos || acceso.demos.map(canonica).includes(canonica(demo));
 }
 
 // A dónde mandar a alguien que acaba de entrar con su link.

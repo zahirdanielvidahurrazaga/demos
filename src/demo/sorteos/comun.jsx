@@ -67,3 +67,24 @@ export function miniatura(archivo, ancho = 420) {
     img.src = url;
   });
 }
+
+// Ventana modal accesible: foco adentro al abrir, Tab no se sale, Escape
+// cierra y al cerrar el foco regresa a donde estaba (revisión de Codex).
+export function useDialogo(ref, alCerrar) {
+  useEffect(() => {
+    const antes = document.activeElement;
+    const enfocables = () => [...(ref.current?.querySelectorAll('button:not([disabled]), input, select, textarea, a[href]') || [])];
+    (ref.current?.querySelector('input, select') || enfocables()[0])?.focus();
+    const tecla = (ev) => {
+      if (ev.key === 'Escape') { ev.preventDefault(); alCerrar(); return; }
+      if (ev.key !== 'Tab') return;
+      const els = enfocables();
+      if (!els.length) return;
+      const primero = els[0], ultimo = els[els.length - 1];
+      if (ev.shiftKey && document.activeElement === primero) { ev.preventDefault(); ultimo.focus(); }
+      else if (!ev.shiftKey && document.activeElement === ultimo) { ev.preventDefault(); primero.focus(); }
+    };
+    document.addEventListener('keydown', tecla);
+    return () => { document.removeEventListener('keydown', tecla); antes?.focus?.(); };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+}

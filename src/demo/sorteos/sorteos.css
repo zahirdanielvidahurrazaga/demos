@@ -559,5 +559,6 @@
   .tx-mas { display: none; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .so-confeti, .so-ticker, .so-carrito, .mq-focos i, .tx-vivo i, .tx-fase-girando .tx-rodillos { animation: none !important; }
+  .so-confeti { display: none; }
+  .so-confeti, .so-confeti i, .so-ticker, .so-carrito, .mq-focos i, .tx-vivo i, .tx-fase-girando .tx-rodillos { animation: none !important; }
 }

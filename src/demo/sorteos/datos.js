@@ -169,7 +169,26 @@ function obtener() { if (!estado) { estado = leer(); guardar(); } return estado;
 if (typeof window !== 'undefined') {
   window.addEventListener('storage', (e) => { if (e.key === LLAVE && e.newValue) { try { estado = JSON.parse(e.newValue); avisar(); } catch { /* */ } } });
 }
-function cambiar(fn) { const e = obtener(); estado = fn(structuredClone(e)) || e; guardar(); avisar(); }
+// Cada cambio parte de lo que hay en localStorage AHORA (no de la copia en
+// memoria): si otra pestaña escribió hace un instante y su evento `storage`
+// todavía no llega, no se pisa su cambio (revisión de Codex, 20-oct).
+function leerFresco() {
+  try { const t = localStorage.getItem(LLAVE); if (t) { const e = JSON.parse(t); if (e.v === 1) return e; } } catch { /* sin almacenamiento */ }
+  return null;
+}
+function cambiar(fn) { const e = leerFresco() || obtener(); estado = fn(structuredClone(e)) || e; guardar(); avisar(); }
+
+// Solo UNA pestaña mueve a la gente simulada: con comprador y verificador
+// abiertos, las dos escribían a la vez cada pocos segundos.
+const YO = Math.random().toString(36).slice(2);
+export function soyLider() {
+  try {
+    const l = JSON.parse(localStorage.getItem('demo_sorteos_lider') || 'null');
+    if (l && l.id !== YO && Date.now() - l.t < 15000) return false;
+    localStorage.setItem('demo_sorteos_lider', JSON.stringify({ id: YO, t: Date.now() }));
+  } catch { /* sin almacenamiento: esta pestaña simula sola */ }
+  return true;
+}
 export const useSorteos = () => useSyncExternalStore((f) => { oyentes.add(f); return () => oyentes.delete(f); }, obtener);
 export function reiniciarDemo() { estado = sembrar(); guardar(); avisar(); }
 
@@ -198,14 +217,22 @@ export function apartar(sorteoId, numeros, datos, { mio = true } = {}) {
   return folio;
 }
 
+// ¿El folio sigue siendo dueño de todos sus números? (un apartado liberado o
+// vencido pudo pasar a otra persona mientras se subía la foto)
+const vigente = (e, p) => p && (p.estado === 'apartado' || p.estado === 'revision')
+  && p.numeros.every((n) => e.boletos[p.sorteo][n] === p.folio);
+
 export function subirComprobante(folio, comprobante) {
+  let ok = false;
   cambiar((e) => {
     const p = e.pedidos[folio];
-    if (!p || p.estado === 'pagado') return e;
+    if (!vigente(e, p) || (p.estado === 'apartado' && p.vence < Date.now())) return e;
+    ok = true;
     p.estado = 'revision'; p.comprobante = comprobante; p.subido = Date.now();
     evento(e, `Llegó comprobante del folio ${folio} (${p.nombre})`, 'revision');
     return e;
   });
+  return ok;
 }
 
 // ── comprobación automática (simulada en la demo) ───────────────────────────
@@ -223,12 +250,23 @@ export function claveRastreo(p) { return `MBAN01${String(p.creado).slice(-6)}${p
 export function setAuto(v) { cambiar((e) => { e.auto = v; return e; }); }
 export function verificarAuto(folio) {
   cambiar((e) => {
-    const p = e.pedidos[folio]; if (!p || p.estado !== 'revision') return e;
-    p.estado = 'pagado'; p.aprobado = Date.now(); p.auto = { clave: claveRastreo(p) };
+    const p = e.pedidos[folio]; if (!vigente(e, p) || p.estado !== 'revision') return e;
+    p.estado = 'pagado'; p.aprobado = Date.now(); p.auto = { clave: claveRastreo(p) }; delete p.autoListo;
     e.autoHoy = (e.autoHoy || 0) + 1;
     evento(e, `Folio ${folio} pagado solo: ${pesos(p.total)} confirmado con Banxico`, 'pagado');
     return e;
   });
+}
+// La comprobación queda AGENDADA en el almacén (no en un temporizador de la
+// pantalla): si el comprador se va del pago, igual se termina.
+export const SEGUNDOS_AUTO = 5;
+export function programarAuto(folio, segundos = SEGUNDOS_AUTO) {
+  cambiar((e) => { const p = e.pedidos[folio]; if (p && p.estado === 'revision') p.autoListo = Date.now() + segundos * 1000; return e; });
+}
+export function procesarAutos() {
+  const ahora = Date.now();
+  Object.values(obtener().pedidos).filter((p) => p.estado === 'revision' && p.autoListo && p.autoListo <= ahora)
+    .forEach((p) => verificarAuto(p.folio));
 }
 export function mandarARevision(folio, motivo) {
   cambiar((e) => {
@@ -241,7 +279,7 @@ export function mandarARevision(folio, motivo) {
 
 export function aprobar(folio) {
   cambiar((e) => {
-    const p = e.pedidos[folio]; if (!p) return e;
+    const p = e.pedidos[folio]; if (!vigente(e, p)) return e;
     p.estado = 'pagado'; p.aprobado = Date.now();
     evento(e, `Folio ${folio} pagado: ${p.numeros.length} boleto${p.numeros.length > 1 ? 's' : ''} de ${p.nombre}`, 'pagado');
     return e;
@@ -289,9 +327,8 @@ export function simularCompradores() {
     const pend = Object.values(e.pedidos).filter((p) => p.simulado && p.estado === 'apartado');
     const p = pend[Math.floor(r() * pend.length)];
     if (p) {
-      subirComprobante(p.folio, { simulado: true });
-      if (obtener().auto) {
-        if (r() < 0.8) setTimeout(() => verificarAuto(p.folio), 2500);
+      if (subirComprobante(p.folio, { simulado: true }) && obtener().auto) {
+        if (r() < 0.8) programarAuto(p.folio, 3);
         else mandarARevision(p.folio, MOTIVOS_REVISION[Math.floor(r() * MOTIVOS_REVISION.length)]);
       }
     }
@@ -316,12 +353,43 @@ export function buscarPorTelefono(e, tel) {
   return Object.values(e.pedidos).filter((p) => p.tel.endsWith(t) && p.estado !== 'liberado').sort((a, b) => b.creado - a.creado);
 }
 
-// número ganador con la dinámica de Lotería Nacional: últimas cifras del
-// segundo lugar + últimas del premio mayor, de izquierda a derecha.
-export function numeroGanador(s, segundo, mayor) {
-  const d = digitos(s);
-  const mitad = Math.ceil(d / 2);
-  const a = String(segundo).replace(/\D/g, '').slice(-(d - mitad)).padStart(d - mitad, '0');
-  const b = String(mayor).replace(/\D/g, '').slice(-mitad).padStart(mitad, '0');
-  return Number(a + b) % s.total;
+// ── el ganador (dinámica de Lotería Nacional) ───────────────────────────────
+// Últimas cifras del segundo lugar + últimas del premio mayor, de izquierda a
+// derecha, SIN ajustes: el número que se ve armado es el que juega. Si el
+// sorteo da oportunidades, el número se arma con las cifras de la oportunidad
+// más alta (boletos 0000–9999 se leen como 00000–09999) y puede caer en un
+// boleto o en la oportunidad extra de alguien. Panel y transmisión usan ESTO.
+export const rangoJuego = (s) => s.total * (1 + s.oportunidades);
+export const cifrasJuego = (s) => String(rangoJuego(s) - 1).length;
+export function partirCifras(s) { const d = cifrasJuego(s); const b = Math.ceil(d / 2); return { a: d - b, b }; }
+
+export function armarNumero(s, segundo, mayor) {
+  const { a, b } = partirCifras(s);
+  const sa = String(segundo).replace(/\D/g, '').padStart(a, '0');
+  const sb = String(mayor).replace(/\D/g, '').padStart(b, '0');
+  return { a1: sa.slice(0, -a), a2: sa.slice(-a), b1: sb.slice(0, -b), b2: sb.slice(-b), n: Number(sa.slice(-a) + sb.slice(-b)) };
+}
+
+export const fmtJuego = (s, n) => String(n).padStart(cifrasJuego(s), '0');
+
+// ¿De quién es el número n? → { boleto, via: 'boleto' | 'oportunidad', pedido } o null
+export function duenoDe(e, s, n) {
+  if (n >= rangoJuego(s)) return null;
+  let boleto = n, via = 'boleto';
+  if (n >= s.total) {
+    via = 'oportunidad';
+    boleto = null;
+    for (let x = 0; x < s.total; x++) if (oportunidadesDe(s, x).includes(n)) { boleto = x; break; }
+    if (boleto == null) return null;
+  }
+  const folio = e.boletos[s.id][boleto];
+  return { boleto, via, pedido: folio ? e.pedidos[folio] : null };
+}
+
+// Para el ensayo: resultados de lotería de práctica que arman el número n.
+export function resultadosPara(s, n) {
+  const { a, b } = partirCifras(s);
+  const t = fmtJuego(s, n);
+  const relleno = (k) => String(Math.floor(Math.random() * 10 ** k)).padStart(k, '0');
+  return { segundo: relleno(5 - a > 0 ? 5 - a : 1) + t.slice(0, a), mayor: relleno(5 - b > 0 ? 5 - b : 1) + t.slice(a) };
 }

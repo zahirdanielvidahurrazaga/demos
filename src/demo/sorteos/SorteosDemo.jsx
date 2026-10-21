@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { LayoutDashboard, MessageCircle, RotateCcw, Smartphone, Tv } from 'lucide-react';
 import BarraDemo from '../kaizen/BarraDemo';
 import { KAIZEN } from '../kaizen/marca';
-import { NEGOCIO, liberarVencidos, reiniciarDemo, simularCompradores } from './datos';
+import { NEGOCIO, liberarVencidos, procesarAutos, reiniciarDemo, simularCompradores, soyLider } from './datos';
 import Sitio from './Sitio';
 import Panel from './Panel';
 import Transmision from './Transmision';
@@ -76,12 +76,16 @@ export default function SorteosDemo() {
   useEffect(() => {
     let id;
     const paso = () => {
-      if (!document.hidden) { simularCompradores(); liberarVencidos(); }
+      if (!document.hidden && soyLider()) { simularCompradores(); liberarVencidos(); }
       id = setTimeout(paso, 6000 + Math.random() * 6000);
     };
     id = setTimeout(paso, 4000);
     return () => clearTimeout(id);
   }, []);
+
+  // las comprobaciones automáticas agendadas se terminan aquí, en cualquier
+  // pantalla (antes dependían de que el comprador se quedara en el pago)
+  useEffect(() => { const id = setInterval(procesarAutos, 1000); return () => clearInterval(id); }, []);
 
   const mensaje = 'Hola KaiZen, vi la demo de sitio de sorteos y me interesa para mi negocio.';
 

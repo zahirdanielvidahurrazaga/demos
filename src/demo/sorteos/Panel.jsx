@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Check, Clock, Download, LayoutDashboard, MessageCircle, Receipt, Search, ShieldCheck, Ticket, Trophy, Unlock, X } from 'lucide-react';
 import {
-  NEGOCIO, SORTEOS, aprobar, fmtNum, liberar, numeroGanador, oportunidadesDe, pesos, rechazar, resumen, setAuto, useSorteos,
+  NEGOCIO, SORTEOS, aprobar, armarNumero, duenoDe, fmtJuego, fmtNum, liberar, oportunidadesDe, partirCifras, pesos, rechazar, resumen, setAuto, useSorteos,
 } from './datos';
 import { ESTADO_TXT, Progreso, Restante, fechaLarga, hora, wa } from './comun';
 
@@ -210,7 +210,9 @@ function Boletos() {
       const x = e.pedidos[f];
       if (x.estado === 'pagado') filas.push([f, fmtNum(s, num), oportunidadesDe(s, Number(num)).join(' '), x.nombre, x.apellidos, x.tel, x.lugar]);
     });
-    const csv = filas.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
+    // Excel ejecuta como fórmula lo que empieza con = + - @: se antepone ' (revisión de Codex)
+    const celda = (c) => { const t = String(c); return /^[=+\-@\t\r]/.test(t) ? `'${t}` : t; };
+    const csv = filas.map((r) => r.map((c) => `"${celda(c).replace(/"/g, '""')}"`).join(',')).join('\n');
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob(['﻿' + csv], { type: 'text/csv' }));
     a.download = `boletos-pagados-${s.id}.csv`;
@@ -248,38 +250,36 @@ function Ganador() {
   const [mayor, setMayor] = useState('');
   const s = SORTEOS.find((x) => x.id === sorteo);
   const listo = segundo.length >= 3 && mayor.length >= 3;
-  const n = listo ? numeroGanador(s, segundo, mayor) : null;
-
-  // el número puede ser boleto u oportunidad de otro boleto
-  let p = null, como = '';
-  if (n != null) {
-    const f = e.boletos[sorteo][n];
-    if (f) { p = e.pedidos[f]; como = 'boleto'; }
-  }
+  // el mismo cálculo que la pantalla de transmisión (datos.js)
+  const armado = listo ? armarNumero(s, segundo, mayor) : null;
+  const dueno = armado ? duenoDe(e, s, armado.n) : null;
+  const p = dueno?.pedido;
+  const como = dueno?.via === 'oportunidad' ? `con la oportunidad extra de su boleto ${fmtNum(s, dueno.boleto)}` : dueno ? `boleto ${fmtNum(s, dueno.boleto)}` : '';
+  const { a, b } = partirCifras(s);
 
   return (
     <>
       <h1 className="so-panel-h1">Sacar al ganador</h1>
-      <p className="so-entrada">Escribe los resultados de la Lotería Nacional y el sistema arma el número ganador con la dinámica del sorteo.</p>
+      <p className="so-entrada">Escribe los resultados de la Lotería Nacional. El número se arma con las últimas {a} cifras del segundo lugar y las últimas {b} del premio mayor{s.oportunidades > 0 ? '; puede caer en un boleto o en una oportunidad extra' : ''}.</p>
       <div className="so-ganador-campos">
         <label>Sorteo<select value={sorteo} onChange={(ev) => setSorteo(ev.target.value)}>{SORTEOS.map((x) => <option key={x.id} value={x.id}>{x.titulo}</option>)}</select></label>
-        <label>Segundo lugar<input inputMode="numeric" value={segundo} onChange={(ev) => setSegundo(ev.target.value.replace(/\D/g, ''))} placeholder="Ej. 48213" /></label>
-        <label>Premio mayor<input inputMode="numeric" value={mayor} onChange={(ev) => setMayor(ev.target.value.replace(/\D/g, ''))} placeholder="Ej. 07956" /></label>
+        <label>Segundo lugar<input inputMode="numeric" value={segundo} onChange={(ev) => setSegundo(ev.target.value.replace(/\D/g, ''))} placeholder="Ej. 48271" /></label>
+        <label>Premio mayor<input inputMode="numeric" value={mayor} onChange={(ev) => setMayor(ev.target.value.replace(/\D/g, ''))} placeholder="Ej. 07941" /></label>
       </div>
-      {n != null && (
+      {armado && (
         <div className={`so-caja so-ganador-res ${p?.estado === 'pagado' ? 'so-ganador-si' : ''}`}>
           <p className="so-sello">Número ganador</p>
-          <p className="so-num-grande">{fmtNum(s, n)}</p>
+          <p className="so-num-grande">{fmtJuego(s, armado.n)}</p>
           {p?.estado === 'pagado' ? (
             <>
               <p><Trophy size={20} /> <b>{p.nombre} {p.apellidos}</b> · {p.lugar} · {como}</p>
               <a className="so-boton so-boton-verde" target="_blank" rel="noreferrer"
-                href={wa(p.tel, `¡${p.nombre}, ganaste ${s.titulo} con tu boleto ${fmtNum(s, n)}! Comunícate con nosotros para entregarte tu premio. — ${NEGOCIO.nombre}`)}>
+                href={wa(p.tel, `¡${p.nombre}, ganaste ${s.titulo} ${como}! Comunícate con nosotros para entregarte tu premio. — ${NEGOCIO.nombre}`)}>
                 <MessageCircle size={17} /> Avisarle al ganador
               </a>
             </>
           ) : p ? (
-            <p>Ese número estaba <b>apartado sin pagar</b>: según tus reglas, se vuelve a jugar o pasa al siguiente.</p>
+            <p>Ese número ({como}) estaba <b>apartado sin pagar</b>: según tus reglas, se vuelve a jugar o pasa al siguiente.</p>
           ) : (
             <p>Ese número <b>no se vendió</b>. Según tus reglas: se vuelve a jugar con el siguiente sorteo de la Lotería.</p>
           )}
