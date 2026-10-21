@@ -49,8 +49,14 @@ const GUIA = {
   ],
 };
 
+// El link que se enseña → el negocio en la base. "atlas" es la marca genérica
+// para enseñarla a cualquier gimnasio; por dentro sigue siendo el negocio
+// 'manhattan' (cuentas, reinicio nocturno y cron dependen de ese id).
+const ALIAS = { atlas: 'manhattan' };
+
 export default function GimnasioDemo() {
-  const { negocio: clave } = useParams();
+  const { negocio: claveUrl } = useParams();
+  const clave = ALIAS[claveUrl] || claveUrl;
   const [negocio, setNegocio] = useState(undefined);
   const [rol, setRol] = useState(() => {
     const r = new URLSearchParams(window.location.search).get('rol');
@@ -124,7 +130,7 @@ export default function GimnasioDemo() {
     setReiniciando(true);
     const { error } = await supabase.rpc('gym_reset');
     if (error) { setReiniciando(false); setErrorSesion(errorLegible(error)); return; }
-    window.location.href = `/gimnasio/${negocio.id}?rol=${rol}`;
+    window.location.href = `/gimnasio/${claveUrl}?rol=${rol}`;
   };
 
   const mensaje = `Hola KaiZen, vi la demo de control de acceso de ${negocio.nombre} y me interesa para mi gimnasio.`;
@@ -138,7 +144,7 @@ export default function GimnasioDemo() {
       <div ref={encabezado} style={{ position: 'sticky', top: 0, zIndex: 9300, paddingBottom: 8, background: 'linear-gradient(var(--g-fondo) 62%, transparent)' }}>
         <BarraDemo roles={ROLES} rol={rol} alCambiar={setRol}
           guiaAbierta={guia} alGuia={() => setGuia((x) => !x)}
-          aviso={`Demostración para ${negocio.nombre} · socios y movimientos de ejemplo · por KaiZen`} />
+          aviso={`${negocio.nombre} · gimnasio, socios y movimientos de ejemplo · por KaiZen`} />
       </div>
 
       {guia && (

@@ -51,7 +51,7 @@ Desde el 13-oct-2026 **todo el sitio, índice incluido, está cerrado**: sin có
 - `/demo/alma` → **Studio Alma** (pilates): la app real de Be Fit pintada con otra marca.
 - `/pedidos/hoja` → **Hoja · cocina fit** (pedidos en línea: recoger, a domicilio, en mesa con QR).
 - `/sorteos/fortuna` → **Sorteos Fortuna** (rifas con boletos; negocio de ejemplo, sin base de datos).
-- `/gimnasio/manhattan` → **GYM Fitness Manhattan** (control de acceso con QR y aforo en vivo). **Gimnasio REAL al que se le está vendiendo**: el aviso no dice "negocio inventado" (socios y movimientos sí son de ejemplo). Sí está en el índice, a petición del usuario. `?rol=socio|recepcion|dueno` abre directo en ese rol.
+- `/gimnasio/atlas` → **Atlas Fitness** (control de acceso con QR y aforo en vivo). **Genérico desde el 20-oct-2026** para enseñarlo a cualquier gimnasio; antes era GYM Fitness Manhattan (prospecto real). Por dentro el negocio sigue siendo `manhattan` (cuentas `*@demo.manhattan.mx`, reinicio y cron): `ALIAS` en `GimnasioDemo.jsx` traduce el link, y `/gimnasio/manhattan` sigue abriendo. `?rol=socio|recepcion|dueno` abre directo en ese rol.
 
 | Qué | Dónde |
 |---|---|

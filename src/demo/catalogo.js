@@ -34,13 +34,14 @@ export const SECTORES = [
         detalle: 'Pilates Reformer · Puebla',
         nota: 'estudio de ejemplo',
       },
-      // Gimnasio REAL (prospecto): el negocio existe, pero socios y movimientos son de ejemplo.
+      // Gimnasio de ejemplo (antes GYM Fitness Manhattan, prospecto real; desde el
+      // 20-oct-2026 es genérico para enseñarlo a cualquier gimnasio).
       {
         tipo: 'gimnasio',
-        clave: 'manhattan',
-        nombre: 'GYM Fitness Manhattan',
-        detalle: 'Control de acceso con QR y aforo en vivo · Miahuatlán, Oax.',
-        nota: 'gimnasio',
+        clave: 'atlas',
+        nombre: 'Atlas Fitness',
+        detalle: 'Control de acceso con QR y aforo en vivo · Puebla',
+        nota: 'gimnasio de ejemplo',
       },
     ],
   },

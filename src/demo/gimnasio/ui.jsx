@@ -100,8 +100,8 @@ export function cargarFuentesGym() {
 export const degradadoTexto = { color: 'var(--g-pri)' };
 
 // Marca: cuadro de acento con las siglas + el nombre en condensada.
-// PROVISIONAL hasta que Manhattan pase su logo.
-export function Logo({ nombre = 'GYM Fitness Manhattan', tamano = 1, compacto = false, sub }) {
+// Logo genérico (siglas en el cuadro de acento + nombre en condensada).
+export function Logo({ nombre = 'Atlas Fitness', tamano = 1, compacto = false, sub }) {
   const partes = nombre.split(' ');
   const siglas = partes.map((p) => p[0]).join('').toUpperCase();
   const grande = partes[partes.length - 1];

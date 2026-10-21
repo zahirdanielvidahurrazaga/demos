@@ -13,15 +13,14 @@
 -- Colores: el rojo de su Instagram, llevado al estilo "Pulso" (degradado rojo →
 -- coral que brilla sobre negro). Info: lo público de su Instagram.
 insert into public.gym_negocios (id, nombre, ciudad, capacidad, alerta_pct, qr_segundos, marca, info) values
-  ('manhattan', 'GYM Fitness Manhattan', 'Miahuatlán, Oax.', 120, 85, 30, '{
+  ('manhattan', 'Atlas Fitness', 'Puebla', 120, 85, 30, '{
     "primario": "#FF2E3B", "primario2": "#FF7A50", "primarioTexto": "#FFFFFF",
     "fondo": "#0B0B0D", "superficie": "#151518", "superficie2": "#222226",
     "texto": "#F4F4F5", "suave": "#9A9AA3", "tenue": "#6E6E76",
     "verde": "#34D399", "rojo": "#FF4D4F", "ambar": "#FBBF24"
   }', '{
-    "direccion": "Calle 3 de Octubre 420B, Centro",
-    "ciudad": "Miahuatlán de Porfirio Díaz, Oax.",
-    "instagram": "gymfitnesssmanhattan",
+    "direccion": "Av. Juárez 2915, La Paz",
+    "ciudad": "Puebla, Pue.",
     "clases": ["CrossFit", "Spinning", "Cardio", "Zumba"]
   }')
 on conflict (id) do update set nombre = excluded.nombre, ciudad = excluded.ciudad, marca = excluded.marca,
