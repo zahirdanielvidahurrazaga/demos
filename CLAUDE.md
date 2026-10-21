@@ -45,6 +45,8 @@ Desde el 13-oct-2026 **todo el sitio, índice incluido, está cerrado**: sin có
 - Códigos vigentes: el maestro de Zahir "Zahir (ventas)" (todas, vence 13-oct-2027) y "GYM Fitness Manhattan" (vence 20-oct-2026). Ver con `lista`.
 - **Al mandar una demo a un prospecto, crearle su código con `nuevo`; los links viejos sin código ya no abren.**
 
+> 📱 **Dynamic Island (21-oct-2026):** con `viewport-fit=cover`, en iPhone la página dibuja debajo de la barra de estado. Todo lo fijo arriba (barra de KaiZen, índice) y toda ventana a pantalla completa lleva `env(safe-area-inset-top/bottom)` en su padding y en su `max-height`. Un modal más alto que la pantalla NO va centrado con grid (se corta por los dos lados): fondo `display:flex` + `margin:auto` en la caja.
+
 ## Las demos
 
 - `/` → índice (marca KaiZen).
