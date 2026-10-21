@@ -348,7 +348,7 @@ function Pago({ folio, ir }) {
 
   return (
     <main className="so-seccion so-pago">
-      {p.estado === 'pagado' && <div className="so-confeti" aria-hidden="true">{Array.from({ length: 30 }, (_, i) => <i key={i} />)}</div>}
+      {p.estado === 'pagado' && <div className="so-confeti" aria-hidden="true">{Array.from({ length: 30 }, (_, i) => <i key={i} style={{ left: `${(i * 37) % 100}%`, animationDelay: `${(i % 9) * 0.13}s` }} />)}</div>}
       <p className="so-sello">Folio {p.folio} · {s.titulo}</p>
       <h1 className="so-h1">{p.estado === 'pagado' ? '¡Ya estás participando!' : p.estado === 'liberado' ? 'Este apartado venció' : '¡Boletos apartados!'}</h1>
 

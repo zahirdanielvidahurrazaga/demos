@@ -21,6 +21,7 @@ function Armado({ s, fuente }) {
   const [b1, b2] = corta(fuente.mayor, mitad);
   return (
     <div className="tx-armado">
+      {fuente.ensayo && <span className="tx-armado-ensayo">Resultados de práctica</span>}
       <div className="tx-fuente"><span>Segundo lugar</span><b>{a1}<em>{a2}</em></b></div>
       <span className="tx-mas">+</span>
       <div className="tx-fuente"><span>Premio mayor</span><b>{b1}<em>{b2}</em></b></div>
@@ -53,12 +54,19 @@ export default function Transmision() {
     if (segundo.length < 3 || mayor.length < 3) return;
     revelar(numeroGanador(s, segundo, mayor), { segundo, mayor });
   };
+  // El ensayo hace lo mismo que el sorteo real: inventa resultados de lotería
+  // de práctica que caen en un boleto pagado y los arma igual, pero toda la
+  // pantalla dice "ensayo" para que nadie lo confunda con el bueno.
   const ensayo = () => {
-    // en el ensayo cae en un boleto pagado, para ver al ganador
     const pagados = Object.entries(e.boletos[sorteo]).filter(([, f]) => e.pedidos[f].estado === 'pagado');
-    revelar(Number(pagados[Math.floor(Math.random() * pagados.length)][0]));
+    const num = Number(pagados[Math.floor(Math.random() * pagados.length)][0]);
+    const d = digitos(s), mitad = Math.ceil(d / 2);
+    const t = String(num).padStart(d, '0');
+    const relleno = () => String(Math.floor(Math.random() * 1000)).padStart(3, '0');
+    revelar(num, { segundo: relleno() + t.slice(0, d - mitad), mayor: relleno() + t.slice(d - mitad), ensayo: true });
   };
 
+  const esEnsayo = !!fuente?.ensayo;
   const folio = n != null ? e.boletos[sorteo][n] : null;
   const p = folio ? e.pedidos[folio] : null;
   const gano = p?.estado === 'pagado';
@@ -83,27 +91,29 @@ export default function Transmision() {
         <p className="tx-ayuda">Escribe los resultados oficiales de la Lotería Nacional de hoy. El número ganador se arma con las últimas {digitos(s) - Math.ceil(digitos(s) / 2)} cifras del segundo lugar y las últimas {Math.ceil(digitos(s) / 2)} del premio mayor.</p>
       </div>
 
-      <div className={`tx tx-fase-${fase}`} ref={escenario}>
+      <div className={`tx tx-fase-${fase} ${esEnsayo ? 'tx-es-ensayo' : ''}`} ref={escenario}>
         <div className="tx-fondo" aria-hidden="true"><img src={s.foto} alt="" /></div>
         <header className="tx-cabeza">
           <span className="tx-marca"><i>★</i> FORTUNA</span>
-          <span className="tx-vivo"><i /> EN VIVO</span>
+          {esEnsayo
+            ? <span className="tx-vivo tx-vivo-ensayo"><i /> ENSAYO</span>
+            : <span className="tx-vivo"><i /> EN VIVO</span>}
         </header>
 
         <div className="tx-centro">
           <p className="tx-sorteo">{s.titulo}</p>
           <p className="tx-fecha">Lotería Nacional · {fechaLarga(s.fecha)}</p>
           {fuente && <Armado s={s} fuente={fuente} />}
-          {!fuente && n != null && <p className="tx-ensayo">Ensayo · número al azar</p>}
           <div className="tx-rodillos">
             <Rodillos ref={rodillos} cifras={digitos(s)} grande />
           </div>
           <div className="tx-ganador" aria-live="polite">
             {fase === 'ganador' && (gano ? (
               <>
-                <p className="tx-gano"><Trophy size={30} /> ¡TENEMOS GANADOR!</p>
+                <p className="tx-gano"><Trophy size={30} /> {esEnsayo ? 'GANADOR DE ENSAYO' : '¡TENEMOS GANADOR!'}</p>
                 <p className="tx-nombre">{p.nombre} {p.apellidos.charAt(0)}.</p>
                 <p className="tx-datos">{p.lugar} · boleto {fmtNum(s, n)} · folio {p.folio}</p>
+                {esEnsayo && <p className="tx-ensayo">Práctica: este resultado no cuenta</p>}
               </>
             ) : (
               <>
@@ -118,7 +128,7 @@ export default function Transmision() {
           <span>{r.pagados.toLocaleString('es-MX')} boletos participando</span>
           <span>sorteosfortuna.mx · verifica tu boleto</span>
         </footer>
-        {fase === 'ganador' && gano && <div className="so-confeti tx-confeti" aria-hidden="true">{Array.from({ length: 40 }, (_, i) => <i key={i} />)}</div>}
+        {fase === 'ganador' && gano && <div className="so-confeti tx-confeti" aria-hidden="true">{Array.from({ length: 40 }, (_, i) => <i key={i} style={{ left: `${(i * 37) % 100}%`, animationDelay: `${(i % 9) * 0.13}s` }} />)}</div>}
       </div>
     </div>
   );
