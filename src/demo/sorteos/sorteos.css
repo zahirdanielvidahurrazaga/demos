@@ -503,6 +503,29 @@
 .tx-pie { display: flex; justify-content: space-between; gap: 20px; padding: clamp(12px, 2vw, 26px) clamp(18px, 3vw, 40px); color: #bdb9ae; font-size: clamp(.7rem, 1.2vw, .95rem); letter-spacing: .06em; }
 .tx-confeti { position: absolute; }
 
+/* selectores: flecha propia con aire (la nativa quedaba pegada a la orilla) */
+.so select {
+  -webkit-appearance: none; appearance: none;
+  padding-right: 44px !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23C9C6BE' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 16px center; background-size: 12px;
+  cursor: pointer;
+}
+
+/* transmisión: campos con etiqueta, ayuda y el armado del número */
+.tx-controles { align-items: flex-end; padding: 14px 16px; }
+.tx-campo { display: grid; gap: 6px; font-size: .72rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--so-tenue); }
+.tx-campo select { min-width: 200px; }
+.tx-ayuda { flex-basis: 100%; font-size: .82rem; color: var(--so-tenue); line-height: 1.5; padding: 2px 2px 0; }
+.tx-armado { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: clamp(8px, 1.4vw, 18px); margin-top: clamp(4px, 1vw, 12px); animation: tx-entra .5s both; }
+.tx-fuente { display: grid; gap: 4px; justify-items: center; padding: clamp(8px, 1vw, 12px) clamp(12px, 1.6vw, 20px); border-radius: 16px; background: rgba(255, 255, 255, .07); border: 1px solid rgba(255, 255, 255, .14); backdrop-filter: var(--so-vidrio); -webkit-backdrop-filter: var(--so-vidrio); }
+.tx-fuente span { font-size: clamp(.58rem, .9vw, .72rem); letter-spacing: .14em; text-transform: uppercase; color: #bdb9ae; }
+.tx-fuente b { font-family: var(--so-titulo); font-weight: 400; font-size: clamp(1.1rem, 2.4vw, 2rem); letter-spacing: .1em; color: rgba(255, 255, 255, .45); line-height: 1; }
+.tx-fuente em { font-style: normal; color: var(--so-oro); text-shadow: 0 0 18px rgba(255, 200, 61, .6); }
+.tx-fuente-total { border-color: rgba(255, 200, 61, .5); background: rgba(255, 200, 61, .1); }
+.tx-mas { font-family: var(--so-titulo); font-size: clamp(1.2rem, 2.4vw, 2rem); color: #bdb9ae; }
+.tx-ensayo { font-size: clamp(.7rem, 1.2vw, .9rem); letter-spacing: .14em; text-transform: uppercase; color: #bdb9ae; padding: 6px 14px; border-radius: 999px; border: 1px dashed rgba(255, 255, 255, .25); }
+
 /* ── teléfono (va al final para ganar) ─────────────────────────────────── */
 @media (max-width: 700px) {
   .so-hero { min-height: 600px; border-radius: 28px; margin-top: 14px; }
@@ -526,8 +549,10 @@
   .mq-palanca { right: -38px; height: 120px; }
   .mq-palanca i { height: 95px; }
   .tx { aspect-ratio: 9 / 13; }
-  .tx-controles input { width: calc(50% - 5px); }
-  .tx-controles select { width: 100%; }
+  .tx-campo { flex: 1 1 calc(50% - 5px); }
+  .tx-campo:first-child { flex-basis: 100%; }
+  .tx-campo input, .tx-campo select { width: 100%; min-width: 0; }
+  .tx-mas { display: none; }
 }
 @media (prefers-reduced-motion: reduce) {
   .so-confeti, .so-ticker, .so-carrito, .mq-focos i, .tx-vivo i, .tx-fase-girando .tx-rodillos { animation: none !important; }

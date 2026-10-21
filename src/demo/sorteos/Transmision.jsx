@@ -11,6 +11,25 @@ import { Rodillos } from './Maquina';
 // botón de pantalla completa para capturarla en OBS o compartir pantalla.
 // ─────────────────────────────────────────────────────────────────────────────
 
+// Cómo se arma el número, a la vista de quien ve el live: las cifras que
+// cuentan de cada resultado de la Lotería van resaltadas en oro.
+function Armado({ s, fuente }) {
+  const d = digitos(s);
+  const mitad = Math.ceil(d / 2);
+  const corta = (txt, k) => { const t = String(txt).padStart(k, '0'); return [t.slice(0, -k), t.slice(-k)]; };
+  const [a1, a2] = corta(fuente.segundo, d - mitad);
+  const [b1, b2] = corta(fuente.mayor, mitad);
+  return (
+    <div className="tx-armado">
+      <div className="tx-fuente"><span>Segundo lugar</span><b>{a1}<em>{a2}</em></b></div>
+      <span className="tx-mas">+</span>
+      <div className="tx-fuente"><span>Premio mayor</span><b>{b1}<em>{b2}</em></b></div>
+      <span className="tx-mas">=</span>
+      <div className="tx-fuente tx-fuente-total"><span>Número ganador</span><b><em>{a2}{b2}</em></b></div>
+    </div>
+  );
+}
+
 export default function Transmision() {
   const e = useSorteos();
   const [sorteo, setSorteo] = useState(SORTEOS[0].id);
@@ -18,20 +37,21 @@ export default function Transmision() {
   const [mayor, setMayor] = useState('');
   const [fase, setFase] = useState('espera'); // espera · girando · ganador
   const [n, setN] = useState(null);
+  const [fuente, setFuente] = useState(null); // los números de la Lotería con que se armó
   const rodillos = useRef(null);
   const escenario = useRef(null);
   const s = SORTEOS.find((x) => x.id === sorteo);
   const r = resumen(e, s);
 
-  const revelar = async (num) => {
+  const revelar = async (num, de = null) => {
     if (fase === 'girando') return;
-    setN(num); setFase('girando');
+    setN(num); setFuente(de); setFase('girando');
     await rodillos.current.girar(num, { lento: true });
     setFase('ganador');
   };
   const conLoteria = () => {
     if (segundo.length < 3 || mayor.length < 3) return;
-    revelar(numeroGanador(s, segundo, mayor));
+    revelar(numeroGanador(s, segundo, mayor), { segundo, mayor });
   };
   const ensayo = () => {
     // en el ensayo cae en un boleto pagado, para ver al ganador
@@ -46,14 +66,21 @@ export default function Transmision() {
   return (
     <div className="tx-envoltura">
       <div className="tx-controles">
-        <select value={sorteo} onChange={(ev) => { setSorteo(ev.target.value); setFase('espera'); setN(null); }} disabled={fase === 'girando'}>
-          {SORTEOS.map((x) => <option key={x.id} value={x.id}>{x.titulo}</option>)}
-        </select>
-        <input inputMode="numeric" placeholder="Segundo lugar" value={segundo} onChange={(ev) => setSegundo(ev.target.value.replace(/\D/g, ''))} />
-        <input inputMode="numeric" placeholder="Premio mayor" value={mayor} onChange={(ev) => setMayor(ev.target.value.replace(/\D/g, ''))} />
+        <label className="tx-campo">Sorteo
+          <select value={sorteo} onChange={(ev) => { setSorteo(ev.target.value); setFase('espera'); setN(null); setFuente(null); }} disabled={fase === 'girando'}>
+            {SORTEOS.map((x) => <option key={x.id} value={x.id}>{x.titulo}</option>)}
+          </select>
+        </label>
+        <label className="tx-campo">Segundo lugar
+          <input inputMode="numeric" placeholder="Ej. 48271" value={segundo} onChange={(ev) => setSegundo(ev.target.value.replace(/\D/g, ''))} />
+        </label>
+        <label className="tx-campo">Premio mayor
+          <input inputMode="numeric" placeholder="Ej. 07941" value={mayor} onChange={(ev) => setMayor(ev.target.value.replace(/\D/g, ''))} />
+        </label>
         <button className="so-boton so-boton-oro so-boton-chico" onClick={conLoteria} disabled={fase === 'girando' || segundo.length < 3 || mayor.length < 3}><Play size={16} /> Revelar</button>
         <button className="so-boton so-boton-vidrio so-boton-chico" onClick={ensayo} disabled={fase === 'girando'}><Shuffle size={16} /> Ensayo</button>
         <button className="so-boton so-boton-vidrio so-boton-chico" onClick={() => escenario.current?.requestFullscreen?.()} aria-label="Pantalla completa"><Maximize2 size={16} /></button>
+        <p className="tx-ayuda">Escribe los resultados oficiales de la Lotería Nacional de hoy. El número ganador se arma con las últimas {digitos(s) - Math.ceil(digitos(s) / 2)} cifras del segundo lugar y las últimas {Math.ceil(digitos(s) / 2)} del premio mayor.</p>
       </div>
 
       <div className={`tx tx-fase-${fase}`} ref={escenario}>
@@ -66,6 +93,8 @@ export default function Transmision() {
         <div className="tx-centro">
           <p className="tx-sorteo">{s.titulo}</p>
           <p className="tx-fecha">Lotería Nacional · {fechaLarga(s.fecha)}</p>
+          {fuente && <Armado s={s} fuente={fuente} />}
+          {!fuente && n != null && <p className="tx-ensayo">Ensayo · número al azar</p>}
           <div className="tx-rodillos">
             <Rodillos ref={rodillos} cifras={digitos(s)} grande />
           </div>
