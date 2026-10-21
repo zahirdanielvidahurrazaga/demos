@@ -334,7 +334,7 @@ export function Hoja({ abierta, alCerrar, titulo, children, ancho = 480 }) {
             onDragEnd={(_e, i) => { if (i.offset.y > 110 || i.velocity.y > 600) alCerrar(); }}
             className="g-app g-sin-barra"
             style={{
-              width: `min(${ancho}px, 100%)`, maxHeight: '92vh', overflowY: 'auto', boxSizing: 'border-box', background: '#0E0E0E',
+              width: `min(${ancho}px, 100%)`, maxHeight: 'calc(100dvh - 24px - env(safe-area-inset-top, 0px))', overflowY: 'auto', boxSizing: 'border-box', background: '#0E0E0E',
               borderRadius: '30px 30px 0 0', border: `1px solid ${g.linea}`, borderBottom: 'none', padding: '10px 18px 28px',
               color: g.texto, fontFamily: g.fuente,
             }}>

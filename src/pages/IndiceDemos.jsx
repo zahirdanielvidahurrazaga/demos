@@ -112,7 +112,7 @@ export default function IndiceDemos() {
       `}</style>
 
       {/* Navbar del sitio: píldora de cristal flotante */}
-      <div style={{ position: 'sticky', top: 0, zIndex: 10, padding: '12px 16px 0' }}>
+      <div style={{ position: 'sticky', top: 0, zIndex: 10, padding: '12px 16px 0', paddingTop: 'calc(12px + env(safe-area-inset-top, 0px))' }}>
         <nav style={{
           maxWidth: 1120, margin: '0 auto', display: 'flex', alignItems: 'center', gap: 16,
           padding: '8px 8px 8px 22px', borderRadius: 999, boxSizing: 'border-box',

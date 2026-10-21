@@ -96,10 +96,10 @@ export function Hoja({ abierta, alCerrar, children, ancho = 520, titulo }) {
     <div onClick={alCerrar} style={{
       position: 'fixed', inset: 0, zIndex: 9400, background: 'rgba(20,24,18,0.5)',
       display: 'flex', alignItems: centrada ? 'center' : 'flex-end', justifyContent: 'center',
-      padding: centrada ? 24 : 0, boxSizing: 'border-box',
+      padding: centrada ? 24 : 0, paddingTop: centrada ? 'calc(24px + env(safe-area-inset-top, 0px))' : 'env(safe-area-inset-top, 0px)', boxSizing: 'border-box',
     }}>
       <div role="dialog" aria-label={titulo} onClick={(e) => e.stopPropagation()} style={{
-        width: `min(${ancho}px, 100%)`, maxHeight: centrada ? 'calc(100dvh - 48px)' : 'calc(100dvh - 40px)', overflowY: 'auto',
+        width: `min(${ancho}px, 100%)`, maxHeight: centrada ? 'calc(100dvh - 48px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))' : 'calc(100dvh - 40px - env(safe-area-inset-top, 0px))', overflowY: 'auto',
         overscrollBehavior: 'contain', background: t.fondo, borderRadius: centrada ? 26 : '26px 26px 0 0',
         boxShadow: '0 -20px 50px rgba(0,0,0,0.25)', boxSizing: 'border-box',
         paddingBottom: 'env(safe-area-inset-bottom, 0px)', position: 'relative',

@@ -96,7 +96,7 @@ export function InsigniaNueva() {
   if (!b) return null;
   return (
     <div role="dialog" aria-label="Nueva insignia" onClick={dismissBadge} style={{
-      position: 'fixed', inset: 0, zIndex: 9600, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24,
+      position: 'fixed', inset: 0, zIndex: 9600, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, paddingTop: 'calc(24px + env(safe-area-inset-top, 0px))', paddingBottom: 'calc(24px + env(safe-area-inset-bottom, 0px))',
       background: 'var(--a-velo)', WebkitBackdropFilter: 'blur(16px)', backdropFilter: 'blur(16px)', animation: 'alma-velo .3s ease both',
     }}>
       <div onClick={(e) => e.stopPropagation()} style={{ ...vidrio, background: 'var(--a-hoja)', width: 'min(360px, 100%)', borderRadius: 34, padding: '34px 24px 24px', textAlign: 'center', color: a.tinta, position: 'relative', overflow: 'hidden' }}>

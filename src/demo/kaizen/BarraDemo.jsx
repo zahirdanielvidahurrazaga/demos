@@ -30,7 +30,7 @@ export default function BarraDemo({ roles, rol, alCambiar, guiaAbierta, alGuia, 
   useEffect(() => { cargarFuentesKaizen(); }, []);
 
   return (
-    <div style={{ padding: ancho ? '12px 16px 0' : '8px 8px 0', pointerEvents: 'auto', fontFamily: KAIZEN.texto }}>
+    <div style={{ padding: ancho ? '12px 16px 0' : '8px 8px 0', paddingTop: `calc(${ancho ? 12 : 8}px + env(safe-area-inset-top, 0px))`, pointerEvents: 'auto', fontFamily: KAIZEN.texto }}>
       <div style={{
         maxWidth: 1120, margin: '0 auto', display: 'flex', alignItems: 'center', gap: ancho ? 14 : 6,
         padding: ancho ? '6px 6px 6px 18px' : 5, borderRadius: 999, boxSizing: 'border-box',

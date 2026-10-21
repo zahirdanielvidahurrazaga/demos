@@ -884,8 +884,8 @@ function Pasarela({ ordenId, negocio, alPagar, alCancelar }) {
   };
 
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 9700, background: 'var(--p-pri-60)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-      <div role="dialog" aria-label="Pago" style={{ width: 'min(420px, 100%)', background: k.fondo, borderRadius: 26, padding: 24, boxSizing: 'border-box', boxShadow: '0 24px 60px rgba(0,0,0,0.3)', color: k.texto, fontFamily: k.sans }}>
+    <div style={{ position: 'fixed', inset: 0, zIndex: 9700, background: 'var(--p-pri-60)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, paddingTop: 'calc(16px + env(safe-area-inset-top, 0px))', paddingBottom: 'calc(16px + env(safe-area-inset-bottom, 0px))' }}>
+      <div role="dialog" aria-label="Pago" style={{ width: 'min(420px, 100%)', maxHeight: '100%', overflowY: 'auto', background: k.fondo, borderRadius: 26, padding: 24, boxSizing: 'border-box', boxShadow: '0 24px 60px rgba(0,0,0,0.3)', color: k.texto, fontFamily: k.sans }}>
         {aprobado ? (
           <div style={{ textAlign: 'center', padding: '10px 0' }}>
             <CheckCircle2 size={60} strokeWidth={1.3} color="var(--p-pri)" style={{ marginBottom: 8 }} />

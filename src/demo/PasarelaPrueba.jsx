@@ -67,6 +67,7 @@ export default function PasarelaPrueba({ ordenId, cfg, alTerminar }) {
         position: 'fixed', inset: 0, zIndex: 9700, background: 'rgba(15,15,15,0.55)',
         backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)',
         display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px',
+        paddingTop: 'calc(16px + env(safe-area-inset-top, 0px))', paddingBottom: 'calc(16px + env(safe-area-inset-bottom, 0px))',
       }}>
         <div role="dialog" aria-label="Pago aprobado" style={{
           width: 'min(380px, 100%)', background: '#fff', borderRadius: '24px', padding: '30px 22px',
@@ -92,9 +93,10 @@ export default function PasarelaPrueba({ ordenId, cfg, alTerminar }) {
       position: 'fixed', inset: 0, zIndex: 9700, background: 'rgba(15,15,15,0.55)',
       backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)',
       display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px',
+      paddingTop: 'calc(16px + env(safe-area-inset-top, 0px))', paddingBottom: 'calc(16px + env(safe-area-inset-bottom, 0px))',
     }}>
       <div role="dialog" aria-label="Pasarela de pago de prueba" style={{
-        width: 'min(420px, 100%)', maxHeight: 'calc(100vh - 32px)', overflowY: 'auto',
+        width: 'min(420px, 100%)', maxHeight: 'calc(100dvh - 32px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))', overflowY: 'auto',
         background: '#fff', borderRadius: '24px', padding: '22px', color: tinta,
         boxShadow: '0 24px 60px rgba(0,0,0,0.3)', boxSizing: 'border-box',
       }}>
