@@ -70,9 +70,13 @@ export function miniatura(archivo, ancho = 420) {
 
 // Ventana modal accesible: foco adentro al abrir, Tab no se sale, Escape
 // cierra y al cerrar el foco regresa a donde estaba (revisión de Codex).
+// Mientras está abierta, la página de atrás no se mueve con el scroll.
 export function useDialogo(ref, alCerrar) {
   useEffect(() => {
     const antes = document.activeElement;
+    const html = document.documentElement;
+    const previo = { h: html.style.overflow, b: document.body.style.overflow };
+    html.style.overflow = 'hidden'; document.body.style.overflow = 'hidden';
     const enfocables = () => [...(ref.current?.querySelectorAll('button:not([disabled]), input, select, textarea, a[href]') || [])];
     (ref.current?.querySelector('input, select') || enfocables()[0])?.focus();
     const tecla = (ev) => {
@@ -85,6 +89,10 @@ export function useDialogo(ref, alCerrar) {
       else if (!ev.shiftKey && document.activeElement === ultimo) { ev.preventDefault(); primero.focus(); }
     };
     document.addEventListener('keydown', tecla);
-    return () => { document.removeEventListener('keydown', tecla); antes?.focus?.(); };
+    return () => {
+      document.removeEventListener('keydown', tecla);
+      html.style.overflow = previo.h; document.body.style.overflow = previo.b;
+      antes?.focus?.({ preventScroll: true });
+    };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 }

@@ -68,7 +68,7 @@ export default function SorteosDemo() {
     if (document.getElementById('fuentes-sorteos')) return;
     const link = document.createElement('link');
     link.id = 'fuentes-sorteos'; link.rel = 'stylesheet';
-    link.href = 'https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700;800&display=swap';
+    link.href = 'https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700;800&family=VT323&display=swap';
     document.head.appendChild(link);
   }, []);
 
