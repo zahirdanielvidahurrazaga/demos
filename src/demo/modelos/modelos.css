@@ -708,10 +708,11 @@ button.mo-kpi:hover { transform: translateY(-2px); box-shadow: 0 0 0 1px var(--m
 
 /* ── aspirante: la página de reclutamiento ────────────────────────────── */
 .mo-reclu-portada { position: relative; width: 100vw; margin-left: calc(50% - 50vw); height: calc(100svh - var(--mo-barra) - 70px); min-height: 480px; overflow: hidden; display: flex; align-items: flex-end; background: #000; }
-.mo-reclu-portada img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; animation: mo-kenburns 16s ease-out both; filter: grayscale(.25); }
+.mo-reclu-portada img, .mo-reclu-portada video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: grayscale(.25); }
+.mo-reclu-portada img { animation: mo-kenburns 16s ease-out both; }
 .mo-reclu-portada::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0, 0, 0, .1), rgba(0, 0, 0, .25) 45%, rgba(0, 0, 0, .78)); }
 .mo-reclu-texto { position: relative; z-index: 1; max-width: 1240px; width: 100%; margin: 0 auto; padding: 0 20px 52px; color: #fff; }
-.mo-reclu-texto h1 { font-size: clamp(3.8rem, 12vw, 11rem); margin: 18px 0 18px !important; }
+.mo-reclu-texto h1 { font-size: clamp(3.4rem, 9vw, 8.4rem); margin: 18px 0 18px !important; }
 .mo-reclu-texto h1 span, .mo-reclu-texto h1 em { animation: mo-sube .9s cubic-bezier(.2, .7, .1, 1) both; }
 .mo-reclu-lema { font-size: 1.05rem; max-width: 440px; opacity: .85; margin-bottom: 24px !important; line-height: 1.55; }
 .mo-reclu-dos { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center; padding-top: 90px; }

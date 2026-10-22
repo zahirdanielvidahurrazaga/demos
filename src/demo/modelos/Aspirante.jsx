@@ -48,12 +48,16 @@ export default function Aspirante() {
 // ── la página antes de postularse ───────────────────────────────────────────
 function Reclutamiento({ e, alListo }) {
   const form = useRef(null);
+  const [sinVideo, setSinVideo] = useState(false);
   const nuevas = ['sofia', 'andres'].map((id) => modeloPorId(e, id)).filter(Boolean);
   const ir = () => form.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   return (
     <>
       <section className="mo-reclu-portada">
-        <img src="/modelos/mira/evento-casting.webp" alt="" />
+        {/* el video del casting (Gemini); si no carga, su foto */}
+        {sinVideo
+          ? <img src="/modelos/mira/evento-casting.webp" alt="" />
+          : <video src="/modelos/mira/video/casting.mp4" poster="/modelos/mira/video/casting.jpg" autoPlay muted loop playsInline onError={() => setSinVideo(true)} />}
         <div className="mo-reclu-texto">
           <p className="mo-eti" style={{ color: 'rgba(255,255,255,.75)' }}>Scouting en línea · {AGENCIA.ciudad}</p>
           <h1 className="mo-gigante">Quiero<br /><em>ser modelo.</em></h1>
