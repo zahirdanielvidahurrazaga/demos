@@ -16,6 +16,7 @@
 //                     (tabla pedidos_negocios, ruta /pedidos/<clave>)
 //   tipo: 'gimnasio' → `clave` es un gimnasio de la demo de control de acceso
 //                     (tabla gym_negocios, ruta /gimnasio/<clave>)
+//   tipo: 'sorteos' / 'modelos' → maquetas sin base de datos (/sorteos/<clave>, /modelos/<clave>)
 //   tipo: 'externa' → `url` a una demo desplegada aparte
 //
 // Para agregar una: un bloque más aquí. Nada más se toca.
@@ -75,6 +76,21 @@ export const SECTORES = [
     ],
   },
 
+  {
+    id: 'modelos',
+    titulo: 'Agencias de modelos',
+    descripcion: 'Book en línea, castings y bookings con opción y cotización, app para las modelos, scouting y eventos.',
+    demos: [
+      {
+        tipo: 'modelos',
+        clave: 'mira',
+        nombre: 'MIRA Model Management',
+        detalle: 'Moda, publicidad y pasarela · CDMX y Puebla',
+        nota: 'agencia de ejemplo',
+      },
+    ],
+  },
+
   // ── Plantillas para cuando existan. Se dejan comentadas a propósito: un
   // ── catálogo con enlaces muertos vende peor que uno corto.
   //
@@ -110,5 +126,6 @@ export function destinoDe(demo) {
   if (demo.tipo === 'pedidos') return `/pedidos/${demo.clave}`;
   if (demo.tipo === 'gimnasio') return `/gimnasio/${demo.clave}`;
   if (demo.tipo === 'sorteos') return `/sorteos/${demo.clave}`;
+  if (demo.tipo === 'modelos') return `/modelos/${demo.clave}`;
   return `/demo/${demo.clave}`;
 }
