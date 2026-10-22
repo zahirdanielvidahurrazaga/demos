@@ -122,7 +122,7 @@ export function miniatura(archivo, ancho = 360) {
 // Para el input de fecha/hora local
 export const aLocal = (ts) => { const d = new Date(ts); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 16); };
 
-// Mide el encabezado fijo de MIRA y deja su alto en --mo-cab (en el .mo de
+// Mide el encabezado fijo de KADE y deja su alto en --mo-cab (en el .mo de
 // arriba): en celular es mucho más alto (logo + fila de secciones) y lo que
 // se queda fijo debajo de él (el carrusel) tiene que saber dónde empieza.
 export function useAltoCabeza() {

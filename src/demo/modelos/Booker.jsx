@@ -512,7 +512,7 @@ function DetalleEvento({ e, ev }) {
               <div style={{ display: 'flex', gap: 6, margin: '8px 0', flexWrap: 'wrap', alignItems: 'center' }}>
                 <span className="mo-tenue" style={{ fontSize: '.72rem' }}>Pases de prueba:</span>
                 {pruebas.map((p) => <button key={p.id} type="button" className="mo-chip" style={{ padding: '4px 10px', fontSize: '.72rem' }} onClick={() => leer(p.codigo)}>{p.codigo}</button>)}
-                <button type="button" className="mo-chip" style={{ padding: '4px 10px', fontSize: '.72rem' }} onClick={() => leer('MIRA-XXXX')}>falso</button>
+                <button type="button" className="mo-chip" style={{ padding: '4px 10px', fontSize: '.72rem' }} onClick={() => leer('KADE-XXXX')}>falso</button>
               </div>
             )}
             {flash && <div className="mo-flash" style={{ background: flash.ok ? 'var(--mo-verde)' : 'var(--mo-rojo)', color: '#fff', marginBottom: 8 }}>{flash.ok ? '✓ ' : '✕ '}{flash.texto}</div>}

@@ -1,5 +1,5 @@
 /* ─────────────────────────────────────────────────────────────────────────────
-   MIRA MODEL MANAGEMENT (demo). "Editorial + Casting": por fuera es una
+   KADE MODEL MANAGEMENT (demo). "Editorial + Casting": por fuera es una
    revista (papel hueso, tinta, Bodoni enorme, fotos con aire); por dentro es
    la mesa de la booker (polaroids con borde, números de modelo estampados en
    mono, notas en lápiz rojo). El rojo es SOLO lápiz: lo que hay que atender.
@@ -35,7 +35,7 @@
 :where(.mo) a { color: inherit; }
 :where(.mo) input, :where(.mo) select, :where(.mo) textarea { font: inherit; color: inherit; }
 
-.mo-barra-demo { position: sticky; top: 0; z-index: 9300; padding-bottom: 8px; background: linear-gradient(var(--mo-papel) 55%, transparent); }
+.mo-barra-demo { position: sticky; top: 0; z-index: 9300; padding-bottom: 8px; background: var(--mo-papel); }
 
 /* botón "pantalla completa": ver la demo como el sitio real, sin la barra de KaiZen */
 .mo-completa { position: fixed; z-index: 9360; right: 16px; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); display: inline-flex; align-items: center; gap: 8px; padding: 10px 14px; border-radius: 999px; border: 1px solid rgba(255, 255, 255, .18); background: rgba(20, 20, 19, .62); color: #F2EEE7 !important; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); font-family: 'Inter', system-ui, sans-serif; font-size: .74rem; font-weight: 600; opacity: .75; transition: opacity .2s; }
@@ -502,7 +502,10 @@
 .mo-zoom { position: fixed; z-index: 9400; overflow: hidden; transition: top .7s cubic-bezier(.7, 0, .2, 1), left .7s cubic-bezier(.7, 0, .2, 1), width .7s cubic-bezier(.7, 0, .2, 1), height .7s cubic-bezier(.7, 0, .2, 1); }
 .mo-zoom img { width: 100%; height: 100%; object-fit: cover; object-position: center 25%; }
 @media (max-width: 860px) {
-  .mo-tira2 { width: 17vw; height: min(46vh, calc(100svh - var(--mo-barra) - var(--mo-cab, 64px) - 160px)); }
+  .mo-tira2 { width: 17vw; height: min(44vh, calc(100svh - var(--mo-barra) - var(--mo-cab, 64px) - 250px)); }
+  /* en celular: aire abajo del encabezado para que las rayitas no queden pegadas */
+  .mo-carrusel-fijo { justify-content: flex-start; padding-top: 44px; gap: 30px; }
+  .mo-carrusel-pie { min-height: 90px; }
 }
 
 /* ── board pulido: revista, no catálogo ───────────────────────────────── */
@@ -864,3 +867,24 @@ button.mo-kpi:hover { transform: translateY(-2px); box-shadow: 0 0 0 1px var(--m
 .mo-portal-grid > *, .mo-dos-col > * { min-width: 0; }
 .mo-convoca { overflow: hidden; margin-bottom: 12px; display: grid; grid-template-columns: 170px minmax(0, 1fr); }
 @media (max-width: 860px) { .mo-convoca { grid-template-columns: 1fr; } .mo-convoca > .mo-foto { min-height: 0 !important; aspect-ratio: 16 / 9; } }
+
+/* ── menú de celular: la fila de secciones se recoge al bajar ─────────── */
+.mo-hamburguesa { display: none; position: relative; width: 44px; height: 44px; border-radius: 50%; place-items: center; box-shadow: inset 0 0 0 1px var(--mo-linea); color: var(--mo-tinta); }
+.mo-hamburguesa i { position: absolute; top: 9px; right: 9px; width: 8px; height: 8px; border-radius: 50%; background: var(--mo-rojo); }
+.mo-menu { position: fixed; inset: 0; z-index: 9550; background: #0E0E0D; color: #EEEAE3; display: flex; flex-direction: column; padding: calc(18px + env(safe-area-inset-top, 0px)) 22px calc(26px + env(safe-area-inset-bottom, 0px)); animation: mo-aparece .25s ease; overflow-y: auto; }
+.mo-menu-cab { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+.mo-menu-cab .mo-hamburguesa { color: #EEEAE3; box-shadow: inset 0 0 0 1px rgba(238, 234, 227, .2); }
+.mo-menu nav { display: grid; }
+.mo-menu nav button { display: flex; align-items: baseline; gap: 16px; padding: 12px 0; border-bottom: 1px solid rgba(238, 234, 227, .12); text-align: left; font-family: var(--mo-serif); font-size: clamp(2.2rem, 10vw, 3.2rem); line-height: 1; letter-spacing: -.02em; color: #EEEAE3; animation: mo-sube .45s cubic-bezier(.2, .7, .1, 1) both; }
+.mo-menu nav button .mo-mono { font-size: .7rem; letter-spacing: .1em; color: #8C877F; }
+.mo-menu nav button[aria-current='page'] { font-style: italic; }
+.mo-menu nav button[aria-current='page']::after { content: ''; width: 8px; height: 8px; border-radius: 50%; background: #E5483A; align-self: center; }
+@media (max-width: 860px) {
+  .mo-hamburguesa { display: grid; }
+  .mo-package-boton { padding: 10px 14px; }
+  .mo-nav-movil { max-height: 80px; transition: max-height .35s ease, opacity .25s ease, padding .35s ease; }
+  .mo-cabeza.compacto .mo-nav-movil { max-height: 0; opacity: 0; padding-top: 0; padding-bottom: 0; pointer-events: none; }
+  .mo-cabeza.compacto { padding-bottom: 10px; }
+  .mo-cabeza.compacto .mo-logo { font-size: 1.35rem; }
+  .mo-cabeza.compacto .mo-logo small { display: none; }
+}

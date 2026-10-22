@@ -83,8 +83,8 @@ export const SECTORES = [
     demos: [
       {
         tipo: 'modelos',
-        clave: 'mira',
-        nombre: 'MIRA Model Management',
+        clave: 'kade',
+        nombre: 'KADE Model Management',
         detalle: 'Moda, publicidad y pasarela · CDMX y Puebla',
         nota: 'agencia de ejemplo',
       },

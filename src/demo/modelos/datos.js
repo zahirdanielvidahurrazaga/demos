@@ -17,10 +17,10 @@ import { useSyncExternalStore } from 'react';
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const AGENCIA = {
-  nombre: 'MIRA',
-  completo: 'MIRA Model Management',
+  nombre: 'KADE',
+  completo: 'KADE Model Management',
   ciudad: 'Ciudad de México · Puebla',
-  correo: 'booking@mira.mx',
+  correo: 'booking@kade.mx',
   whatsapp: '522220000000',
   comision: 0.2,   // lo que se queda la agencia de cada trabajo
   iva: 0.16,
@@ -95,8 +95,8 @@ function sembrar() {
       ['Café Lumbre', 'Temporada de invierno', 'Sesión', -44, 8000], ['Joyería Plata Fina', 'Catálogo anillos', 'Sesión', -35, 10000],
     ].map(([marca, proyecto, tipo, d, tarifa]) => t('valeria', marca, proyecto, tipo, d, 10, 6, 'Estudio Roma Norte, CDMX', tarifa, { cobrado: true, liquidado: true })),
     // castings pasados con lo que dijo el cliente
-    t('valeria', 'Lumbre Cosmetics', 'Casting belleza rímel', 'Casting', -16, 12, 1, 'Agencia MIRA, CDMX', 0, { resultado: 'quedo', feedback: 'Les encantó la mirada y la piel. Te quieren para la campaña.' }),
-    t('valeria', 'Tenis Ruta', 'Casting lanzamiento', 'Casting', -11, 16, 1, 'Agencia MIRA, CDMX', 0, { resultado: 'no', feedback: 'Buscaban un perfil más deportivo. Muy buena actitud en el casting.' }),
+    t('valeria', 'Lumbre Cosmetics', 'Casting belleza rímel', 'Casting', -16, 12, 1, 'Agencia KADE, CDMX', 0, { resultado: 'quedo', feedback: 'Les encantó la mirada y la piel. Te quieren para la campaña.' }),
+    t('valeria', 'Tenis Ruta', 'Casting lanzamiento', 'Casting', -11, 16, 1, 'Agencia KADE, CDMX', 0, { resultado: 'no', feedback: 'Buscaban un perfil más deportivo. Muy buena actitud en el casting.' }),
     t('valeria', 'Atelier Ruiz', 'Prueba de vestuario', 'Casting', -4, 13, 1, 'Atelier Ruiz, Puebla centro', 0, { resultado: 'espera', feedback: 'Deciden el viernes; les gustó tu caminata.' }),
     // futuro de Valeria (la cuenta de la demo)
     t('valeria', 'Norte Denim', 'Fitting campaña primavera', 'Fitting', 2, 12, 2, 'Showroom Norte, Polanco', 3000),
@@ -109,9 +109,9 @@ function sembrar() {
     t('camila', 'Café Lumbre', 'Menú de temporada', 'Sesión', 3, 9, 4, 'Café Lumbre, Puebla', 10000),
     t('ximena', 'Volt Supplements', 'Campaña "sin pretextos"', 'Campaña', 5, 6, 8, 'Gimnasio Atlas, Puebla', 14000),
     t('emilio', 'Volt Supplements', 'Campaña "sin pretextos"', 'Campaña', 5, 6, 8, 'Gimnasio Atlas, Puebla', 14000),
-    t('mateo', 'Autos Cholula', 'Casting comercial', 'Casting', 2, 11, 1, 'Agencia MIRA, Puebla', 0),
+    t('mateo', 'Autos Cholula', 'Casting comercial', 'Casting', 2, 11, 1, 'Agencia KADE, Puebla', 0),
     t('ana', 'Revista Plana', 'Editorial belleza', 'Sesión', 8, 10, 5, 'Estudio Condesa, CDMX', 9000),
-    t('sofia', 'Norte Denim', 'Casting campaña', 'Casting', 1, 13, 1, 'Agencia MIRA, CDMX', 0),
+    t('sofia', 'Norte Denim', 'Casting campaña', 'Casting', 1, 13, 1, 'Agencia KADE, CDMX', 0),
     t('andres', 'Sastrería Gil', 'Lookbook', 'Sesión', 11, 10, 5, 'Estudio Roma Norte, CDMX', 9000, { estado: 'opcion' }),
   ];
 
@@ -125,7 +125,7 @@ function sembrar() {
     {
       id: id(), folio: 'SOL-0141', marca: 'Norte Denim', contacto: 'Iván Paredes', correo: 'ivan@nortedenim.mx', telefono: '5512345678',
       proyecto: 'Casting campaña verano', tipo: 'casting', trabajo: 'Casting', fecha: enDias(7, 12), horas: 2,
-      lugar: 'Agencia MIRA, CDMX', uso: 'Campaña completa · 1 año', modelos: ['valeria', 'sofia', 'ana', 'andres'], nota: '',
+      lugar: 'Agencia KADE, CDMX', uso: 'Campaña completa · 1 año', modelos: ['valeria', 'sofia', 'ana', 'andres'], nota: '',
       estado: 'nueva', creada: Date.now() - 20 * HORA, mia: false, cotizacion: null,
     },
   ];
@@ -139,7 +139,7 @@ function sembrar() {
       invitados: invitadosEjemplo(64),
     },
     {
-      id: 'casting', titulo: 'Casting abierto · New faces 2027', tipo: 'Casting abierto', fecha: enDias(10, 11), lugar: 'Agencia MIRA, Puebla',
+      id: 'casting', titulo: 'Casting abierto · New faces 2027', tipo: 'Casting abierto', fecha: enDias(10, 11), lugar: 'Agencia KADE, Puebla',
       foto: '/modelos/mira/evento-casting.webp', publico: true, cupo: 60,
       descripcion: 'Buscamos caras nuevas de 16 a 25 años. Ven sin maquillaje, con jeans y blusa negra. Trae una identificación.',
       convocadas: {}, invitados: invitadosEjemplo(23, true),
@@ -160,7 +160,7 @@ function sembrar() {
   ];
 
   return {
-    v: 3, trabajos, solicitudes, eventos, aspirantes,
+    v: 4, trabajos, solicitudes, eventos, aspirantes,
     favoritos: [], nuevas: [], polaroids: {}, misRegistros: [],
     avisos: [
       ['booker', 'Hotel Cielo pidió un booking (2 modelos)', 2, { tipo: 'solicitud' }],
@@ -193,15 +193,15 @@ function invitadosEjemplo(n, aspirantes = false) {
 function aspiranteEjemplo(nombre, edad, estatura, ciudad, ig, estado, horas, board = 'mujeres') {
   return { id: id(), nombre, board, edad, estatura, ciudad, ig, telefono: '222' + String(Math.floor(1e6 + Math.random() * 9e6)), fotos: [], estado, nota: '', creada: Date.now() - horas * HORA, mia: false };
 }
-function codigoPase() { return 'MIRA-' + Math.random().toString(36).slice(2, 6).toUpperCase(); }
+function codigoPase() { return 'KADE-' + Math.random().toString(36).slice(2, 6).toUpperCase(); }
 
 // ── almacén ─────────────────────────────────────────────────────────────────
-const LLAVE = 'demo_modelos_v3';
+const LLAVE = 'demo_modelos_v4';
 let estado = null;
 const oyentes = new Set();
 
 function leerFresco() {
-  try { const t = localStorage.getItem(LLAVE); if (t) { const e = JSON.parse(t); if (e.v === 3) return e; } } catch { /* sin almacenamiento */ }
+  try { const t = localStorage.getItem(LLAVE); if (t) { const e = JSON.parse(t); if (e.v === 4) return e; } } catch { /* sin almacenamiento */ }
   return null;
 }
 function guardar() { try { localStorage.setItem(LLAVE, JSON.stringify(estado)); } catch { /* lleno o bloqueado */ } }

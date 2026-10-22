@@ -10,7 +10,7 @@ import Aspirante from './Aspirante';
 import './modelos.css';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// MAQUETA DE AGENCIA DE MODELOS — /modelos/mira
+// MAQUETA DE AGENCIA DE MODELOS — /modelos/kade
 //
 // Cuatro roles sobre el mismo almacén del navegador (sin base de datos, como
 // Sorteos): Cliente (el sitio con el book), Aspirante (scouting en línea),

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
-import { ArrowRight, Check, Download, Heart, MapPin, Printer, Send, Sparkles } from 'lucide-react';
+import { ArrowRight, Check, Download, Heart, MapPin, Menu, Printer, Send, Sparkles, X } from 'lucide-react';
 import {
   AGENCIA, CATEGORIAS, PORTADAS, TIPOS_TRABAJO, USOS, DIA,
   useAgencia, todasLasModelos, modeloPorId, nombreDe, fotoDe, choques, alternarFavorito, vaciarPackage,
@@ -25,6 +25,27 @@ const VISTAS = [
 export default function Sitio({ alPostularse }) {
   const e = useAgencia();
   const cabeza = useAltoCabeza();
+  // en celular, al bajar la fila de secciones se recoge en un menú
+  const [compacto, setCompacto] = useState(false);
+  const [menu, setMenu] = useState(false);
+  useEffect(() => {
+    // con margen (se recoge pasando 120 px, regresa abajo de 40) para que no
+    // parpadee justo en el límite
+    const alBajar = () => setCompacto((c) => (c ? window.scrollY > 40 : window.scrollY > 120));
+    alBajar();
+    window.addEventListener('scroll', alBajar, { passive: true });
+    return () => window.removeEventListener('scroll', alBajar);
+  }, []);
+  // con el menú abierto: la página de atrás no se mueve y Esc lo cierra
+  useEffect(() => {
+    if (!menu) return undefined;
+    const html = document.documentElement;
+    const antes = html.style.overflow;
+    html.style.overflow = 'hidden';
+    const tecla = (ev) => { if (ev.key === 'Escape') setMenu(false); };
+    window.addEventListener('keydown', tecla);
+    return () => { html.style.overflow = antes; window.removeEventListener('keydown', tecla); };
+  }, [menu]);
   const [vista, setVista] = useState('inicio');
   const [modelo, setModelo] = useState(null);       // la portada abierta
   const [lista, setLista] = useState([]);           // con quién se pasa ← →
@@ -41,7 +62,7 @@ export default function Sitio({ alPostularse }) {
   return (
     <div className="mo-sitio">
       <div ref={cabeza} className="mo-noche-cab">
-        <header className="mo-cabeza">
+        <header className={`mo-cabeza ${compacto ? 'compacto' : ''}`}>
           <button type="button" className="mo-logo" onClick={() => ir('inicio')} aria-label="Inicio">
             {AGENCIA.nombre}<small>MODEL MANAGEMENT</small>
           </button>
@@ -53,10 +74,15 @@ export default function Sitio({ alPostularse }) {
             ))}
             <button type="button" onClick={alPostularse}>Quiero ser modelo</button>
           </nav>
-          <button type="button" className="mo-package-boton" onClick={() => setPackage('mesa')}>
-            Package <b>{e.favoritos.length}</b>
-          </button>
-          <div className="mo-nav-movil">
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <button type="button" className="mo-package-boton" onClick={() => setPackage('mesa')}>
+              Package <b>{e.favoritos.length}</b>
+            </button>
+            <button type="button" className="mo-hamburguesa" onClick={() => setMenu(true)} aria-label="Abrir menú" aria-expanded={menu}>
+              <Menu size={20} />{porContestar > 0 && <i />}
+            </button>
+          </div>
+          <div className="mo-nav-movil" aria-hidden={compacto || undefined}>
             {VISTAS.map(([id, t]) => (
               <button key={id} type="button" className="mo-chip" aria-pressed={!modelo && vista === id} onClick={() => ir(id)}>
                 {t}{id === 'solicitudes' && porContestar > 0 ? ` (${porContestar})` : ''}
@@ -89,6 +115,27 @@ export default function Sitio({ alPostularse }) {
         </button>
       </footer>
 
+      {menu && (
+        <div className="mo-menu" role="dialog" aria-modal="true" aria-label="Menú">
+          <div className="mo-menu-cab">
+            <span className="mo-logo">{AGENCIA.nombre}<small>MODEL MANAGEMENT</small></span>
+            <button type="button" className="mo-hamburguesa" style={{ display: 'grid' }} onClick={() => setMenu(false)} aria-label="Cerrar menú"><X size={20} /></button>
+          </div>
+          <nav>
+            {VISTAS.map(([id, t], k) => (
+              <button key={id} type="button" style={{ animationDelay: `${k * 45}ms` }} aria-current={!modelo && vista === id ? 'page' : undefined}
+                onClick={() => { setMenu(false); ir(id); }}>
+                <span className="mo-mono">{String(k + 1).padStart(2, '0')}</span>{t}
+                {id === 'solicitudes' && porContestar > 0 && <span className="mo-lapiz" style={{ fontSize: '1.4rem' }}>({porContestar})</span>}
+              </button>
+            ))}
+            <button type="button" style={{ animationDelay: `${VISTAS.length * 45}ms` }} onClick={() => { setMenu(false); alPostularse(); }}>
+              <span className="mo-mono">{String(VISTAS.length + 1).padStart(2, '0')}</span><em>Quiero ser modelo</em>
+            </button>
+          </nav>
+          <p className="mo-eti" style={{ marginTop: 'auto' }}>{AGENCIA.ciudad} · {AGENCIA.correo}</p>
+        </div>
+      )}
       {composite && <Composite m={modeloPorId(e, composite)} alCerrar={() => setComposite(null)} />}
       {package_ && <Package e={e} pasoInicial={package_} alCerrar={() => setPackage(null)} alEnviado={() => { setPackage(null); ir('solicitudes'); }} abrir={(id) => { setPackage(null); abrir(id, e.favoritos); }} />}
       {evento && <RegistroEvento e={e} ev={e.eventos.find((x) => x.id === evento)} alCerrar={() => setEvento(null)} />}
@@ -100,7 +147,7 @@ export default function Sitio({ alPostularse }) {
 const VIDEOS = ['hero-1', 'hero-2', 'hero-3'].map((n) => `/modelos/mira/video/${n}.mp4`);
 const DIAPOSITIVAS = ['renata', 'diego', 'ana', 'valeria', 'emilio'];
 
-// Video a pantalla completa con MIRA encima. Corre los videos que existan (los
+// Video a pantalla completa con KADE encima. Corre los videos que existan (los
 // hace Gemini); si ninguno carga, pasa las fotos con movimiento lento.
 function Portadilla({ alBajar }) {
   // primero se pregunta cuáles videos existen (un 404 aquí regresa el index
@@ -618,11 +665,11 @@ function Eventos({ e, abrir }) {
 // archivo .ics para el calendario del celular
 function icsEvento(ev, pase) {
   const f = (ts) => new Date(ts).toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
-  const ics = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//MIRA//Demo//ES', 'BEGIN:VEVENT', `UID:${pase.id}@mira.mx`, `DTSTAMP:${f(Date.now())}`,
+  const ics = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//KADE//Demo//ES', 'BEGIN:VEVENT', `UID:${pase.id}@kade.mx`, `DTSTAMP:${f(Date.now())}`,
     `DTSTART:${f(ev.fecha)}`, `DTEND:${f(ev.fecha + 3 * 3600000)}`, `SUMMARY:${ev.titulo}`, `LOCATION:${ev.lugar}`, `DESCRIPTION:Pase ${pase.codigo}`, 'END:VEVENT', 'END:VCALENDAR'].join('\r\n');
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([ics], { type: 'text/calendar' }));
-  a.download = 'MIRA-evento.ics';
+  a.download = 'KADE-evento.ics';
   a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 2000);
 }

@@ -171,7 +171,7 @@ function Inicio({ e, m, mios, pendientes, ir, verPortada }) {
 // archivo .ics para agregar el trabajo al calendario del teléfono
 function descargarIcs(t) {
   const f = (ts) => new Date(ts).toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
-  const ics = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//MIRA//Demo//ES', 'BEGIN:VEVENT', `UID:${t.id}@mira.mx`, `DTSTAMP:${f(Date.now())}`,
+  const ics = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//KADE//Demo//ES', 'BEGIN:VEVENT', `UID:${t.id}@kade.mx`, `DTSTAMP:${f(Date.now())}`,
     `DTSTART:${f(t.fecha)}`, `DTEND:${f(t.fecha + t.horas * HORA)}`, `SUMMARY:${t.marca} · ${t.tipo}`, `LOCATION:${t.lugar}`, `DESCRIPTION:${t.proyecto}`, 'END:VEVENT', 'END:VCALENDAR'].join('\r\n');
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([ics], { type: 'text/calendar' }));

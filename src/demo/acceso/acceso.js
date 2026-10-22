@@ -69,7 +69,7 @@ export function demoDeRuta(ruta) {
 // Links que son la misma demo (el gimnasio se volvió genérico el 20-oct-2026:
 // `gimnasio/atlas` es por dentro `gimnasio/manhattan`). Un código que abre uno
 // abre el otro, y el índice lo enseña con cualquiera de los dos.
-const MISMA_DEMO = { 'gimnasio/manhattan': 'gimnasio/atlas' };
+const MISMA_DEMO = { 'gimnasio/manhattan': 'gimnasio/atlas', 'modelos/mira': 'modelos/kade' };   // la agencia se llamó MIRA el 21-oct
 export const canonica = (demo) => MISMA_DEMO[demo] || demo;
 
 export function permite(acceso, ruta) {
