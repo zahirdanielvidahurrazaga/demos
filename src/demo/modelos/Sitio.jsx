@@ -61,7 +61,9 @@ export default function Sitio({ alPostularse }) {
 
   return (
     <div className="mo-sitio">
-      <div ref={cabeza} className="mo-noche-cab">
+      {/* sin barra: los elementos flotan; sobre el video (inicio y eventos) el
+          video sube hasta arriba; al bajar, un degradado suave para que se lean */}
+      <div ref={cabeza} className={`mo-noche-cab ${!modelo && ['inicio', 'eventos'].includes(vista) ? 'sobre' : ''} ${compacto || menu ? 'solido' : ''}`}>
         <header className={`mo-cabeza ${compacto ? 'compacto' : ''}`}>
           <button type="button" className="mo-logo" onClick={() => ir('inicio')} aria-label="Inicio">
             {AGENCIA.nombre}<small>MODEL MANAGEMENT</small>

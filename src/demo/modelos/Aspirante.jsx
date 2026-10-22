@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { ArrowLeft, ArrowRight, Camera, Check, Plus, X } from 'lucide-react';
 import { AGENCIA, HORA, useAgencia, modeloPorId, postularse, fechaLarga, fechaCorta, hora, estaturaTxt } from './datos';
@@ -21,13 +21,20 @@ const MINIMO = { mujeres: 170, hombres: 180 };
 export default function Aspirante() {
   const e = useAgencia();
   const cabeza = useAltoCabeza();
+  const [bajo, setBajo] = useState(false);
+  useEffect(() => {
+    const alBajar = () => setBajo(window.scrollY > 120);
+    alBajar();
+    window.addEventListener('scroll', alBajar, { passive: true });
+    return () => window.removeEventListener('scroll', alBajar);
+  }, []);
   const [mia, setMia] = useState(leerMia);
   const a = e.aspirantes.find((x) => x.id === mia);
   const guardar = (id) => { try { localStorage.setItem(LLAVE, id); } catch { /* */ } setMia(id); window.scrollTo({ top: 0, behavior: 'smooth' }); };
   const otra = () => { try { localStorage.removeItem(LLAVE); } catch { /* */ } setMia(null); };
   return (
     <div className="mo-sitio">
-      <div ref={cabeza} className="mo-noche-cab">
+      <div ref={cabeza} className={`mo-noche-cab ${a ? '' : 'sobre'} ${bajo ? 'solido' : ''}`}>
         <header className="mo-cabeza">
           <div className="mo-logo">{AGENCIA.nombre}<small>MODEL MANAGEMENT</small></div>
           <span className="mo-eti">Scouting 2027</span>

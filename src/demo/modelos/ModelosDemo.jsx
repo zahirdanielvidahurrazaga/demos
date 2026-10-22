@@ -7,6 +7,7 @@ import Sitio from './Sitio';
 import Modelo from './Modelo';
 import Booker from './Booker';
 import Aspirante from './Aspirante';
+import Carga, { yaCargo, olvidarCarga } from './Carga';
 import './modelos.css';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -61,6 +62,8 @@ export default function ModelosDemo() {
     return ROLES.some((x) => x.id === r) ? r : 'cliente';
   });
   const [guia, setGuia] = useState(false);
+  // pantalla de carga al entrar al sitio (una vez por visita)
+  const [cargando, setCargando] = useState(() => rol === 'cliente' && !yaCargo());
   // "como sitio": sin la barra de KaiZen y con el navegador a pantalla completa
   const [completa, setCompleta] = useState(false);
   const encabezado = useRef(null);
@@ -132,7 +135,7 @@ export default function ModelosDemo() {
           <a className="mo-guia-boton" href={`https://wa.me/${KAIZEN.whatsapp}?text=${encodeURIComponent(mensaje)}`} target="_blank" rel="noreferrer">
             <MessageCircle size={17} /> Quiero esto para mi agencia
           </a>
-          <button type="button" className="mo-guia-boton mo-guia-boton-claro" onClick={() => { reiniciarDemo(); try { localStorage.removeItem('demo_modelos_mi_postulacion'); } catch { /* */ } window.location.reload(); }}>
+          <button type="button" className="mo-guia-boton mo-guia-boton-claro" onClick={() => { reiniciarDemo(); olvidarCarga(); try { localStorage.removeItem('demo_modelos_mi_postulacion'); } catch { /* */ } window.location.reload(); }}>
             <RotateCcw size={16} /> Reiniciar la demo
           </button>
         </aside>
@@ -143,6 +146,8 @@ export default function ModelosDemo() {
         {completa ? <Minimize2 size={15} /> : <Maximize2 size={15} />}
         <span>{completa ? 'Salir' : 'Pantalla completa'}</span>
       </button>
+
+      {cargando && <Carga alTerminar={() => setCargando(false)} />}
 
       {/* el sitio se queda montado: al regresar sigue donde estaba */}
       <div hidden={rol !== 'cliente'}><Sitio alPostularse={() => cambiarRol('aspirante')} /></div>
