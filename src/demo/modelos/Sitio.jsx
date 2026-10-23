@@ -226,7 +226,8 @@ function Inicio({ e, ir, abrir, abrirEvento }) {
           <h2>El <em>board</em></h2>
           <p className="mo-tenue" style={{ fontSize: '.86rem', maxWidth: 360 }}>{modelos.length} modelos para moda, publicidad y pasarela. Arma tu package y pide casting en línea.</p>
         </div>
-        <Carrusel modelos={modelos} abrir={abrir} />
+        {/* el board del inicio es el mismo Giro del book: todas en fila, al tocar una crece y gira */}
+        <Giro e={e} modelos={modelos} abrir={abrir} />
       </section>
 
       <Indice modelos={modelos} eventos={proximos.length} ir={ir} />
