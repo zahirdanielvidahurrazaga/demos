@@ -54,7 +54,11 @@ export default function Giro({ e, modelos, abrir }) {
               tabIndex={alFrente || !foco ? 0 : -1}
               style={{ '--d': d, '--l': lejos, '--f': i - (modelos.length - 1) / 2, zIndex: foco ? 20 - lejos : 1 }}
               onClick={() => { if (!alFrente) { setSel(i); setFoco(true); } }} aria-label={alFrente ? `${x.nombre}, arrastra para girarla` : `Ver a ${x.nombre}`}>
-              {alFrente && GIROS[x.id] ? <Girar id={x.id} {...datosGiro(x.id)} /> : <Quieta m={x} />}
+              {/* las que tienen video giran desde la fila (cada una en otro punto
+                  de su vuelta); al frente además se gira arrastrando */}
+              {GIROS[x.id] && (alFrente || !foco)
+                ? <Girar id={x.id} {...datosGiro(x.id)} interactivo={alFrente} fase={i * 0.17} />
+                : <Quieta m={x} />}
               {!foco && <span className="mo-giro-num">{x.num}</span>}
             </button>
           );
@@ -100,14 +104,14 @@ export default function Giro({ e, modelos, abrir }) {
 // La que gira: los cuadros precargados se pintan en un canvas (cambiar el src de
 // un <img> parpadea). Gira sola despacio (el medio giro se mece) y se gira
 // arrastrando con el mouse o el dedo; al soltar sigue sola desde ahí.
-function Girar({ id, n, vuelta }) {
+function Girar({ id, n, vuelta, interactivo = true, fase = 0 }) {
   const lienzo = useRef(null);
   useEffect(() => {
     const cv = lienzo.current;
     const ctx = cv.getContext('2d');
     const imgs = Array.from({ length: n }, (_, i) => { const im = new Image(); im.src = cuadro(id, i); return im; });
     const quieto = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    let meta = 0, actual = 0, ultimo = -1, raf = 0, tocado = 0, arrastre = null;
+    let meta = vuelta ? fase : 0, actual = meta, ultimo = -1, raf = 0, tocado = 0, arrastre = null;
     const pintar = () => {
       // vuelta completa: a = vueltas (0 frente, .5 espalda, 1 frente otra vez, sin tope)
       // medio giro: a = -1 (perfil a un lado) · 0 (frente) · 1 (perfil al otro lado)
@@ -140,8 +144,10 @@ function Girar({ id, n, vuelta }) {
     };
     const alBajar = (ev) => { arrastre = { x: ev.clientX, a: meta }; tocado = Date.now(); cv.setPointerCapture?.(ev.pointerId); };
     const alSoltar = () => { arrastre = null; };
-    cv.addEventListener('pointermove', alMover);
-    cv.addEventListener('pointerdown', alBajar);
+    if (interactivo) {
+      cv.addEventListener('pointermove', alMover);
+      cv.addEventListener('pointerdown', alBajar);
+    }
     window.addEventListener('pointerup', alSoltar);
     // en celular, deslizar hacia arriba/abajo sobre ella cancela el arrastre
     // (touch-action: pan-y deja bajar por la página): también hay que soltarlo
@@ -155,8 +161,8 @@ function Girar({ id, n, vuelta }) {
       window.removeEventListener('pointerup', alSoltar);
       window.removeEventListener('pointercancel', alSoltar);
     };
-  }, [id, n, vuelta]);
-  return <canvas ref={lienzo} className="mo-giro-cuerpo mo-giro-canvas" aria-hidden="true" />;
+  }, [id, n, vuelta, interactivo]); // eslint-disable-line react-hooks/exhaustive-deps
+  return <canvas ref={lienzo} className={`mo-giro-cuerpo mo-giro-canvas ${interactivo ? 'se-arrastra' : ''}`} aria-hidden="true" />;
 }
 
 // La que no gira (en la fila, atrás, o sin video todavía): su cuadro de frente
