@@ -31,10 +31,18 @@ export default function Sitio({ alPostularse }) {
   // en celular, al bajar la fila de secciones se recoge en un menú
   const [compacto, setCompacto] = useState(false);
   const [menu, setMenu] = useState(false);
+  const [sobreClaro, setSobreClaro] = useState(false);
   useEffect(() => {
     // con margen (se recoge pasando 120 px, regresa abajo de 40) para que no
     // parpadee justo en el límite
-    const alBajar = () => setCompacto((c) => (c ? window.scrollY > 40 : window.scrollY > 120));
+    const alBajar = () => {
+      setCompacto((c) => (c ? window.scrollY > 40 : window.scrollY > 120));
+      // ¿qué hay justo debajo del encabezado? sobre el estudio claro del Giro
+      // el encabezado se vuelve claro (una barra negra ahí se ve pesada)
+      const r = cabeza.current?.getBoundingClientRect();
+      const debajo = r && document.elementFromPoint(window.innerWidth / 2, r.bottom + 6);
+      setSobreClaro(!!debajo?.closest?.('.mo-giro'));
+    };
     alBajar();
     window.addEventListener('scroll', alBajar, { passive: true });
     return () => window.removeEventListener('scroll', alBajar);
@@ -79,7 +87,7 @@ export default function Sitio({ alPostularse }) {
     <div className="mo-sitio">
       {/* sin barra: los elementos flotan; sobre el video (inicio y eventos) el
           video sube hasta arriba; al bajar, un degradado suave para que se lean */}
-      <div ref={cabeza} className={`mo-noche-cab ${!modelo && ['inicio', 'eventos'].includes(vista) ? 'sobre' : ''} ${compacto || menu ? 'solido' : ''}`}>
+      <div ref={cabeza} className={`mo-noche-cab ${!modelo && ['inicio', 'eventos'].includes(vista) ? 'sobre' : ''} ${compacto || menu ? 'solido' : ''} ${sobreClaro && !menu ? 'mo-claro sobre-claro' : ''}`}>
         <header className={`mo-cabeza ${compacto ? 'compacto' : ''}`}>
           <button type="button" className="mo-logo" onClick={() => ir('inicio')} aria-label="Inicio">
             {AGENCIA.nombre}<small>MODEL MANAGEMENT</small>
@@ -189,8 +197,6 @@ function Portadilla({ alBajar }) {
     const id = setInterval(() => setDia((d) => (d + 1) % DIAPOSITIVAS.length), 6000);
     return () => clearInterval(id);
   }, [video, listo]);
-  const total = video ? videos.length : DIAPOSITIVAS.length;
-  const actual = video ? (i % videos.length) : dia;
   return (
     <section className="mo-video" aria-label="Portada">
       {DIAPOSITIVAS.map((id, k) => (
@@ -203,9 +209,9 @@ function Portadilla({ alBajar }) {
       )}
       <div className="mo-video-logo"><span>{AGENCIA.nombre}</span></div>
       <div className="mo-video-pie">
-        <span>Model Management<br />{AGENCIA.ciudad}</span>
+        <span />
         <button type="button" onClick={alBajar}>Ver el board ↓</button>
-        <span className="mo-contador">{String(actual + 1).padStart(2, '0')} <i /> {String(total).padStart(2, '0')}</span>
+        <span />
       </div>
     </section>
   );
@@ -222,10 +228,6 @@ function Inicio({ e, ir, abrir, abrirEvento }) {
       <Portadilla alBajar={() => tiras.current?.scrollIntoView({ behavior: 'smooth' })} />
 
       <section ref={tiras} className="mo-tiras-sec">
-        <div className="mo-seccion-cab">
-          <h2>El <em>board</em></h2>
-          <p className="mo-tenue" style={{ fontSize: '.86rem', maxWidth: 360 }}>{modelos.length} modelos para moda, publicidad y pasarela. Arma tu package y pide casting en línea.</p>
-        </div>
         {/* el board del inicio es el mismo Giro del book: todas en fila, al tocar una crece y gira */}
         <Giro e={e} modelos={modelos} abrir={abrir} />
       </section>
@@ -263,12 +265,7 @@ function Inicio({ e, ir, abrir, abrirEvento }) {
         </div>
       </section>
 
-      {proximos.length > 0 && (
-        <section className="mo-seccion">
-          <div className="mo-seccion-cab"><h2>Próximos <em>eventos</em></h2></div>
-          <div className="mo-eventos">{proximos.map((ev) => <TarjetaEvento key={ev.id} ev={ev} abrir={abrirEvento} />)}</div>
-        </section>
-      )}
+      {proximos.length > 0 && <Carteles eventos={proximos} abrir={abrirEvento} />}
     </>
   );
 }
@@ -647,17 +644,27 @@ function Cuenta({ hasta }) {
   );
 }
 
-function TarjetaEvento({ ev, abrir }) {
-  const d = new Date(ev.fecha);
+// Próximos eventos del inicio: carteles a sangre, uno junto al otro, en blanco y
+// negro; el que tiene el cursor se ensancha y toma color. Encima, solo la fecha
+// en contorno, el título y una línea con lugar y hora.
+function Carteles({ eventos, abrir }) {
   return (
-    <button type="button" className="mo-evento" onClick={() => abrir(ev.id)}>
-      <Foto src={ev.foto}>
-        <div className="mo-fecha-bloque"><b>{d.getDate()}</b><span>{d.toLocaleDateString('es-MX', { month: 'short' })}</span></div>
-      </Foto>
-      <p className="mo-eti" style={{ marginTop: 14 }}>{ev.tipo}</p>
-      <h3>{ev.titulo}</h3>
-      <p className="mo-tenue" style={{ fontSize: '.86rem', marginTop: 6, display: 'flex', gap: 6, alignItems: 'center' }}><MapPin size={14} /> {ev.lugar} · {hora(ev.fecha)}</p>
-    </button>
+    <section className="mo-carteles" aria-label="Próximos eventos">
+      <p className="mo-eti mo-carteles-eti">Próximos eventos</p>
+      {eventos.map((ev) => {
+        const d = new Date(ev.fecha);
+        return (
+          <button key={ev.id} type="button" className="mo-cartel" onClick={() => abrir(ev.id)}>
+            <img src={ev.foto} alt="" loading="lazy" />
+            <span className="mo-cartel-texto">
+              <span className="mo-cartel-fecha">{String(d.getDate()).padStart(2, '0')}·{String(d.getMonth() + 1).padStart(2, '0')}</span>
+              <span className="mo-cartel-titulo">{ev.titulo}</span>
+              <span className="mo-cartel-pie"><span className="mo-mono">{ev.lugar} · {hora(ev.fecha)}</span><span className="mo-cartel-ir">Registrarme <ArrowRight size={14} /></span></span>
+            </span>
+          </button>
+        );
+      })}
+    </section>
   );
 }
 

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { ArrowLeft, ArrowRight, Heart } from 'lucide-react';
-import { GIROS, alternarFavorito, estaturaTxt, medidasTxt, fotoDe } from './datos';
+import { GIROS, alternarFavorito, estaturaTxt, fotoDe } from './datos';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // VISTA "GIRO" del book — idea tomada de un TikTok que pasó Zahir (22-oct; solo
@@ -42,8 +42,11 @@ export default function Giro({ e, modelos, abrir }) {
   }, [modelos.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const enPackage = e.favoritos.includes(m.id);
+  // en celular la fila va en renglones de 4 (en compu, una sola línea)
+  const POR_RENGLON = 4;
+  const renglones = Math.ceil(modelos.length / POR_RENGLON);
   return (
-    <section className={`mo-giro mo-claro ${foco ? 'foco' : 'fila'}`} style={{ '--n': modelos.length }} aria-label="Board en giro">
+    <section className={`mo-giro mo-claro ${foco ? 'foco' : 'fila'}`} style={{ '--n': modelos.length, '--nr': renglones }} aria-label="Board en giro">
       <div className="mo-giro-escena">
         {modelos.map((x, i) => {
           const d = i - sel;
@@ -52,7 +55,12 @@ export default function Giro({ e, modelos, abrir }) {
           return (
             <button key={x.id} type="button" className={`mo-giro-fig ${alFrente ? 'al-frente' : ''} ${foco && lejos > 2 ? 'oculta' : ''}`}
               tabIndex={alFrente || !foco ? 0 : -1}
-              style={{ '--d': d, '--l': lejos, '--f': i - (modelos.length - 1) / 2, zIndex: foco ? 20 - lejos : 1 }}
+              style={{
+                '--d': d, '--l': lejos, '--f': i - (modelos.length - 1) / 2,
+                '--r': Math.floor(i / POR_RENGLON),
+                '--c': (i % POR_RENGLON) - (Math.min(POR_RENGLON, modelos.length - Math.floor(i / POR_RENGLON) * POR_RENGLON) - 1) / 2,
+                zIndex: foco ? 20 - lejos : 1,
+              }}
               onClick={() => { if (!alFrente) { setSel(i); setFoco(true); } }} aria-label={alFrente ? `${x.nombre}, arrastra para girarla` : `Ver a ${x.nombre}`}>
               {/* las que tienen video giran desde la fila (cada una en otro punto
                   de su vuelta); al frente además se gira arrastrando */}
@@ -66,18 +74,16 @@ export default function Giro({ e, modelos, abrir }) {
         <div className="mo-giro-niebla" aria-hidden="true" />
       </div>
 
-      {!foco && <p className="mo-giro-invita">Toca a una para verla de cerca</p>}
-
+      {/* al frente: lo mínimo — nombre, estatura y dos enlaces; abajo, solo las flechas */}
       {foco && (
         <div key={m.id} className="mo-giro-info">
-          <button type="button" className="mo-giro-volver" onClick={() => setFoco(false)}><ArrowLeft size={14} /> Todas</button>
-          <p className="mo-eti">Nº {m.num} · {m.categorias.join(' · ')}</p>
-          <h3 className="mo-gigante">{m.nombre}<br /><em>{m.apellido}</em></h3>
-          <p className="mo-mono mo-giro-datos">{estaturaTxt(m.estatura)} · {medidasTxt(m)}<br />{m.ojos} · {m.cabello} · {m.ciudad}</p>
+          <button type="button" className="mo-giro-volver" onClick={() => setFoco(false)}><ArrowLeft size={13} /> Todas</button>
+          <h3 className="mo-gigante">{m.nombre} <em>{m.apellido}</em></h3>
+          <p className="mo-mono mo-giro-datos">Nº {m.num} · {estaturaTxt(m.estatura)}</p>
           <div className="mo-giro-acciones">
-            <button type="button" className="mo-boton mo-boton-chico" onClick={() => abrir(m.id, ids)}>Ver portada <ArrowRight size={14} /></button>
-            <button type="button" className="mo-boton mo-boton-claro mo-boton-chico" aria-pressed={enPackage} onClick={() => alternarFavorito(m.id)}>
-              <Heart size={14} fill={enPackage ? 'currentColor' : 'none'} /> {enPackage ? 'En tu package' : 'Al package'}
+            <button type="button" onClick={() => abrir(m.id, ids)}>Ver portada</button>
+            <button type="button" aria-pressed={enPackage} onClick={() => alternarFavorito(m.id)} aria-label={enPackage ? 'Quitar del package' : 'Agregar al package'}>
+              <Heart size={13} fill={enPackage ? 'currentColor' : 'none'} />
             </button>
           </div>
         </div>
@@ -85,16 +91,8 @@ export default function Giro({ e, modelos, abrir }) {
 
       {foco && (
         <div className="mo-giro-pie">
-          <button type="button" className="mo-giro-flecha" onClick={() => mover(-1)} aria-label="Anterior"><ArrowLeft size={18} /></button>
-          <div className="mo-giro-fila" role="group" aria-label="Elegir modelo">
-            {modelos.map((x, i) => (
-              <button key={x.id} type="button" aria-pressed={i === sel} onClick={() => setSel(i)} aria-label={x.nombre}>
-                <img src={recorteDe(x) || (GIROS[x.id] ? cuadro(x.id, 0, !!GIROS[x.id].ligero) : fotoDe(x, 'book'))} alt="" loading="lazy" />
-              </button>
-            ))}
-          </div>
-          <button type="button" className="mo-giro-flecha" onClick={() => mover(1)} aria-label="Siguiente"><ArrowRight size={18} /></button>
-          <p className="mo-giro-ayuda">{GIROS[m.id] ? 'Arrastra para girarla · ← → otra modelo' : '← → para pasar de modelo'}</p>
+          <button type="button" onClick={() => mover(-1)} aria-label="Anterior"><ArrowLeft size={15} /></button>
+          <button type="button" onClick={() => mover(1)} aria-label="Siguiente"><ArrowRight size={15} /></button>
         </div>
       )}
     </section>
