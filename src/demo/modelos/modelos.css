@@ -1133,7 +1133,7 @@ button.mo-kpi:hover { transform: translateY(-2px); box-shadow: 0 0 0 1px var(--m
 .mo-carteles-eti { position: absolute; top: 28px; left: clamp(16px, 4vw, 56px); z-index: 3; color: rgba(255, 255, 255, .7); }
 .mo-cartel { position: relative; flex: 1 1 0; min-width: 0; padding: 0; overflow: hidden; text-align: left; color: #F4F1EA; transition: flex-grow .9s cubic-bezier(.7, 0, .2, 1); }
 .mo-cartel + .mo-cartel { border-left: 1px solid rgba(255, 255, 255, .12); }
-.mo-cartel img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: grayscale(1) brightness(.62) contrast(1.05); transform: scale(1.04); transition: filter .9s ease, transform 1.4s cubic-bezier(.2, .7, .1, 1); }
+.mo-cartel img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 22%; filter: grayscale(1) brightness(.62) contrast(1.05); transform: scale(1.04); transition: filter .9s ease, transform 1.4s cubic-bezier(.2, .7, .1, 1); }
 .mo-cartel::after { content: ''; position: absolute; inset: 0; background: linear-gradient(transparent 45%, rgba(0, 0, 0, .7)); pointer-events: none; }
 .mo-carteles:hover .mo-cartel:hover, .mo-cartel:focus-visible { flex-grow: 1.8; }
 .mo-cartel:hover img, .mo-cartel:focus-visible img { filter: grayscale(0) brightness(.8) contrast(1.02); transform: scale(1); }
@@ -1144,7 +1144,13 @@ button.mo-kpi:hover { transform: translateY(-2px); box-shadow: 0 0 0 1px var(--m
 .mo-cartel-pie .mo-mono { font-size: .68rem; letter-spacing: .06em; color: rgba(244, 241, 234, .7); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .mo-cartel-ir { display: inline-flex; align-items: center; gap: 6px; font-size: .62rem; letter-spacing: .2em; text-transform: uppercase; font-weight: 600; white-space: nowrap; opacity: 0; transform: translateX(-8px); transition: opacity .5s, transform .5s; }
 .mo-cartel:hover .mo-cartel-ir, .mo-cartel:focus-visible .mo-cartel-ir { opacity: 1; transform: none; }
-@media (hover: none), (max-width: 860px) {
+/* pantallas táctiles anchas (iPad): lado a lado como en compu, ya en color y
+   con "Registrarme" visible porque no hay cursor */
+@media (hover: none) and (min-width: 861px) {
+  .mo-cartel img { filter: grayscale(.15) brightness(.74); transform: none; }
+  .mo-cartel-ir { opacity: 1; transform: none; }
+}
+@media (max-width: 860px) {
   .mo-carteles { flex-direction: column; height: auto; min-height: 0; margin-top: 60px; }
   .mo-cartel { flex: none; height: 64svh; min-height: 420px; }
   .mo-cartel + .mo-cartel { border-left: 0; border-top: 1px solid rgba(255, 255, 255, .12); }
