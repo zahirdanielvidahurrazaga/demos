@@ -42,12 +42,13 @@ export default function Giro({ e, modelos, abrir }) {
   }, [modelos.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const enPackage = e.favoritos.includes(m.id);
-  // en celular la fila va en renglones de 4 (en compu, una sola línea)
-  const POR_RENGLON = 4;
-  const renglones = Math.ceil(modelos.length / POR_RENGLON);
+  // en celular la fila se desliza con el dedo; al pasar a una sola modelo,
+  // la escena regresa a su inicio para que el acomodo del frente cuadre
+  const escena = useRef(null);
+  useEffect(() => { if (foco && escena.current) escena.current.scrollLeft = 0; }, [foco]);
   return (
-    <section className={`mo-giro mo-claro ${foco ? 'foco' : 'fila'}`} style={{ '--n': modelos.length, '--nr': renglones }} aria-label="Board en giro">
-      <div className="mo-giro-escena">
+    <section className={`mo-giro mo-claro ${foco ? 'foco' : 'fila'}`} style={{ '--n': modelos.length }} aria-label="Board en giro">
+      <div ref={escena} className="mo-giro-escena">
         {modelos.map((x, i) => {
           const d = i - sel;
           const lejos = Math.abs(d);
@@ -56,9 +57,7 @@ export default function Giro({ e, modelos, abrir }) {
             <button key={x.id} type="button" className={`mo-giro-fig ${alFrente ? 'al-frente' : ''} ${foco && lejos > 2 ? 'oculta' : ''}`}
               tabIndex={alFrente || !foco ? 0 : -1}
               style={{
-                '--d': d, '--l': lejos, '--f': i - (modelos.length - 1) / 2,
-                '--r': Math.floor(i / POR_RENGLON),
-                '--c': (i % POR_RENGLON) - (Math.min(POR_RENGLON, modelos.length - Math.floor(i / POR_RENGLON) * POR_RENGLON) - 1) / 2,
+                '--d': d, '--l': lejos, '--f': i - (modelos.length - 1) / 2, '--i': i,
                 zIndex: foco ? 20 - lejos : 1,
               }}
               onClick={() => { if (!alFrente) { setSel(i); setFoco(true); } }} aria-label={alFrente ? `${x.nombre}, arrastra para girarla` : `Ver a ${x.nombre}`}>

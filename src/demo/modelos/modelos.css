@@ -1166,8 +1166,14 @@ button.mo-kpi:hover { transform: translateY(-2px); box-shadow: 0 0 0 1px var(--m
 .mo :focus:not(:focus-visible) { outline: none; }
 /* celular: la fila en renglones de 4 y, al frente, el nombre abajo junto a las flechas */
 @media (max-width: 860px) {
-  .mo-giro.fila .mo-giro-fig { height: calc(78% / var(--nr) - 7%); bottom: calc(6% + (var(--nr) - 1 - var(--r)) * (84% / var(--nr))); transform: translateX(-50%) translateX(calc(var(--c) * 23vw)); }
-  .mo-giro-num { bottom: -18px; }
+  /* la fila: una sola línea que se desliza con el dedo, una modelo cada 30vw */
+  .mo-giro.fila .mo-giro-escena { overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+  .mo-giro.fila .mo-giro-escena::-webkit-scrollbar { display: none; }
+  .mo-giro.fila .mo-giro-fig { left: calc(36vw + var(--i) * 30vw); height: 44%; bottom: 24%; transform: translateX(-50%); scroll-snap-align: center; }
+  /* al final queda aire para que la última también pueda quedar al centro */
+  .mo-giro.fila .mo-giro-escena::after { content: ''; position: absolute; top: 0; left: calc(36vw + var(--n) * 30vw); width: 34vw; height: 1px; }
+  .mo-giro.fila .mo-giro-niebla { display: none; }
+  .mo-giro-num { bottom: -20px; }
   .mo-giro.foco .mo-giro-fig { height: 58%; bottom: 24%; }
   .mo-giro-info { top: auto; bottom: 64px; left: 16px; right: 16px; max-width: none; z-index: 41; }
   .mo-giro-info h3 { font-size: 1.5rem; margin: 8px 0 4px; }
