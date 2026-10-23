@@ -1047,7 +1047,7 @@ button.mo-kpi:hover { transform: translateY(-2px); box-shadow: 0 0 0 1px var(--m
   filter: blur(calc(var(--l) * 2.4px)) grayscale(calc(min(var(--l), 1) * .7)); transition: transform .9s cubic-bezier(.7, 0, .2, 1), filter .9s ease, opacity .6s ease; cursor: pointer; }
 .mo-giro-fig:not(.al-frente) .mo-giro-cuerpo { opacity: .55; }
 .mo-giro-fig.al-frente { cursor: default; }
-.mo-giro-canvas { cursor: grab; touch-action: none; }
+.mo-giro-canvas { cursor: grab; }
 .mo-giro-canvas:active { cursor: grabbing; }
 .mo-giro-fig.oculta { opacity: 0; pointer-events: none; }
 .mo-giro-fig:focus-visible { outline: 1px solid var(--mo-tinta); outline-offset: 6px; }

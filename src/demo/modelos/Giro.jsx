@@ -143,6 +143,9 @@ function Girar({ id, n, vuelta }) {
     cv.addEventListener('pointermove', alMover);
     cv.addEventListener('pointerdown', alBajar);
     window.addEventListener('pointerup', alSoltar);
+    // en celular, deslizar hacia arriba/abajo sobre ella cancela el arrastre
+    // (touch-action: pan-y deja bajar por la página): también hay que soltarlo
+    window.addEventListener('pointercancel', alSoltar);
     imgs[vuelta ? 0 : n - 1].onload = pintar;
     raf = requestAnimationFrame(animar);
     return () => {
@@ -150,6 +153,7 @@ function Girar({ id, n, vuelta }) {
       cv.removeEventListener('pointermove', alMover);
       cv.removeEventListener('pointerdown', alBajar);
       window.removeEventListener('pointerup', alSoltar);
+      window.removeEventListener('pointercancel', alSoltar);
     };
   }, [id, n, vuelta]);
   return <canvas ref={lienzo} className="mo-giro-cuerpo mo-giro-canvas" aria-hidden="true" />;
