@@ -248,7 +248,7 @@ function Inicio({ e, ir, abrir, abrirEvento }) {
               <div>
                 <p className="mo-gigante" style={{ fontSize: 'clamp(2.2rem, 4.5vw, 4rem)' }}>{destacada.nombre}<br /><em>{destacada.apellido}</em></p>
                 <p className="mo-tenue" style={{ marginTop: 12, fontFamily: 'var(--mo-serif)', fontStyle: 'italic', fontSize: '1.1rem' }}>{linea}</p>
-                <span className="mo-boton mo-boton-chico" style={{ marginTop: 18 }}>Ver su portada <ArrowRight size={14} /></span>
+                <span className="mo-cartel-ir mo-evento-ir" style={{ marginTop: 18 }}>Ver su portada <ArrowRight size={14} /></span>
               </div>
             </div>
           </div>
