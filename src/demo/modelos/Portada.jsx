@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { ArrowLeft, ArrowRight, Download, Heart, Send } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Heart } from 'lucide-react';
 import {
   PORTADAS, DIA, useAgencia, modeloPorId, fotoDe, bloqueado, alternarFavorito, registrarVista,
   estaturaTxt, mismoDia,
@@ -131,24 +131,18 @@ export default function Portada({ id, lista, alCambiar, alCerrar, alComposite, a
         </div>
       </div>
 
-      <section className="mo-portada-info">
+      {/* debajo del collage, lo mínimo (23-oct): nombre, medidas en una línea,
+          disponibilidad y tres enlaces — la portada de arriba es la protagonista */}
+      <section className="mo-portada-info mo-portada-min">
         <div>
-          <p className="mo-eti">{m.categorias.join(' · ')} · {m.ciudad}</p>
-          <h2 className="mo-gigante" style={{ fontSize: 'clamp(2.6rem, 6vw, 5rem)', margin: '14px 0 16px' }}>{m.nombre} <em>{m.apellido}</em></h2>
-          <p className="mo-tenue" style={{ fontSize: '1.05rem', lineHeight: 1.6, maxWidth: 520 }}>{m.bio}</p>
-          <div className="mo-cifras-grandes" style={{ marginTop: 28 }}>
-            <div><span className="mo-eti">Estatura</span><b>{estaturaTxt(m.estatura)}</b></div>
-            <div><span className="mo-eti">{m.board === 'hombres' ? 'Pecho' : 'Busto'}</span><b>{m.medidas[0]}</b></div>
-            <div><span className="mo-eti">Cintura</span><b>{m.medidas[1]}</b></div>
-            <div><span className="mo-eti">{m.board === 'hombres' ? 'Traje' : 'Cadera'}</span><b>{m.medidas[2]}</b></div>
-            <div><span className="mo-eti">Calzado</span><b>{m.calzado}</b></div>
-            <div><span className="mo-eti">Instagram</span><b>{m.ig}</b></div>
-          </div>
-          <p className="mo-tenue" style={{ fontSize: '.84rem', marginTop: 14 }}>Ojos {m.ojos.toLowerCase()} · Cabello {m.cabello.toLowerCase()} · {m.idiomas}</p>
+          <h2 className="mo-gigante">{m.nombre} <em>{m.apellido}</em></h2>
+          <p className="mo-mono mo-portada-medidas">
+            {estaturaTxt(m.estatura)} · {m.medidas.join(' · ')} · Calzado {m.calzado}
+          </p>
         </div>
-        <div style={{ display: 'grid', gap: 26, alignContent: 'start' }}>
+        <div style={{ display: 'grid', gap: 22, alignContent: 'start' }}>
           <div>
-            <p className="mo-eti" style={{ marginBottom: 10 }}>Disponibilidad · próximos 14 días</p>
+            <p className="mo-eti" style={{ marginBottom: 10 }}>Disponibilidad · 14 días</p>
             <div className="mo-dispo">
               {dias.map((d) => {
                 const est = estadoDia(d);
@@ -159,24 +153,16 @@ export default function Portada({ id, lista, alCambiar, alCerrar, alComposite, a
                 );
               })}
             </div>
-            <div className="mo-dispo-leyenda">
-              {[['', 'Libre'], ['ocupado', 'Ocupada'], ['opcion', 'Opción o casting'], ['bloq', 'No disponible']].map(([c, t]) => (
-                <span key={t}><i className={c} />{t}</span>
-              ))}
-            </div>
           </div>
           {!soloVer && (
-            <div style={{ display: 'grid', gap: 8 }}>
-              <button type="button" className="mo-boton" onClick={() => alPedir(m.id)}><Send size={16} /> Pedir casting o booking</button>
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                <button type="button" className="mo-boton mo-boton-claro" style={{ flex: 1 }} onClick={() => alternarFavorito(m.id)}>
-                  <Heart size={16} fill={fav ? 'currentColor' : 'none'} /> {fav ? 'En tu package' : 'Al package'}
-                </button>
-                <button type="button" className="mo-boton mo-boton-claro" style={{ flex: 1 }} onClick={() => alComposite(m.id)}><Download size={16} /> Composite</button>
-              </div>
+            <div className="mo-giro-acciones">
+              <button type="button" onClick={() => alPedir(m.id)}>Pedir casting</button>
+              <button type="button" onClick={() => alComposite(m.id)}>Composite</button>
+              <button type="button" aria-pressed={fav} onClick={() => alternarFavorito(m.id)} aria-label={fav ? 'Quitar del package' : 'Agregar al package'}>
+                <Heart size={14} fill={fav ? 'currentColor' : 'none'} />
+              </button>
             </div>
           )}
-          <p className="mo-tenue" style={{ fontSize: '.74rem' }}>Usa ← → del teclado para pasar de modelo.</p>
         </div>
       </section>
 

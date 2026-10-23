@@ -245,7 +245,17 @@ let estado = null;
 const oyentes = new Set();
 
 function leerFresco() {
-  try { const t = localStorage.getItem(LLAVE); if (t) { const e = JSON.parse(t); if (e.v === 5) return e; } } catch { /* sin almacenamiento */ }
+  try {
+    const t = localStorage.getItem(LLAVE);
+    if (t) {
+      const e = JSON.parse(t);
+      if (e.v === 5) {
+        // la simulación llegó a pasarse del cupo: se recortan los invitados de ejemplo
+        e.eventos.forEach((ev) => { if (ev.cupo && ev.invitados.length > ev.cupo) ev.invitados = [...ev.invitados.filter((p) => p.mio || p.aspirante), ...ev.invitados.filter((p) => !p.mio && !p.aspirante)].slice(0, Math.round(ev.cupo * 0.9)); });
+        return e;
+      }
+    }
+  } catch { /* sin almacenamiento */ }
   return null;
 }
 function guardar() { try { localStorage.setItem(LLAVE, JSON.stringify(estado)); } catch { /* lleno o bloqueado */ } }
@@ -462,7 +472,8 @@ export function registrarseEvento(eid, datos, { mio = true } = {}) {
   let pase;
   cambiar((e) => {
     const ev = e.eventos.find((x) => x.id === eid);
-    if (!ev) return;
+    // con cupo lleno ya no se registra nadie (la simulación llegó a 551/180)
+    if (!ev || (ev.cupo && ev.invitados.length >= ev.cupo)) return;
     pase = { id: id(), ...datos, codigo: codigoPase(), estado: 'registrado', creada: Date.now(), mio };
     ev.invitados.unshift(pase);
     if (mio) e.misRegistros.push({ evento: eid, pase: pase.id });
@@ -571,7 +582,7 @@ export function simular() {
     }, { mia: false });
     return;
   }
-  const ev = e0.eventos.find((x) => x.publico && x.fecha > Date.now());
+  const ev = e0.eventos.find((x) => x.publico && x.fecha > Date.now() && (!x.cupo || x.invitados.length < x.cupo * 0.9));
   if (ev && Math.random() < 0.5) {
     registrarseEvento(ev.id, { nombre: NOMBRES[(paso * 7) % NOMBRES.length], empresa: EMPRESAS[paso % EMPRESAS.length], correo: '' }, { mio: false });
   }

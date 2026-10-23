@@ -802,9 +802,6 @@ button.mo-kpi:hover { transform: translateY(-2px); box-shadow: 0 0 0 1px var(--m
 .mo-evento-portada-texto h1 { font-size: clamp(3rem, 8.5vw, 8rem); margin: 14px 0 14px !important; }
 .mo-evento-portada-pie { display: flex; justify-content: space-between; align-items: flex-end; gap: 20px; flex-wrap: wrap; margin-top: 26px; padding-top: 22px; border-top: 1px solid rgba(255, 255, 255, .25); }
 .mo-cuenta { display: flex; gap: 26px; }
-.mo-cuenta div { display: grid; }
-.mo-cuenta b { font-family: var(--mo-serif); font-weight: 400; font-size: clamp(2.2rem, 4.4vw, 3.6rem); line-height: 1; font-variant-numeric: tabular-nums; }
-.mo-cuenta span { font-size: .62rem; letter-spacing: .18em; text-transform: uppercase; opacity: .7; margin-top: 6px; }
 .mo-lineup-fila { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(160px, 230px); gap: 14px; overflow-x: auto; padding-bottom: 8px; scrollbar-width: none; }
 .mo-lineup-modelo { display: grid; gap: 8px; animation: mo-sube .6s cubic-bezier(.2, .7, .1, 1) both; animation-delay: calc(var(--k) * 110ms); }
 .mo-lineup-modelo .mo-foto { aspect-ratio: 3 / 4.4; }
@@ -813,7 +810,7 @@ button.mo-kpi:hover { transform: translateY(-2px); box-shadow: 0 0 0 1px var(--m
 .mo-lineup-modelo span { font-size: .64rem; letter-spacing: .14em; color: var(--mo-tenue); }
 .mo-lineup-modelo b { font-family: var(--mo-serif); font-weight: 400; font-size: 1.5rem; line-height: 1; }
 .mo-agenda-ev { border-top: 1px solid var(--mo-linea); }
-.mo-agenda-fila { position: relative; display: grid; grid-template-columns: 110px minmax(0, 1fr) 200px 40px; align-items: center; gap: 24px; width: 100%; text-align: left; padding: 26px 0; border-bottom: 1px solid var(--mo-linea); transition: padding .4s cubic-bezier(.2, .7, .1, 1); }
+.mo-agenda-fila { position: relative; display: grid; grid-template-columns: 110px minmax(0, 1fr) 40px; align-items: center; gap: 24px; width: 100%; text-align: left; padding: 26px 0; border-bottom: 1px solid var(--mo-linea); transition: padding .4s cubic-bezier(.2, .7, .1, 1); }
 .mo-agenda-fila:hover { padding-left: 14px; }
 .mo-agenda-fecha { font-size: .68rem; letter-spacing: .14em; text-transform: uppercase; color: var(--mo-tenue); line-height: 1.5; }
 .mo-agenda-fecha b { display: block; font-family: var(--mo-serif); font-weight: 400; font-size: 3.4rem; line-height: .9; color: var(--mo-tinta); letter-spacing: -.03em; }
@@ -1186,3 +1183,24 @@ button.mo-kpi:hover { transform: translateY(-2px); box-shadow: 0 0 0 1px var(--m
   .mo-giro-acciones { margin-top: 10px; }
   .mo-giro-pie { left: 16px; right: 16px; bottom: 14px; justify-content: space-between; }
 }
+/* menú sobre el estudio claro: todas las secciones legibles, no solo la activa */
+.mo-noche-cab.sobre-claro .mo-nav button { color: rgba(21, 20, 19, .6) !important; }
+.mo-noche-cab.sobre-claro .mo-nav button[aria-current='page'], .mo-noche-cab.sobre-claro .mo-nav button:hover { color: #151413 !important; }
+.mo-noche-cab.sobre-claro .mo-logo, .mo-noche-cab.sobre-claro .mo-package-boton { color: #151413; }
+/* ficha de la modelo, minimalista */
+.mo-portada-min { align-items: end; }
+.mo-portada-min h2 { font-size: clamp(2.4rem, 5vw, 4.4rem); line-height: 1; }
+.mo-portada-medidas { margin-top: 14px; font-size: .74rem; letter-spacing: .08em; color: var(--mo-tenue); }
+.mo-portada-min .mo-giro-acciones { margin-top: 0; }
+.mo-oscuro .mo-portada-min .mo-giro-acciones button { color: #F2EEE7; border-bottom-color: #F2EEE7; }
+.mo-oscuro .mo-portada-min .mo-giro-acciones button[aria-pressed] { border-bottom: 0; }
+/* página de Eventos, minimalista */
+.mo-evento-cuando { font-size: .74rem; letter-spacing: .06em; opacity: .8; margin-top: 6px; }
+.mo-cuenta { display: flex; gap: 18px; font-size: clamp(1.1rem, 2vw, 1.5rem); letter-spacing: .04em; }
+.mo-cuenta small { font-size: .6em; opacity: .6; margin-left: 2px; }
+.mo-evento-ir { opacity: 1 !important; transform: none !important; color: #fff; border-bottom: 1px solid #fff; padding-bottom: 3px; }
+/* "Filtrar": un enlace junto a Giro / Tiras / Cuadrícula; los filtros se abren abajo */
+.mo-book-filtrar { margin-left: 26px; padding-left: 22px !important; border-left: 1px solid var(--mo-linea); }
+.mo-book-filtrar[aria-expanded='true'] { color: var(--mo-tinta) !important; }
+.mo-book-cab { margin-bottom: 28px; }
+.mo-book .mo-filtros-texto { margin-top: -10px; animation: mo-aparece .3s ease; }

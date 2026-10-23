@@ -308,12 +308,14 @@ function Book({ e, board, abrir }) {
   const [min, setMin] = useState('');
   const [ciudad, setCiudad] = useState('');
   const [cabello, setCabello] = useState('');
-  const [modo, setModo] = useState('giro');          // primero el giro, luego tiras y cuadrícula
+  const [modo, setModo] = useState('giro');
+  const [filtrar, setFiltrar] = useState(false);          // primero el giro, luego tiras y cuadrícula
   const todas = todasLasModelos(e);
   const base = board === 'new' ? todas.filter((m) => m.categorias.includes('New faces')) : todas.filter((m) => m.board === board);
   const lista = base.filter((m) => (!cat || m.categorias.includes(cat)) && (!min || m.estatura >= Number(min))
     && (!ciudad || m.ciudad === ciudad) && (!cabello || m.cabello === cabello));
   const cabellos = [...new Set(base.map((m) => m.cabello))];
+  const activos = [cat, min, ciudad, cabello].filter(Boolean).length;
   const titulo = { mujeres: <>Mujeres</>, hombres: <>Hombres</>, new: <>New <em>faces</em></> }[board];
   const ids = lista.map((m) => m.id);
   const rejilla = useRef(null);
@@ -337,9 +339,13 @@ function Book({ e, board, abrir }) {
           <button type="button" aria-pressed={modo === 'tiras'} onClick={() => setModo('tiras')}>Tiras</button>
           <span>/</span>
           <button type="button" aria-pressed={modo === 'cuadricula'} onClick={() => setModo('cuadricula')}>Cuadrícula</button>
+          {/* los filtros quedan plegados detrás de un solo enlace (23-oct: minimalismo) */}
+          <button type="button" className="mo-book-filtrar" aria-expanded={filtrar} onClick={() => setFiltrar((x) => !x)}>
+            Filtrar{activos ? ` (${activos})` : ''}
+          </button>
         </div>
       </div>
-      <div className="mo-filtros mo-filtros-texto">
+      {filtrar && <div className="mo-filtros mo-filtros-texto">
         <button type="button" aria-pressed={!cat} onClick={() => setCat('')}>Todas</button>
         {CATEGORIAS.filter((c) => board !== 'new' || c !== 'New faces').map((c) => (
           <button key={c} type="button" aria-pressed={cat === c} onClick={() => setCat(cat === c ? '' : c)}>{c}</button>
@@ -356,7 +362,7 @@ function Book({ e, board, abrir }) {
           <option value="">Cabello</option>
           {cabellos.map((c) => <option key={c}>{c}</option>)}
         </select>
-      </div>
+      </div>}
       {!lista.length && <p className="mo-tenue" style={{ padding: '40px 0' }}>Nadie con esos filtros. <span className="mo-lapiz">quita uno</span></p>}
       {lista.length > 0 && modo === 'tiras' && <Carrusel key={ids.join()} modelos={lista} abrir={abrir} />}
       {lista.length > 0 && modo === 'giro' && <Giro key={ids.join()} e={e} modelos={lista} abrir={abrir} />}
@@ -636,11 +642,12 @@ function Cuenta({ hasta }) {
   const [ahora, setAhora] = useState(() => Date.now());
   useEffect(() => { const id = setInterval(() => setAhora(Date.now()), 1000); return () => clearInterval(id); }, []);
   const s = Math.max(0, Math.floor((hasta - ahora) / 1000));
-  const partes = [['días', Math.floor(s / 86400)], ['horas', Math.floor((s % 86400) / 3600)], ['min', Math.floor((s % 3600) / 60)], ['seg', s % 60]];
+  const partes = [['d', Math.floor(s / 86400)], ['h', Math.floor((s % 86400) / 3600)], ['m', Math.floor((s % 3600) / 60)], ['s', s % 60]];
+  // una sola línea: 05d 18h 16m 45s
   return (
-    <div className="mo-cuenta" role="timer" aria-label={`Faltan ${partes[0][1]} días`}>
-      {partes.map(([t, v]) => <div key={t}><b>{String(v).padStart(2, '0')}</b><span>{t}</span></div>)}
-    </div>
+    <p className="mo-cuenta mo-mono" role="timer" aria-label={`Faltan ${partes[0][1]} días`}>
+      {partes.map(([t, v]) => <span key={t}>{String(v).padStart(2, '0')}<small>{t}</small></span>)}
+    </p>
   );
 }
 
@@ -679,24 +686,23 @@ function Eventos({ e, abrir }) {
       <section className="mo-evento-portada">
         <FondoEvento ev={primero} />
         <div className="mo-evento-portada-texto">
-          <p className="mo-eti" style={{ color: 'rgba(255,255,255,.75)' }}>Próximo · {primero.tipo}</p>
+          {/* lo mínimo (23-oct): título, una línea con cuándo y dónde, la cuenta y "Registrarme" */}
           <h1 className="mo-gigante">{titulo}{sub && <><br /><em>{sub}</em></>}</h1>
-          <p style={{ opacity: .85, display: 'flex', gap: 6, alignItems: 'center', marginTop: 4 }}><MapPin size={15} /> {fechaLarga(primero.fecha)} · {hora(primero.fecha)} · {primero.lugar}</p>
+          <p className="mo-mono mo-evento-cuando">{fechaLarga(primero.fecha)} · {hora(primero.fecha)} · {primero.lugar}</p>
           <div className="mo-evento-portada-pie">
             <Cuenta hasta={primero.fecha} />
-            <button type="button" className="mo-boton mo-boton-blanco" onClick={() => abrir(primero.id)}>Registrarme <ArrowRight size={16} /></button>
+            <button type="button" className="mo-cartel-ir mo-evento-ir" onClick={() => abrir(primero.id)}>Registrarme <ArrowRight size={14} /></button>
           </div>
         </div>
       </section>
 
       {modelos.length > 0 && (
         <section className="mo-seccion mo-lineup">
-          <div className="mo-seccion-cab"><h2>Desfilan <em>en {titulo.split(' ')[0].toLowerCase()}</em></h2><p className="mo-tenue" style={{ fontSize: '.86rem' }}>{modelos.length} modelos de {AGENCIA.nombre} confirmadas</p></div>
+          <div className="mo-seccion-cab"><h2>Desfilan</h2></div>
           <div className="mo-lineup-fila">
             {modelos.map((m, k) => (
               <div key={m.id} className="mo-lineup-modelo" style={{ '--k': k }}>
                 <FotoModelo m={m} tipo="book" />
-                <span className="mo-mono">LOOK {String(k + 1).padStart(2, '0')}</span>
                 <b>{m.nombre}</b>
               </div>
             ))}
@@ -705,26 +711,18 @@ function Eventos({ e, abrir }) {
       )}
 
       <section className="mo-seccion">
-        <div className="mo-seccion-cab"><h2>La <em>agenda</em></h2><p className="mo-tenue" style={{ fontSize: '.86rem' }}>Regístrate y llévate tu pase digital</p></div>
+        <div className="mo-seccion-cab"><h2>La <em>agenda</em></h2></div>
         <div className="mo-agenda-ev">
           {lista.map((ev) => {
             const d = new Date(ev.fecha);
-            const pct = ev.cupo ? Math.min(1, ev.invitados.length / ev.cupo) : 0;
             const mio = e.misRegistros.some((r) => r.evento === ev.id);
             return (
               <button key={ev.id} type="button" className="mo-agenda-fila" onClick={() => abrir(ev.id)}>
                 <span className="mo-agenda-fecha"><b>{d.getDate()}</b>{d.toLocaleDateString('es-MX', { month: 'short' })}<br />{d.toLocaleDateString('es-MX', { weekday: 'short' })}</span>
                 <span className="mo-agenda-info">
-                  <span className="mo-eti">{ev.tipo}{mio ? ' · ya tienes pase' : ''}</span>
                   <b>{ev.titulo}</b>
-                  <small>{hora(ev.fecha)} · {ev.lugar}</small>
+                  <small>{hora(ev.fecha)} · {ev.lugar}{mio ? ' · ya tienes pase' : ''}</small>
                 </span>
-                {ev.cupo > 0 && (
-                  <span className="mo-agenda-cupo">
-                    <small className="mo-mono">{ev.invitados.length}/{ev.cupo}</small>
-                    <i><em style={{ width: `${pct * 100}%` }} /></i>
-                  </span>
-                )}
                 <span className="mo-agenda-foto"><img src={ev.foto} alt="" loading="lazy" /></span>
                 <ArrowRight className="mo-agenda-flecha" size={22} strokeWidth={1.4} />
               </button>
