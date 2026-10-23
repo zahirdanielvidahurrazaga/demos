@@ -310,7 +310,7 @@ function Book({ e, board, abrir }) {
   const [min, setMin] = useState('');
   const [ciudad, setCiudad] = useState('');
   const [cabello, setCabello] = useState('');
-  const [modo, setModo] = useState('cuadricula');
+  const [modo, setModo] = useState('giro');          // primero el giro, luego tiras y cuadrícula
   const todas = todasLasModelos(e);
   const base = board === 'new' ? todas.filter((m) => m.categorias.includes('New faces')) : todas.filter((m) => m.board === board);
   const lista = base.filter((m) => (!cat || m.categorias.includes(cat)) && (!min || m.estatura >= Number(min))
@@ -334,11 +334,11 @@ function Book({ e, board, abrir }) {
       <div className="mo-book-cab">
         <h2 className="mo-gigante">{titulo}<sup className="mo-mono">({String(lista.length).padStart(2, '0')})</sup></h2>
         <div className="mo-book-modo" role="group" aria-label="Cómo ver el board">
-          <button type="button" aria-pressed={modo === 'cuadricula'} onClick={() => setModo('cuadricula')}>Cuadrícula</button>
+          <button type="button" aria-pressed={modo === 'giro'} onClick={() => setModo('giro')}>Giro</button>
           <span>/</span>
           <button type="button" aria-pressed={modo === 'tiras'} onClick={() => setModo('tiras')}>Tiras</button>
           <span>/</span>
-          <button type="button" aria-pressed={modo === 'giro'} onClick={() => setModo('giro')}>Giro</button>
+          <button type="button" aria-pressed={modo === 'cuadricula'} onClick={() => setModo('cuadricula')}>Cuadrícula</button>
         </div>
       </div>
       <div className="mo-filtros mo-filtros-texto">
