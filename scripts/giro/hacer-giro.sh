@@ -40,6 +40,8 @@ destino=$raiz/public/modelos/mira/giro/$id
 rm -rf $destino; mkdir -p $destino
 for f in $tmp/c/*.png; do cwebp -quiet -q 72 -alpha_q 85 "$f" -o "$destino/${${f:t}%.png}.webp"; done
 n=$(ls $destino | wc -l | tr -d ' ')
+# versión ligera para la fila del book (uno de cada dos cuadros, 450 px)
+nl=$(python3 $aqui/ligero.py $destino 2 450)
 rm -rf $tmp
-if [[ -n $modo ]]; then cual="$id: { n: $n, vuelta: true }"; else cual="$id: $n"; fi
+if [[ -n $modo ]]; then cual="$id: { n: $n, ligero: $nl, vuelta: true }"; else cual="$id: $n"; fi
 echo "Listo: $n cuadros en public/modelos/mira/giro/$id → en GIROS de src/demo/modelos/datos.js:  $cual"

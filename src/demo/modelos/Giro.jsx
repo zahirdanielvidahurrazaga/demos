@@ -18,7 +18,7 @@ import { GIROS, alternarFavorito, estaturaTxt, medidasTxt, fotoDe } from './dato
 // ─────────────────────────────────────────────────────────────────────────────
 
 const recorteDe = (m) => (GIROS[m.id] || m.foto ? null : `/modelos/mira/recorte/${m.id}.webp`);
-const cuadro = (id, i) => `/modelos/mira/giro/${id}/${String(i).padStart(2, '0')}.webp`;
+const cuadro = (id, i, ligero) => `/modelos/mira/giro/${id}/${ligero ? 'ligero/' : ''}${String(i).padStart(2, '0')}.webp`;
 const datosGiro = (id) => { const g = GIROS[id]; return !g ? null : typeof g === 'number' ? { n: g, vuelta: false } : g; };
 // el cuadro de frente: el último en medio giro, el primero en vuelta completa
 const deFrente = (id) => { const g = datosGiro(id); return g.vuelta ? 0 : g.n - 1; };
@@ -89,7 +89,7 @@ export default function Giro({ e, modelos, abrir }) {
           <div className="mo-giro-fila" role="group" aria-label="Elegir modelo">
             {modelos.map((x, i) => (
               <button key={x.id} type="button" aria-pressed={i === sel} onClick={() => setSel(i)} aria-label={x.nombre}>
-                <img src={recorteDe(x) || (GIROS[x.id] ? cuadro(x.id, deFrente(x.id)) : fotoDe(x, 'book'))} alt="" loading="lazy" />
+                <img src={recorteDe(x) || (GIROS[x.id] ? cuadro(x.id, 0, !!GIROS[x.id].ligero) : fotoDe(x, 'book'))} alt="" loading="lazy" />
               </button>
             ))}
           </div>
@@ -102,14 +102,21 @@ export default function Giro({ e, modelos, abrir }) {
 }
 
 // La que gira: los cuadros precargados se pintan en un canvas (cambiar el src de
-// un <img> parpadea). Gira sola despacio (el medio giro se mece) y se gira
+// un <img> parpadea). En la fila usa la versión LIGERA; al frente, la completa,
+// y mientras ésta carga pinta el cuadro ligero equivalente (ya está en caché). Gira sola despacio (el medio giro se mece) y se gira
 // arrastrando con el mouse o el dedo; al soltar sigue sola desde ahí.
-function Girar({ id, n, vuelta, interactivo = true, fase = 0 }) {
+function Girar({ id, n: nCompleto, ligero: nLigero, vuelta, interactivo = true, fase = 0 }) {
   const lienzo = useRef(null);
   useEffect(() => {
     const cv = lienzo.current;
     const ctx = cv.getContext('2d');
-    const imgs = Array.from({ length: n }, (_, i) => { const im = new Image(); im.src = cuadro(id, i); return im; });
+    const cargar = (cuantos, chico) => Array.from({ length: cuantos }, (_, i) => { const im = new Image(); im.decoding = 'async'; im.src = cuadro(id, i, chico); return im; });
+    // en la fila, solo la ligera; al frente, la completa con la ligera de respaldo
+    const usarLigero = !interactivo && nLigero;
+    const n = usarLigero ? nLigero : nCompleto;
+    const imgs = cargar(n, usarLigero);
+    const respaldo = !usarLigero && nLigero ? cargar(nLigero, true) : null;
+    const deRespaldo = (i) => respaldo?.[Math.min(nLigero - 1, Math.round(i * nLigero / n))];
     const quieto = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     let meta = vuelta ? fase : 0, actual = meta, ultimo = -1, raf = 0, tocado = 0, arrastre = null;
     const listo = (im) => im.complete && im.naturalWidth;
@@ -124,15 +131,17 @@ function Girar({ id, n, vuelta, interactivo = true, fase = 0 }) {
       const mezcla = Math.round((pos - base) * 8) / 8;
       const espejo = !vuelta && actual < 0;
       const clave = `${i}·${mezcla}·${espejo}`;
-      const a = imgs[i], b = imgs[j];
-      if (clave === ultimo || !listo(a)) return;
-      if (cv.width !== a.naturalWidth) { cv.width = a.naturalWidth; cv.height = a.naturalHeight; }
+      let a = imgs[i], b = imgs[j], provisional = false;
+      // el completo todavía no llega: el ligero equivalente, estirado al mismo lienzo
+      if (!listo(a) && listo(deRespaldo(i) || {})) { a = deRespaldo(i); b = deRespaldo(j); provisional = true; }
+      if ((clave === ultimo && !provisional) || !listo(a)) return;
+      if (!cv.width || (!provisional && cv.width !== a.naturalWidth)) { cv.width = a.naturalWidth; cv.height = a.naturalHeight; }
       ctx.setTransform(espejo ? -1 : 1, 0, 0, 1, espejo ? cv.width : 0, 0);
       ctx.clearRect(0, 0, cv.width, cv.height);
       ctx.globalAlpha = 1;
-      ctx.drawImage(a, 0, 0);
-      if (mezcla > 0 && j !== i && listo(b)) { ctx.globalAlpha = mezcla; ctx.drawImage(b, 0, 0); ctx.globalAlpha = 1; }
-      ultimo = clave;
+      ctx.drawImage(a, 0, 0, cv.width, cv.height);
+      if (mezcla > 0 && j !== i && b && listo(b)) { ctx.globalAlpha = mezcla; ctx.drawImage(b, 0, 0, cv.width, cv.height); ctx.globalAlpha = 1; }
+      ultimo = provisional ? null : clave;
     };
     const animar = (t) => {
       raf = requestAnimationFrame(animar);
@@ -159,6 +168,7 @@ function Girar({ id, n, vuelta, interactivo = true, fase = 0 }) {
     // (touch-action: pan-y deja bajar por la página): también hay que soltarlo
     window.addEventListener('pointercancel', alSoltar);
     imgs[vuelta ? 0 : n - 1].onload = pintar;
+    if (respaldo) respaldo[vuelta ? 0 : nLigero - 1].onload = pintar;
     raf = requestAnimationFrame(animar);
     return () => {
       cancelAnimationFrame(raf);
@@ -167,7 +177,7 @@ function Girar({ id, n, vuelta, interactivo = true, fase = 0 }) {
       window.removeEventListener('pointerup', alSoltar);
       window.removeEventListener('pointercancel', alSoltar);
     };
-  }, [id, n, vuelta, interactivo]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [id, nCompleto, nLigero, vuelta, interactivo]); // eslint-disable-line react-hooks/exhaustive-deps
   return <canvas ref={lienzo} className={`mo-giro-cuerpo mo-giro-canvas ${interactivo ? 'se-arrastra' : ''}`} aria-hidden="true" />;
 }
 
