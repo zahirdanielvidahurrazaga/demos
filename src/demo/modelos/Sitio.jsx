@@ -10,6 +10,7 @@ import {
 import { Campo, FotoModelo, Foto, Modal, Polaroid, Sello, aLocal, useAltoCabeza } from './comun';
 import Portada from './Portada';
 import Carrusel from './Carrusel';
+import Giro from './Giro';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SITIO DE LA AGENCIA — lo que ve una marca, un fotógrafo o una productora.
@@ -336,6 +337,8 @@ function Book({ e, board, abrir }) {
           <button type="button" aria-pressed={modo === 'cuadricula'} onClick={() => setModo('cuadricula')}>Cuadrícula</button>
           <span>/</span>
           <button type="button" aria-pressed={modo === 'tiras'} onClick={() => setModo('tiras')}>Tiras</button>
+          <span>/</span>
+          <button type="button" aria-pressed={modo === 'giro'} onClick={() => setModo('giro')}>Giro</button>
         </div>
       </div>
       <div className="mo-filtros mo-filtros-texto">
@@ -358,6 +361,7 @@ function Book({ e, board, abrir }) {
       </div>
       {!lista.length && <p className="mo-tenue" style={{ padding: '40px 0' }}>Nadie con esos filtros. <span className="mo-lapiz">quita uno</span></p>}
       {lista.length > 0 && modo === 'tiras' && <Carrusel key={ids.join()} modelos={lista} abrir={abrir} />}
+      {lista.length > 0 && modo === 'giro' && <Giro key={ids.join()} e={e} modelos={lista} abrir={abrir} />}
       {lista.length > 0 && modo === 'cuadricula' && (
         <div ref={rejilla} className="mo-board mo-board-revista">{lista.map((m, i) => <Carta key={m.id} m={m} e={e} i={i} abrir={(id) => abrir(id, ids)} />)}</div>
       )}

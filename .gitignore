@@ -54,3 +54,4 @@ scripts/.backup.env
 
 # Los SQL de la base Demos sí se versionan
 !supabase/demos/*.sql
+scripts/giro/recortar

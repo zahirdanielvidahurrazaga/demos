@@ -58,6 +58,15 @@ export const PORTADAS = {
 };
 export const FOTOS_PORTADA = ['book', 'pose', 'bn', 'cerca', 'polaroid'];
 
+// vista "Giro" del book: cuántos cuadros tiene el giro de cada modelo
+// (public/modelos/mira/giro/<id>/00.webp … del perfil al frente). Para agregar
+// a otra: su video de Gemini → cuadros → recorte → aquí su número.
+export const GIROS = {
+  valeria: { n: 74, vuelta: true },
+  camila: { n: 72, vuelta: true },
+  renata: { n: 72, vuelta: true },
+};
+
 // la cuenta "Modelo" de la demo
 export const YO_MODELO = 'valeria';
 
