@@ -7,9 +7,9 @@ import {
   AGENCIA, YO_MODELO, DIA, HORA, PORTADAS,
   useAgencia, modeloPorId, fotoDe, bloqueado, responderOpcion, responderConvocatoria, subirPolaroid, marcarLeidos,
   elegirPrincipal, actualizarPerfil, alternarBloqueo,
-  neto, realizado, dinero, fechaCorta, fechaLarga, hora, mismoDia, estaturaTxt,
+  neto, realizado, dinero, fechaCorta, fechaLarga, hora, mismoDia, estaturaTxt, pedidasDe,
 } from './datos';
-import { Campo, Foto, FotoModelo, Modal, Polaroid, Sello, miniatura } from './comun';
+import { Campo, Foto, FotoModelo, Modal, Polaroid, Sello, avisarListo, miniatura } from './comun';
 import Portada from './Portada';
 import Marco, { LineaAviso } from './Marco';
 
@@ -96,9 +96,14 @@ function Inicio({ e, m, mios, pendientes, ir, verPortada }) {
   const ahora = Date.now();
   const proximo = mios.filter((t) => t.estado === 'confirmado' && t.fecha + t.horas * HORA > ahora).sort((a, b) => a.fecha - b.fecha)[0];
   const vistas = e.vistas[YO_MODELO] || [];
-  const enPackages = e.solicitudes.filter((s) => s.modelos.includes(YO_MODELO) && s.creada > ahora - 30 * DIA).length + (e.favoritos.includes(YO_MODELO) ? 1 : 0);
+  const enPackages = pedidasDe(e, YO_MODELO);
+  // lo ganado = trabajos ya hechos (igual que la barra del mes en Pagos);
+  // lo que falta del mes va aparte como "agendado"
   const mes = new Date(); mes.setDate(1); mes.setHours(0, 0, 0, 0);
-  const esteMes = mios.filter((t) => t.estado === 'confirmado' && t.tarifa > 0 && t.fecha >= mes.getTime()).reduce((a, t) => a + neto(t.tarifa), 0);
+  const finMes = new Date(mes); finMes.setMonth(finMes.getMonth() + 1);
+  const delMes = mios.filter((t) => t.estado === 'confirmado' && t.tarifa > 0 && t.fecha >= mes.getTime() && t.fecha < finMes.getTime());
+  const esteMes = delMes.filter(realizado).reduce((a, t) => a + neto(t.tarifa), 0);
+  const agendado = delMes.filter((t) => !realizado(t)).reduce((a, t) => a + neto(t.tarifa), 0);
   const misAvisos = e.avisos.filter((a) => a.para === YO_MODELO);
   const [palabra] = PORTADAS[YO_MODELO];
   return (
@@ -122,7 +127,7 @@ function Inicio({ e, m, mios, pendientes, ir, verPortada }) {
       <div className="mo-kpis">
         <div className="mo-kpi"><span className="mo-eti">Vieron tu ficha · 7 días</span><b>{vistas.reduce((a, v) => a + v, 0)}</b><Chispa datos={vistas} /></div>
         <div className="mo-kpi"><span className="mo-eti">Te pidieron · 30 días</span><b>{enPackages}</b><p className="mo-tenue" style={{ fontSize: '.74rem', marginTop: 8 }}>packages y solicitudes</p></div>
-        <button type="button" className="mo-kpi" onClick={() => ir('pagos')}><span className="mo-eti">Ganas este mes</span><b>{dinero(esteMes)}</b><p className="mo-tenue" style={{ fontSize: '.74rem', marginTop: 8 }}>ya sin comisión</p></button>
+        <button type="button" className="mo-kpi" onClick={() => ir('pagos')}><span className="mo-eti">Ganaste este mes</span><b>{dinero(esteMes)}</b><p className="mo-tenue" style={{ fontSize: '.74rem', marginTop: 8 }}>{agendado ? `+ ${dinero(agendado)} ya agendado` : 'ya sin comisión'}</p></button>
         <button type="button" className="mo-kpi" onClick={() => ir('opciones')}><span className="mo-eti">Por contestar</span><b>{pendientes}</b><p className="mo-tenue" style={{ fontSize: '.74rem', marginTop: 8 }}>opciones y convocatorias</p></button>
       </div>
 
@@ -205,6 +210,7 @@ function Agenda({ e, mios }) {
         </div>
       </div>
       <div className="mo-portal-grid mo-cols-17">
+        <div>
         <div className="mo-mes">
           {['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'].map((d) => <span key={d}>{d}</span>)}
           {celdas.map((d) => {
@@ -219,6 +225,12 @@ function Agenda({ e, mios }) {
               </button>
             );
           })}
+        </div>
+        <div className="mo-dispo-leyenda mo-agenda-leyenda">
+          {[['', 'Trabajo confirmado'], ['opcion', 'Opción por contestar'], ['casting', 'Casting o evento'], ['bloq', 'No disponible']].map(([c, t]) => (
+            <span key={t}><i className={c} />{t}</span>
+          ))}
+        </div>
         </div>
         <section className="mo-tarjeta" style={{ padding: 20 }}>
           <p className="mo-eti">{new Date(dia).toLocaleDateString('es-MX', { weekday: 'long' })}</p>
@@ -283,12 +295,12 @@ function Opciones({ e, mios, opciones, convocatorias }) {
                 {choca.length > 0 && <div className="mo-aviso" style={{ marginTop: 10 }}>Ese día ya tienes {choca.map((x) => x.marca).join(', ')}.</div>}
                 {rechazo === t.id ? (
                   <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 16 }}>
-                    {MOTIVOS.map((mo) => <button key={mo} type="button" className="mo-chip" onClick={() => { responderOpcion(t.id, false, mo); setRechazo(null); }}>{mo}</button>)}
+                    {MOTIVOS.map((mo) => <button key={mo} type="button" className="mo-chip" onClick={() => { responderOpcion(t.id, false, mo); setRechazo(null); avisarListo(`Listo: tu booker ya sabe que no puedes con ${t.marca}`); }}>{mo}</button>)}
                     <button type="button" className="mo-chip" onClick={() => setRechazo(null)} aria-label="Cancelar"><X size={13} /></button>
                   </div>
                 ) : (
                   <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
-                    <button type="button" className="mo-boton mo-boton-chico" onClick={() => responderOpcion(t.id, true)}><Check size={15} /> Acepto</button>
+                    <button type="button" className="mo-boton mo-boton-chico" onClick={() => { responderOpcion(t.id, true); avisarListo(t.solicitud ? `Aceptaste ${t.marca}: tu booker ya puede cotizarle al cliente` : `Confirmado: ${t.marca} ya está en tu agenda`); }}><Check size={15} /> Acepto</button>
                     <button type="button" className="mo-boton mo-boton-claro mo-boton-chico" onClick={() => setRechazo(t.id)}>No puedo</button>
                   </div>
                 )}
@@ -303,8 +315,8 @@ function Opciones({ e, mios, opciones, convocatorias }) {
                 <h3 className="mo-gigante" style={{ fontSize: '1.7rem', margin: '10px 0 4px' }}>{ev.titulo}</h3>
                 <p className="mo-tenue" style={{ fontSize: '.86rem' }}>{fechaCorta(ev.fecha)} · {hora(ev.fecha)} · {ev.lugar}</p>
                 <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
-                  <button type="button" className="mo-boton mo-boton-chico" onClick={() => responderConvocatoria(ev.id, YO_MODELO, true)}><Check size={15} /> Ahí estaré</button>
-                  <button type="button" className="mo-boton mo-boton-claro mo-boton-chico" onClick={() => responderConvocatoria(ev.id, YO_MODELO, false)}>No puedo</button>
+                  <button type="button" className="mo-boton mo-boton-chico" onClick={() => { responderConvocatoria(ev.id, YO_MODELO, true); avisarListo(`Listo: te esperan en ${ev.titulo}`); }}><Check size={15} /> Ahí estaré</button>
+                  <button type="button" className="mo-boton mo-boton-claro mo-boton-chico" onClick={() => { responderConvocatoria(ev.id, YO_MODELO, false); avisarListo('Listo: tu booker ya sabe que no vas'); }}>No puedo</button>
                 </div>
               </div>
             </article>
@@ -445,7 +457,7 @@ function MiBook({ e, m, verPortada }) {
         {['book', 'pose', 'bn', 'cerca', 'polaroid'].map((t) => (
           <div key={t} className={`mo-galeria-item ${m.principal === t ? 'principal' : ''}`}>
             <Foto src={fotoDe(m, t)} alt={NOMBRES[t]} />
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 6, marginTop: 8 }}>
+            <div style={{ display: 'grid', justifyItems: 'start', gap: 6, marginTop: 8 }}>
               <span style={{ fontSize: '.8rem' }}>{NOMBRES[t]}</span>
               {m.principal === t ? <Sello estado="confirmada" texto="Principal" />
                 : <button type="button" className="mo-chip" style={{ padding: '4px 10px', fontSize: '.72rem' }} onClick={() => elegirPrincipal(m.id, t)}>Principal</button>}
@@ -505,11 +517,13 @@ const DOCS = [
   { nombre: 'Contrato de representación', detalle: 'Firmado el 12 de marzo de 2025 · vence el 12 de marzo de 2027', estado: ['confirmada', 'Vigente'] },
   { nombre: 'Identificación oficial (INE)', detalle: 'Vence en 2031', estado: ['confirmada', 'Vigente'] },
   { nombre: 'Pasaporte', detalle: 'Vence en agosto de 2029 · listo para viajes', estado: ['confirmada', 'Vigente'] },
-  { nombre: 'Constancia de situación fiscal', detalle: 'La agencia la necesita para timbrar tus recibos', estado: ['nueva', 'Vence en 12 días'] },
+  { nombre: 'Constancia de situación fiscal', detalle: 'La agencia la necesita para timbrar tus recibos', estado: ['nueva', 'Vence en 12 días'], accion: ['Subir la nueva', ['cotizada', 'En revisión'], 'Constancia recibida: tu booker la revisa hoy'] },
   { nombre: 'Datos bancarios', detalle: 'BBVA · CLABE ••• ••• ••4821', estado: ['confirmada', 'Verificada'] },
-  { nombre: 'Uso de imagen · Norte Denim', detalle: 'Campaña primavera · redes + web 1 año', estado: ['pendiente', 'Por firmar'] },
+  { nombre: 'Uso de imagen · Norte Denim', detalle: 'Campaña primavera · redes + web 1 año', estado: ['pendiente', 'Por firmar'], accion: ['Firmar', ['confirmada', 'Firmado'], 'Firmado: la agencia ya tiene tu permiso de uso de imagen'] },
 ];
 function Documentos() {
+  // en la demo, lo que la modelo resuelve aquí (subir o firmar) se queda en la pantalla
+  const [hechos, setHechos] = useState({});
   return (
     <>
       <h1><em>Documentos</em></h1>
@@ -522,7 +536,12 @@ function Documentos() {
                 <b style={{ fontSize: '.92rem' }}>{d.nombre}</b>
                 <p className="mo-tenue" style={{ fontSize: '.78rem', marginTop: 2 }}>{d.detalle}</p>
               </div>
-              <Sello estado={d.estado[0]} texto={d.estado[1]} />
+              {d.accion && !hechos[d.nombre]
+                ? <div style={{ display: 'grid', gap: 6, justifyItems: 'end' }}>
+                    <Sello estado={d.estado[0]} texto={d.estado[1]} />
+                    <button type="button" className="mo-chip" style={{ padding: '4px 10px', fontSize: '.72rem' }} onClick={() => { setHechos({ ...hechos, [d.nombre]: true }); avisarListo(d.accion[2]); }}>{d.accion[0]}</button>
+                  </div>
+                : <Sello estado={(hechos[d.nombre] ? d.accion[1] : d.estado)[0]} texto={(hechos[d.nombre] ? d.accion[1] : d.estado)[1]} />}
             </div>
           ))}
         </section>

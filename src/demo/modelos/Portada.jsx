@@ -159,7 +159,11 @@ export default function Portada({ id, lista, alCambiar, alCerrar, alComposite, a
                 );
               })}
             </div>
-            <p className="mo-tenue" style={{ fontSize: '.72rem', marginTop: 8 }}>Lleno = ocupada · rayado = opción o casting · tachado = no disponible · vacío = libre</p>
+            <div className="mo-dispo-leyenda">
+              {[['', 'Libre'], ['ocupado', 'Ocupada'], ['opcion', 'Opción o casting'], ['bloq', 'No disponible']].map(([c, t]) => (
+                <span key={t}><i className={c} />{t}</span>
+              ))}
+            </div>
           </div>
           {!soloVer && (
             <div style={{ display: 'grid', gap: 8 }}>

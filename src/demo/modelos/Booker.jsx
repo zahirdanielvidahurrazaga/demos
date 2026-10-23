@@ -7,9 +7,9 @@ import {
   useAgencia, todasLasModelos, modeloPorId, nombreDe, choques, bloqueado,
   mandarOpciones, cotizar, confirmarCasting, descartarSolicitud, marcarCobrado, liquidar,
   aprobarPolaroid, convocar, marcarLlegada, llegadaPorCodigo, moverAspirante, crearEvento,
-  neto, realizado, dinero, fechaCorta, fechaLarga, hora, hace, mismoDia, estaturaTxt,
+  neto, realizado, dinero, fechaCorta, fechaLarga, hora, hace, mismoDia, estaturaTxt, pedidasDe, plural,
 } from './datos';
-import { Campo, Foto, FotoModelo, Modal, Sello, aLocal } from './comun';
+import { Campo, Foto, FotoModelo, Modal, Sello, aLocal, avisarListo } from './comun';
 import Marco, { LineaAviso } from './Marco';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -94,8 +94,8 @@ function Hoy({ e, ir, abrirSolicitud }) {
     const monto = ss.reduce((a, s) => a + (s.cotizacion?.total || s.modelos.reduce((b, mid) => b + (s.tipo === 'casting' ? 0 : modeloPorId(e, mid)?.tarifa || 0), 0)), 0);
     return { id, t, ss, monto };
   });
-  // las más pedidas: solicitudes de los últimos 30 días
-  const pedidas = todasLasModelos(e).map((m) => ({ m, n: e.solicitudes.filter((s) => s.modelos.includes(m.id)).length + e.trabajos.filter((t) => t.modeloId === m.id && t.estado === 'confirmado' && t.fecha > ahora - 30 * DIA).length }))
+  // las más pedidas: la misma cuenta que ve la modelo en su "Te pidieron"
+  const pedidas = todasLasModelos(e).map((m) => ({ m, n: pedidasDe(e, m.id) }))
     .sort((a, b) => b.n - a.n).slice(0, 5);
   const maxP = Math.max(...pedidas.map((x) => x.n), 1);
   return (
@@ -104,7 +104,7 @@ function Hoy({ e, ir, abrirSolicitud }) {
         <div><p className="mo-eti">Mesa de booking</p><h1>Buenos días, <em>Paola</em></h1></div>
       </div>
       <div className="mo-kpis">
-        <button type="button" className="mo-kpi" onClick={() => ir('solicitudes')}><span className="mo-eti">Solicitudes nuevas</span><b>{etapas[0].ss.length}</b><small>{esperando} opciones sin respuesta</small></button>
+        <button type="button" className="mo-kpi" onClick={() => ir('solicitudes')}><span className="mo-eti">Solicitudes nuevas</span><b>{etapas[0].ss.length}</b><small>{plural(esperando, 'opción', 'opciones')} sin respuesta</small></button>
         <button type="button" className="mo-kpi" onClick={() => ir('calendario')}><span className="mo-eti">Trabajos · 7 días</span><b>{semana.length}</b><small>{hoy.length} hoy · {manana.length} mañana</small></button>
         <button type="button" className="mo-kpi" onClick={() => ir('dinero')}><span className="mo-eti">Facturado este mes</span><b>{dinero(meses[5].total)}</b><small className={meses[5].total >= meses[4].total ? 'sube' : 'baja'}>{meses[4].total ? `${meses[5].total >= meses[4].total ? '▲' : '▼'} ${Math.abs(Math.round((meses[5].total / meses[4].total - 1) * 100))}% vs ${meses[4].etiqueta}` : '—'}</small></button>
         <button type="button" className="mo-kpi" onClick={() => ir('dinero')}><span className="mo-eti">Por cobrar</span><b>{dinero(porCobrar)}</b><small>trabajos ya hechos</small></button>
@@ -166,7 +166,9 @@ function Hoy({ e, ir, abrirSolicitud }) {
 // ── solicitudes: lista + detalle en la misma pantalla ───────────────────────
 function Solicitudes({ e, abierta, setAbierta }) {
   const [filtro, setFiltro] = useState('activas');
-  const lista = e.solicitudes.filter((s) => (filtro === 'activas' ? !['confirmada', 'cancelada'].includes(s.estado) : ['confirmada', 'cancelada'].includes(s.estado)));
+  // cerrada = cancelada o ya pasó; lo confirmado que viene sigue en activas
+  const cerrada = (s) => s.estado === 'cancelada' || (s.estado === 'confirmada' && s.fecha < Date.now());
+  const lista = e.solicitudes.filter((s) => (filtro === 'activas' ? !cerrada(s) : cerrada(s)));
   const s = e.solicitudes.find((x) => x.id === abierta) || lista[0];
   return (
     <>
@@ -199,6 +201,9 @@ function Solicitudes({ e, abierta, setAbierta }) {
   );
 }
 
+// lo que dice cada modelo de la solicitud cuando ya le llegó la opción
+const RESPUESTA = { opcion: 'Esperando su respuesta', aceptado: 'Aceptó: tiene la fecha apartada', rechazado: 'No puede', confirmado: 'Confirmada', liberado: 'Se liberó la fecha' };
+
 const CajaDetalle = ({ children }) => <section className="mo-tarjeta mo-bandeja-detalle">{children}</section>;
 
 function DetalleSolicitud({ e, s, alCerrar, incrustado }) {
@@ -227,7 +232,7 @@ function DetalleSolicitud({ e, s, alCerrar, incrustado }) {
               <div style={{ flex: 1, minWidth: 0 }}>
                 <b style={{ fontSize: '.92rem' }}>{nombreDe(m)}</b>
                 <p style={{ fontSize: '.76rem', color: ch.length || bloqueado(e, mid, s.fecha) ? 'var(--mo-rojo)' : 'var(--mo-tenue)' }}>
-                  {bloqueado(e, mid, s.fecha) ? 'Marcó ese día como NO disponible · ' : ''}{ch.length ? `Ese día: ${ch.map((x) => `${x.marca} (${x.estado === 'confirmado' ? 'confirmado' : 'opción'})`).join(', ')}` : 'Libre ese día'}
+                  {bloqueado(e, mid, s.fecha) ? 'Marcó ese día como NO disponible · ' : ''}{ch.length ? `Ese día: ${ch.map((x) => `${x.marca} (${x.estado === 'confirmado' ? 'confirmado' : 'opción'})`).join(', ')}` : t ? (RESPUESTA[t.estado] || 'Libre ese día') : 'Libre ese día'}
                   {t?.nota ? ` · "${t.nota}"` : ''}
                 </p>
               </div>
@@ -245,8 +250,8 @@ function DetalleSolicitud({ e, s, alCerrar, incrustado }) {
         <>
           <p className="mo-tenue" style={{ fontSize: '.8rem', marginBottom: 12, lineHeight: 1.5 }}>Mandar la opción le aparta la fecha a cada modelo y le llega a su app para que acepte o rechace.</p>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            <button type="button" className="mo-boton" onClick={() => mandarOpciones(s.id, tarifas)}><Send size={16} /> Mandar opción a {s.modelos.length} modelos</button>
-            <button type="button" className="mo-boton mo-boton-claro" onClick={() => descartarSolicitud(s.id)}>Descartar</button>
+            <button type="button" className="mo-boton" onClick={() => { mandarOpciones(s.id, tarifas); avisarListo(`Opción enviada: le llegó a ${s.modelos.length === 1 ? 'la modelo' : `las ${s.modelos.length} modelos`} en su app`); }}><Send size={16} /> Mandar opción a {plural(s.modelos.length, 'modelo', 'modelos')}</button>
+            <button type="button" className="mo-boton mo-boton-claro" onClick={() => { descartarSolicitud(s.id); avisarListo(`${s.folio} descartada`); }}>Descartar</button>
           </div>
         </>
       )}
@@ -255,9 +260,9 @@ function DetalleSolicitud({ e, s, alCerrar, incrustado }) {
           {!lista && <p className="mo-tenue" style={{ fontSize: '.84rem', marginBottom: 12 }}>Esperando a que las modelos contesten en su app… <span className="mo-lapiz">(Valeria la contestas tú en "Modelo")</span></p>}
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             {s.tipo === 'casting'
-              ? <button type="button" className="mo-boton" disabled={!trabajos.some((t) => t.estado === 'aceptado')} onClick={() => confirmarCasting(s.id)}><Check size={16} /> Confirmar casting con las que aceptaron</button>
-              : <button type="button" className="mo-boton" disabled={!trabajos.some((t) => t.estado === 'aceptado')} onClick={() => cotizar(s.id)}><Send size={16} /> Mandar cotización al cliente</button>}
-            <button type="button" className="mo-boton mo-boton-claro" onClick={() => descartarSolicitud(s.id)}>Cancelar</button>
+              ? <button type="button" className="mo-boton" disabled={!trabajos.some((t) => t.estado === 'aceptado')} onClick={() => { confirmarCasting(s.id); avisarListo(`Casting confirmado: ya está en la agenda de cada modelo`); }}><Check size={16} /> Confirmar casting con las que aceptaron</button>
+              : <button type="button" className="mo-boton" disabled={!trabajos.some((t) => t.estado === 'aceptado')} onClick={() => { cotizar(s.id); avisarListo(`Cotización enviada a ${s.marca}`); }}><Send size={16} /> Mandar cotización al cliente</button>}
+            <button type="button" className="mo-boton mo-boton-claro" onClick={() => { descartarSolicitud(s.id); avisarListo(`${s.folio} cancelada: las fechas se liberaron`); }}>Cancelar</button>
           </div>
         </>
       )}
@@ -371,7 +376,7 @@ function Board({ e }) {
       )}
       <div className="mo-tarjeta mo-tabla-envuelta" style={{ padding: '4px 18px' }}>
         <table className="mo-tabla">
-          <thead><tr><th /><th>Modelo</th><th>Estatura</th><th>Categorías</th><th>Ciudad</th><th className="mo-num">Tarifa día</th><th className="mo-num">30 días</th></tr></thead>
+          <thead><tr><th /><th>Modelo</th><th>Estatura</th><th>Categorías</th><th>Ciudad</th><th className="mo-num">Tarifa día</th><th className="mo-num">Facturó · 30 días</th></tr></thead>
           <tbody>
             {modelos.map((m) => {
               const mes = e.trabajos.filter((t) => t.modeloId === m.id && t.estado === 'confirmado' && t.fecha > Date.now() - 30 * DIA && t.fecha < Date.now()).reduce((a, t) => a + t.tarifa, 0);

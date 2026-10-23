@@ -71,6 +71,8 @@ const id = () => Math.random().toString(36).slice(2, 9);
 
 // ── la siembra: un mes de historia y tres semanas de agenda ─────────────────
 function sembrar() {
+  // las solicitudes que ya van a medio camino: cada etapa de la tubería tiene algo
+  const S = { norteCampana: id(), norteVerano: id(), lumbre: id(), sastreria: id() };
   const t = (modeloId, marca, proyecto, tipo, dias, hora, horas, lugar, tarifa, extra = {}) => ({
     id: id(), modeloId, marca, proyecto, tipo, fecha: enDias(dias, hora), horas, lugar, tarifa,
     estado: 'confirmado', cobrado: dias < -10, liquidado: dias < -18, solicitud: null, nota: '', ...extra,
@@ -95,14 +97,14 @@ function sembrar() {
       ['Café Lumbre', 'Temporada de invierno', 'Sesión', -44, 8000], ['Joyería Plata Fina', 'Catálogo anillos', 'Sesión', -35, 10000],
     ].map(([marca, proyecto, tipo, d, tarifa]) => t('valeria', marca, proyecto, tipo, d, 10, 6, 'Estudio Roma Norte, CDMX', tarifa, { cobrado: true, liquidado: true })),
     // castings pasados con lo que dijo el cliente
-    t('valeria', 'Lumbre Cosmetics', 'Casting belleza rímel', 'Casting', -16, 12, 1, 'Agencia KADE, CDMX', 0, { resultado: 'quedo', feedback: 'Les encantó la mirada y la piel. Te quieren para la campaña.' }),
+    t('valeria', 'Lumbre Cosmetics', 'Casting belleza rímel', 'Casting', -2, 12, 1, 'Agencia KADE, CDMX', 0, { resultado: 'quedo', feedback: 'Les encantó la mirada y la piel. Te quieren para la campaña.' }),
     t('valeria', 'Tenis Ruta', 'Casting lanzamiento', 'Casting', -11, 16, 1, 'Agencia KADE, CDMX', 0, { resultado: 'no', feedback: 'Buscaban un perfil más deportivo. Muy buena actitud en el casting.' }),
     t('valeria', 'Atelier Ruiz', 'Prueba de vestuario', 'Casting', -4, 13, 1, 'Atelier Ruiz, Puebla centro', 0, { resultado: 'espera', feedback: 'Deciden el viernes; les gustó tu caminata.' }),
     // futuro de Valeria (la cuenta de la demo)
     t('valeria', 'Norte Denim', 'Fitting campaña primavera', 'Fitting', 2, 12, 2, 'Showroom Norte, Polanco', 3000),
-    t('valeria', 'Norte Denim', 'Campaña primavera', 'Campaña', 4, 8, 9, 'Desierto de los Leones, CDMX', 26000),
+    t('valeria', 'Norte Denim', 'Campaña primavera', 'Campaña', 4, 8, 9, 'Desierto de los Leones, CDMX', 26000, { solicitud: S.norteCampana }),
     t('valeria', 'Atelier Ruiz', 'Casting desfile', 'Casting', 1, 16, 1, 'Atelier Ruiz, Puebla centro', 0),
-    t('valeria', 'Lumbre Cosmetics', 'Belleza · rímel', 'Sesión', 9, 10, 6, 'Estudio Condesa, CDMX', 18000, { estado: 'opcion' }),
+    t('valeria', 'Lumbre Cosmetics', 'Belleza · rímel', 'Sesión', 9, 10, 6, 'Estudio Condesa, CDMX', 18000, { estado: 'opcion', solicitud: S.lumbre }),
     // futuro del resto
     t('renata', 'Atelier Ruiz', 'Desfile de invierno', 'Pasarela', 6, 19, 4, 'Museo de Arte, Puebla', 26000),
     t('diego', 'Atelier Ruiz', 'Desfile de invierno', 'Pasarela', 6, 19, 4, 'Museo de Arte, Puebla', 22000),
@@ -112,8 +114,17 @@ function sembrar() {
     t('mateo', 'Autos Cholula', 'Casting comercial', 'Casting', 2, 11, 1, 'Agencia KADE, Puebla', 0),
     t('ana', 'Revista Plana', 'Editorial belleza', 'Sesión', 8, 10, 5, 'Estudio Condesa, CDMX', 9000),
     t('sofia', 'Norte Denim', 'Casting campaña', 'Casting', 1, 13, 1, 'Agencia KADE, CDMX', 0),
-    t('andres', 'Sastrería Gil', 'Lookbook', 'Sesión', 11, 10, 5, 'Estudio Roma Norte, CDMX', 9000, { estado: 'opcion' }),
+    t('andres', 'Sastrería Gil', 'Lookbook', 'Sesión', 11, 10, 5, 'Estudio Roma Norte, CDMX', 9000, { estado: 'opcion', solicitud: S.sastreria }),
+    // la cotización que el cliente de la demo tiene por aceptar
+    t('sofia', 'Norte Denim', 'Lookbook verano', 'Sesión', 15, 9, 6, 'Foro Juárez, CDMX', 8000, { estado: 'aceptado', solicitud: S.norteVerano }),
+    t('mateo', 'Norte Denim', 'Lookbook verano', 'Sesión', 15, 9, 6, 'Foro Juárez, CDMX', 11000, { estado: 'aceptado', solicitud: S.norteVerano }),
   ];
+  const cotizacion = (lineas) => {
+    const subtotal = lineas.reduce((a, l) => a + l.tarifa, 0);
+    return { lineas, subtotal, iva: Math.round(subtotal * AGENCIA.iva), total: Math.round(subtotal * (1 + AGENCIA.iva)), t: Date.now() - 3 * HORA };
+  };
+  // el cliente de la demo es Norte Denim (Ana López): su historial en "Mis solicitudes"
+  const NORTE = { marca: 'Norte Denim', contacto: 'Ana López', correo: 'ana@nortedenim.mx', telefono: '5512345678' };
 
   const solicitudes = [
     {
@@ -123,10 +134,32 @@ function sembrar() {
       estado: 'nueva', creada: Date.now() - 2 * HORA, mia: false, cotizacion: null,
     },
     {
-      id: id(), folio: 'SOL-0141', marca: 'Norte Denim', contacto: 'Iván Paredes', correo: 'ivan@nortedenim.mx', telefono: '5512345678',
-      proyecto: 'Casting campaña verano', tipo: 'casting', trabajo: 'Casting', fecha: enDias(7, 12), horas: 2,
+      id: id(), folio: 'SOL-0141', marca: 'Casa Ámbar', contacto: 'Lorena Díaz', correo: 'lorena@casaambar.mx', telefono: '5598765432',
+      proyecto: 'Casting joyería navidad', tipo: 'casting', trabajo: 'Casting', fecha: enDias(7, 12), horas: 2,
       lugar: 'Agencia KADE, CDMX', uso: 'Campaña completa · 1 año', modelos: ['valeria', 'sofia', 'ana', 'andres'], nota: '',
       estado: 'nueva', creada: Date.now() - 20 * HORA, mia: false, cotizacion: null,
+    },
+    {
+      id: S.norteVerano, folio: 'SOL-0140', ...NORTE, proyecto: 'Lookbook verano', tipo: 'booking', trabajo: 'Sesión', fecha: enDias(15, 9), horas: 6,
+      lugar: 'Foro Juárez, CDMX', uso: 'Redes + web · 1 año', modelos: ['sofia', 'mateo'], nota: 'Pareja joven, look relajado de playa.',
+      estado: 'cotizada', creada: Date.now() - 26 * HORA, mia: true, cotizacion: cotizacion([{ modeloId: 'sofia', tarifa: 8000 }, { modeloId: 'mateo', tarifa: 11000 }]),
+    },
+    {
+      id: S.lumbre, folio: 'SOL-0139', marca: 'Lumbre Cosmetics', contacto: 'Daniela Ortiz', correo: 'daniela@lumbre.mx', telefono: '5544556677',
+      proyecto: 'Belleza · rímel', tipo: 'booking', trabajo: 'Sesión', fecha: enDias(9, 10), horas: 6,
+      lugar: 'Estudio Condesa, CDMX', uso: 'Campaña completa · 1 año', modelos: ['valeria'], nota: 'Quedó en el casting: la queremos a ella.',
+      estado: 'en_opcion', creada: Date.now() - 30 * HORA, mia: false, cotizacion: null,
+    },
+    {
+      id: S.sastreria, folio: 'SOL-0138', marca: 'Sastrería Gil', contacto: 'Rodrigo Gil', correo: 'rodrigo@sastreriagil.mx', telefono: '5533221100',
+      proyecto: 'Lookbook', tipo: 'booking', trabajo: 'Sesión', fecha: enDias(11, 10), horas: 5,
+      lugar: 'Estudio Roma Norte, CDMX', uso: 'Redes + web · 1 año', modelos: ['andres'], nota: '',
+      estado: 'en_opcion', creada: Date.now() - 40 * HORA, mia: false, cotizacion: null,
+    },
+    {
+      id: S.norteCampana, folio: 'SOL-0136', ...NORTE, proyecto: 'Campaña primavera', tipo: 'booking', trabajo: 'Campaña', fecha: enDias(4, 8), horas: 9,
+      lugar: 'Desierto de los Leones, CDMX', uso: 'Campaña completa · 1 año', modelos: ['valeria'], nota: '',
+      estado: 'confirmada', creada: Date.now() - 6 * DIA, mia: true, cotizacion: cotizacion([{ modeloId: 'valeria', tarifa: 26000 }]),
     },
   ];
 
@@ -160,7 +193,7 @@ function sembrar() {
   ];
 
   return {
-    v: 4, trabajos, solicitudes, eventos, aspirantes,
+    v: 5, trabajos, solicitudes, eventos, aspirantes,
     favoritos: [], nuevas: [], polaroids: {}, misRegistros: [],
     avisos: [
       ['booker', 'Hotel Cielo pidió un booking (2 modelos)', 2, { tipo: 'solicitud' }],
@@ -168,7 +201,8 @@ function sembrar() {
       ['booker', 'Lumbre Cosmetics pagó la factura de Ana Paula', 5, { tipo: 'dinero', mid: 'ana' }],
       ['booker', 'Nueva postulación: Daniela Herrera, 176 cm, Puebla', 3.2, { tipo: 'scouting' }],
       ['booker', 'Ximena aceptó Volt Supplements · Campaña', 7, { tipo: 'modelo', mid: 'ximena' }],
-      ['booker', 'Norte Denim pidió un casting (4 modelos)', 20, { tipo: 'solicitud' }],
+      ['booker', 'Casa Ámbar pidió un casting (4 modelos)', 20, { tipo: 'solicitud' }],
+      ['booker', 'Norte Denim: cotización SOL-0140 enviada', 3, { tipo: 'dinero' }],
       ['booker', 'Diego aceptó Atelier Ruiz · Pasarela', 26, { tipo: 'modelo', mid: 'diego' }],
       ['valeria', 'Confirmado: Norte Denim · Campaña primavera', 6, {}],
       ['valeria', 'Te depositamos $8,000 por Café Lumbre', 30, {}],
@@ -196,12 +230,12 @@ function aspiranteEjemplo(nombre, edad, estatura, ciudad, ig, estado, horas, boa
 function codigoPase() { return 'KADE-' + Math.random().toString(36).slice(2, 6).toUpperCase(); }
 
 // ── almacén ─────────────────────────────────────────────────────────────────
-const LLAVE = 'demo_modelos_v4';
+const LLAVE = 'demo_modelos_v5';
 let estado = null;
 const oyentes = new Set();
 
 function leerFresco() {
-  try { const t = localStorage.getItem(LLAVE); if (t) { const e = JSON.parse(t); if (e.v === 4) return e; } } catch { /* sin almacenamiento */ }
+  try { const t = localStorage.getItem(LLAVE); if (t) { const e = JSON.parse(t); if (e.v === 5) return e; } } catch { /* sin almacenamiento */ }
   return null;
 }
 function guardar() { try { localStorage.setItem(LLAVE, JSON.stringify(estado)); } catch { /* lleno o bloqueado */ } }
@@ -250,6 +284,14 @@ export const fotoDe = (m, tipo = 'book') => {
 export const bloqueado = (e, mid, fecha) => (e.bloqueos?.[mid] || []).some((d) => mismoDia(d, fecha));
 export const nombreDe = (m) => (m ? `${m.nombre} ${m.apellido}` : '—');
 export const neto = (tarifa) => Math.round(tarifa * (1 - AGENCIA.comision));
+// "te pidieron" en 30 días: la MISMA cuenta para la modelo y para la booker
+// (solicitudes que la incluyen + trabajos directos de la agenda + el package abierto)
+export function pedidasDe(e, mid) {
+  const desde = Date.now() - 30 * DIA;
+  return e.solicitudes.filter((s) => s.modelos.includes(mid) && s.creada > desde).length
+    + e.trabajos.filter((t) => t.modeloId === mid && !t.solicitud && t.estado === 'confirmado' && t.fecha > desde).length
+    + (e.favoritos.includes(mid) ? 1 : 0);
+}
 export const realizado = (t) => t.estado === 'confirmado' && t.fecha + t.horas * HORA < Date.now();
 
 const mismoDia = (a, b) => new Date(a).toDateString() === new Date(b).toDateString();
@@ -270,7 +312,7 @@ export function enviarSolicitud(datos, { mia = true } = {}) {
     folio = `SOL-0${e.folio++}`;
     e.solicitudes.unshift({ id: id(), folio, ...datos, lugar: datos.lugar?.trim() || 'Lugar por confirmar', estado: 'nueva', creada: Date.now(), mia, cotizacion: null });
     if (mia) e.favoritos = [];
-    aviso(e, 'booker', `${datos.marca} pidió ${datos.tipo === 'casting' ? 'un casting' : 'un booking'} (${datos.modelos.length} modelos)`, { tipo: 'solicitud' });
+    aviso(e, 'booker', `${datos.marca} pidió ${datos.tipo === 'casting' ? 'un casting' : 'un booking'} (${plural(datos.modelos.length, 'modelo', 'modelos')})`, { tipo: 'solicitud' });
   });
   return folio;
 }
@@ -542,4 +584,5 @@ export const medidasTxt = (m) => (m.board === 'hombres'
   ? `Pecho ${m.medidas[0]} · Cintura ${m.medidas[1]} · Traje ${m.medidas[2]}`
   : `${m.medidas[0]} · ${m.medidas[1]} · ${m.medidas[2]}`);
 export const estaturaTxt = (cm) => `${(cm / 100).toFixed(2)} m`;
+export const plural = (n, uno, varios) => `${n} ${n === 1 ? uno : varios}`;
 export { DIA, HORA, mismoDia };

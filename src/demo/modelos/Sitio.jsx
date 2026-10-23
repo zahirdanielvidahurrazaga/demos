@@ -21,6 +21,8 @@ const VISTAS = [
   ['inicio', 'Inicio'], ['mujeres', 'Mujeres'], ['hombres', 'Hombres'], ['new', 'New faces'],
   ['eventos', 'Eventos'], ['solicitudes', 'Mis solicitudes'],
 ];
+// lo que dice el telón al cambiar de sección
+const TITULOS = { ...Object.fromEntries(VISTAS), inicio: AGENCIA.nombre };
 
 export default function Sitio({ alPostularse }) {
   const e = useAgencia();
@@ -53,8 +55,21 @@ export default function Sitio({ alPostularse }) {
   const [composite, setComposite] = useState(null);
   const [evento, setEvento] = useState(null);
 
-  const ir = (v) => { setModelo(null); setVista(v); window.scrollTo({ top: 0, behavior: 'smooth' }); };
-  const abrir = (id, ids) => { setLista(ids?.length ? ids : todasLasModelos(e).map((m) => m.id)); setModelo(id); };
+  // telón entre secciones: baja negro con el nombre de lo que viene, se
+  // cambia la página por debajo y sube. Así la revista no "salta".
+  const [telon, setTelon] = useState(null);           // { texto, fase: 'cubre' | 'abre' }
+  const conTelon = (texto, accion) => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) { accion(); window.scrollTo({ top: 0 }); return; }
+    setTelon({ texto, fase: 'cubre' });
+    setTimeout(() => { accion(); window.scrollTo({ top: 0 }); setTelon({ texto, fase: 'abre' }); }, 560);
+    setTimeout(() => setTelon(null), 1250);
+  };
+  const ir = (v) => conTelon(TITULOS[v], () => { setModelo(null); setVista(v); });
+  // desde el carrusel la foto ya creció a pantalla completa: sin telón encima
+  const abrir = (id, ids, { sinTelon } = {}) => {
+    const hacer = () => { setLista(ids?.length ? ids : todasLasModelos(e).map((m) => m.id)); setModelo(id); };
+    if (sinTelon) hacer(); else conTelon(modeloPorId(e, id)?.nombre || AGENCIA.nombre, hacer);
+  };
   const pedir = (id) => { if (!e.favoritos.includes(id)) alternarFavorito(id); setPackage('form'); };
   const misSolicitudes = e.solicitudes.filter((s) => s.mia);
   const porContestar = misSolicitudes.filter((s) => s.estado === 'cotizada').length;
@@ -96,7 +111,7 @@ export default function Sitio({ alPostularse }) {
       </div>
 
       {modelo ? (
-        <Portada key={modelo} id={modelo} lista={lista} alCambiar={setModelo} alCerrar={() => setModelo(null)}
+        <Portada key={modelo} id={modelo} lista={lista} alCambiar={setModelo} alCerrar={() => conTelon(TITULOS[vista], () => setModelo(null))}
           alComposite={setComposite} alPedir={pedir} />
       ) : (
         <>
@@ -138,6 +153,7 @@ export default function Sitio({ alPostularse }) {
           <p className="mo-eti" style={{ marginTop: 'auto' }}>{AGENCIA.ciudad} · {AGENCIA.correo}</p>
         </div>
       )}
+      {telon && <div className={`mo-telon ${telon.fase}`} aria-hidden="true"><span className="mo-gigante">{telon.texto}</span></div>}
       {composite && <Composite m={modeloPorId(e, composite)} alCerrar={() => setComposite(null)} />}
       {package_ && <Package e={e} pasoInicial={package_} alCerrar={() => setPackage(null)} alEnviado={() => { setPackage(null); ir('solicitudes'); }} abrir={(id) => { setPackage(null); abrir(id, e.favoritos); }} />}
       {evento && <RegistroEvento e={e} ev={e.eventos.find((x) => x.id === evento)} alCerrar={() => setEvento(null)} />}
@@ -210,12 +226,9 @@ function Inicio({ e, ir, abrir, abrirEvento }) {
           <p className="mo-tenue" style={{ fontSize: '.86rem', maxWidth: 360 }}>{modelos.length} modelos para moda, publicidad y pasarela. Arma tu package y pide casting en línea.</p>
         </div>
         <Carrusel modelos={modelos} abrir={abrir} />
-        <div style={{ display: 'flex', gap: 10, marginTop: 28, flexWrap: 'wrap' }}>
-          <button type="button" className="mo-boton" onClick={() => ir('mujeres')}>Mujeres <ArrowRight size={16} /></button>
-          <button type="button" className="mo-boton mo-boton-claro" onClick={() => ir('hombres')}>Hombres</button>
-          <button type="button" className="mo-boton mo-boton-claro" onClick={() => ir('new')}>New faces</button>
-        </div>
       </section>
+
+      <Indice modelos={modelos} eventos={proximos.length} ir={ir} />
 
       {/* la portada de la semana: un adelanto del collage */}
       <section className="mo-seccion">
@@ -238,6 +251,16 @@ function Inicio({ e, ir, abrir, abrirEvento }) {
         </button>
       </section>
 
+      {/* doble página: una foto a sangre y una frase, como abre una sección de revista */}
+      <section className="mo-doble">
+        <FotoModelo m={modeloPorId(e, 'renata')} tipo="bn" className="mo-doble-foto" />
+        <div className="mo-doble-texto">
+          <p className="mo-eti">Temporada 26/27 · Nº 008</p>
+          <p className="mo-gigante">Caras que<br /><em>se quedan.</em></p>
+          <p className="mo-doble-pie">Renata Salas, fotografiada para el desfile de invierno de Atelier Ruiz. Pasarela en París, Madrid y CDMX.</p>
+        </div>
+      </section>
+
       {proximos.length > 0 && (
         <section className="mo-seccion">
           <div className="mo-seccion-cab"><h2>Próximos <em>eventos</em></h2></div>
@@ -245,6 +268,38 @@ function Inicio({ e, ir, abrir, abrirEvento }) {
         </section>
       )}
     </>
+  );
+}
+
+// "En este número": el índice de la revista. Al pasar el cursor por una línea,
+// la foto de esa sección flota junto al cursor.
+function Indice({ modelos, eventos, ir }) {
+  const flota = useRef(null);
+  const [foto, setFoto] = useState(null);
+  const lineas = [
+    ['mujeres', 'Mujeres', modelos.filter((m) => m.board === 'mujeres').length, '/modelos/mira/camila-book.webp'],
+    ['hombres', 'Hombres', modelos.filter((m) => m.board === 'hombres').length, '/modelos/mira/diego-book.webp'],
+    ['new', 'New faces', modelos.filter((m) => m.categorias.includes('New faces')).length, '/modelos/mira/sofia-book.webp'],
+    ['eventos', 'Eventos', eventos, '/modelos/mira/evento-pasarela.webp'],
+  ];
+  const mover = (ev) => { if (flota.current) flota.current.style.transform = `translate3d(${ev.clientX + 24}px, ${ev.clientY - 120}px, 0)`; };
+  return (
+    <section className="mo-indice" onMouseMove={mover} onMouseLeave={() => setFoto(null)}>
+      <p className="mo-eti">En este número</p>
+      <ol>
+        {lineas.map(([id, t, n, src], k) => (
+          <li key={id}>
+            <button type="button" onClick={() => ir(id)} onMouseEnter={() => setFoto(src)} onFocus={() => setFoto(null)}>
+              <span className="mo-mono">{String(k + 1).padStart(2, '0')}</span>
+              <span className="mo-indice-t">{t}</span>
+              <sup>({String(n).padStart(2, '0')})</sup>
+              <ArrowRight size={22} />
+            </button>
+          </li>
+        ))}
+      </ol>
+      <div ref={flota} className={`mo-indice-foto ${foto ? 'on' : ''}`} aria-hidden="true">{foto && <img key={foto} src={foto} alt="" />}</div>
+    </section>
   );
 }
 
@@ -397,15 +452,19 @@ function Composite({ m, alCerrar }) {
 function Package({ e, pasoInicial = 'mesa', alCerrar, alEnviado, abrir }) {
   const modelos = e.favoritos.map((id) => modeloPorId(e, id)).filter(Boolean);
   const [paso, setPaso] = useState(pasoInicial);
+  // el cliente ya pidió antes: sus datos de contacto vienen llenos
+  const previa = e.solicitudes.find((s) => s.mia);
   const [f, setF] = useState(() => ({
-    marca: '', contacto: '', correo: '', telefono: '', proyecto: '', tipo: 'casting', trabajo: 'Casting',
+    marca: previa?.marca || '', contacto: previa?.contacto || '', correo: previa?.correo || '', telefono: previa?.telefono || '',
+    proyecto: '', tipo: 'casting', trabajo: 'Casting',
     fecha: aLocal(Date.now() + 5 * DIA).slice(0, 11) + '10:00', horas: 2, lugar: '', uso: USOS[0], nota: '',
   }));
   const [hecho, setHecho] = useState(null);
   const pon = (k) => (ev) => setF((x) => ({ ...x, [k]: ev.target.value }));
   const fechaTs = new Date(f.fecha).getTime();
   const ocupadas = modelos.filter((m) => choques(e, m.id, fechaTs).some((t) => t.estado === 'confirmado'));
-  const listo = f.marca && f.contacto && (f.correo || f.telefono) && f.proyecto && f.fecha;
+  const falta = [!f.marca.trim() && 'marca', !f.contacto.trim() && 'tu nombre', !f.correo && !f.telefono && 'correo o WhatsApp', !f.proyecto.trim() && 'proyecto', !f.fecha && 'fecha'].filter(Boolean);
+  const listo = !falta.length;
 
   if (hecho) {
     return (
@@ -458,19 +517,19 @@ function Package({ e, pasoInicial = 'mesa', alCerrar, alEnviado, abrir }) {
             {f.tipo === 'casting' ? 'Las conoces en persona antes de decidir. El casting no tiene costo.' : 'Ya sabes a quién quieres: te cotizamos con las que estén disponibles.'}
           </p>
           <div className="mo-dos">
-            <Campo etiqueta="Marca o empresa"><input value={f.marca} onChange={pon('marca')} required /></Campo>
-            <Campo etiqueta="Tu nombre"><input value={f.contacto} onChange={pon('contacto')} required /></Campo>
+            <Campo etiqueta="Marca o empresa *"><input value={f.marca} onChange={pon('marca')} required /></Campo>
+            <Campo etiqueta="Tu nombre *"><input value={f.contacto} onChange={pon('contacto')} required /></Campo>
             <Campo etiqueta="Correo"><input type="email" value={f.correo} onChange={pon('correo')} /></Campo>
             <Campo etiqueta="WhatsApp"><input type="tel" inputMode="tel" value={f.telefono} onChange={pon('telefono')} /></Campo>
           </div>
-          <Campo etiqueta="Proyecto"><input value={f.proyecto} onChange={pon('proyecto')} placeholder="Ej. Lookbook primavera" required /></Campo>
+          <Campo etiqueta="Proyecto *"><input value={f.proyecto} onChange={pon('proyecto')} placeholder="Ej. Lookbook primavera" required /></Campo>
           <div className="mo-dos">
             {f.tipo === 'booking' && (
               <Campo etiqueta="Tipo de trabajo">
                 <select value={f.trabajo} onChange={pon('trabajo')}>{TIPOS_TRABAJO.filter((t) => t !== 'Casting').map((t) => <option key={t}>{t}</option>)}</select>
               </Campo>
             )}
-            <Campo etiqueta="Fecha y hora"><input type="datetime-local" value={f.fecha} onChange={pon('fecha')} required /></Campo>
+            <Campo etiqueta="Fecha y hora *"><input type="datetime-local" value={f.fecha} onChange={pon('fecha')} required /></Campo>
             <Campo etiqueta="Duración"><select value={f.horas} onChange={pon('horas')}>{[1, 2, 4, 6, 8, 10].map((h) => <option key={h} value={h}>{h} h</option>)}</select></Campo>
             {f.tipo === 'booking' && (
               <Campo etiqueta="Uso de imagen"><select value={f.uso} onChange={pon('uso')}>{USOS.map((u) => <option key={u}>{u}</option>)}</select></Campo>
@@ -491,6 +550,7 @@ function Package({ e, pasoInicial = 'mesa', alCerrar, alEnviado, abrir }) {
             <button type="submit" className="mo-boton" disabled={!listo}><Send size={16} /> Enviar solicitud</button>
             <button type="button" className="mo-boton mo-boton-claro" onClick={() => setPaso('mesa')}>Atrás</button>
           </div>
+          {falta.length > 0 && <p className="mo-falta">Te falta: {falta.join(', ')}.</p>}
         </form>
       )}
     </Modal>

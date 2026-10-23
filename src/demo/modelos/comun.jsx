@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { X } from 'lucide-react';
+import { Check, X } from 'lucide-react';
 import { fotoDe } from './datos';
 
 // Piezas compartidas por el sitio, la app de la modelo y el panel.
@@ -39,7 +39,7 @@ export function Polaroid({ m, src, pie, extra, style }) {
 
 const SELLOS = {
   opcion: ['Opción', 'ambar'],
-  aceptado: ['Aceptó', 'ambar'],
+  aceptado: ['Aceptó', 'verde'],
   confirmado: ['Confirmado', 'verde'],
   rechazado: ['No puede', 'rojo'],
   liberado: ['Liberado', 'tenue'],
@@ -136,4 +136,20 @@ export function useAltoCabeza() {
     return () => ro.disconnect();
   }, []);
   return ref;
+}
+
+// Aviso flotante de confirmación ("Listo, le avisamos a…"): cualquier pantalla
+// llama a avisarListo() y <AvisoListo /> (en ModelosDemo) lo enseña 3.5 s.
+const escuchas = new Set();
+export function avisarListo(texto) { escuchas.forEach((f) => f(texto)); }
+export function AvisoListo() {
+  const [texto, setTexto] = useState(null);
+  useEffect(() => {
+    let t;
+    const f = (x) => { setTexto(x); clearTimeout(t); t = setTimeout(() => setTexto(null), 3500); };
+    escuchas.add(f);
+    return () => { escuchas.delete(f); clearTimeout(t); };
+  }, []);
+  if (!texto) return null;
+  return <div key={texto} className="mo-listo" role="status"><Check size={16} /> {texto}</div>;
 }

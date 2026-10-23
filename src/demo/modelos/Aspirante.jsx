@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
-import { ArrowLeft, ArrowRight, Camera, Check, Plus, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Camera, Check, ImagePlus, Plus, X } from 'lucide-react';
 import { AGENCIA, HORA, useAgencia, modeloPorId, postularse, fechaLarga, fechaCorta, hora, estaturaTxt } from './datos';
 import { Campo, Foto, FotoModelo, miniatura, useAltoCabeza } from './comun';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SCOUTING EN LÍNEA — "Quiero ser modelo". La página de reclutamiento.
-// Portada con la foto del casting · "así empezaron ellas" (las New faces) ·
+// Portada con la foto del casting · "así empezaron" (las New faces, antes y hoy) ·
 // cómo funciona en 4 pasos · formulario POR PASOS en hoja de papel (tú →
 // medidas con regla → fotos con silueta guía → revisa tu mini composite) ·
 // preguntas frecuentes. Después de mandar: sello "Recibida", línea de tiempo,
@@ -68,17 +68,24 @@ function Reclutamiento({ e, alListo }) {
 
       <section className="mo-seccion mo-reclu-dos">
         <div>
-          <p className="mo-eti">Así empezaron ellas</p>
+          <p className="mo-eti">Así empezaron</p>
           <h2 className="mo-gigante" style={{ fontSize: 'clamp(2.4rem, 5vw, 4.2rem)', margin: '12px 0 16px' }}>Con dos fotos <em>del celular.</em></h2>
           <p className="mo-tenue" style={{ lineHeight: 1.65, maxWidth: 460 }}>
             Sofía y Andrés se postularon aquí mismo. Hoy están en el book de {AGENCIA.nombre} y ya trabajaron con marcas como Norte Denim y Sastrería Gil.
           </p>
         </div>
-        <div className="mo-mesa mo-reclu-polaroids">
-          {nuevas.map((m, k) => (
-            <div key={m.id} className="mo-polaroid" style={{ width: 210, transform: `rotate(${k ? 3 : -3}deg)` }}>
-              <FotoModelo m={m} tipo="polaroid" />
-              <div className="mo-polaroid-pie"><span className="mo-lapiz" style={{ fontSize: '1.3rem' }}>{m.nombre}, antes</span><span className="mo-mono" style={{ fontSize: '.62rem', color: '#777' }}>Nº {m.num}</span></div>
+        {/* la foto del celular con que se postularon y, detrás, su book de hoy */}
+        <div className="mo-reclu-polaroids">
+          {nuevas.map((m) => (
+            <div key={m.id} className="mo-antes-hoy">
+              <div className="mo-antes-hoy-hoy">
+                <FotoModelo m={m} tipo="book" />
+                <span className="mo-lapiz">hoy, Nº {m.num}</span>
+              </div>
+              <div className="mo-polaroid">
+                <FotoModelo m={m} tipo="polaroid" />
+                <div className="mo-polaroid-pie"><span className="mo-lapiz" style={{ fontSize: '1.3rem' }}>{m.nombre}, antes</span></div>
+              </div>
             </div>
           ))}
         </div>
@@ -116,6 +123,18 @@ function Reclutamiento({ e, alListo }) {
           ))}
         </div>
       </section>
+
+      <section className="mo-reclu-cierre">
+        <h2 className="mo-gigante">Cinco minutos.<br /><em>Dos fotos.</em></h2>
+        <button type="button" className="mo-boton mo-boton-blanco" onClick={ir}>Postularme <ArrowRight size={16} /></button>
+      </section>
+      <footer className="mo-pie">
+        <div>
+          <div className="mo-logo" style={{ fontSize: '1.1rem' }}>{AGENCIA.nombre}</div>
+          <p style={{ marginTop: 8 }}>{AGENCIA.ciudad} · {AGENCIA.correo}</p>
+        </div>
+        <p>Nunca cobramos por postularte ni por representarte.</p>
+      </footer>
     </>
   );
 }
@@ -150,10 +169,28 @@ function Silueta({ perfil }) {
 }
 
 const PASOS = ['Tú', 'Medidas', 'Fotos', 'Revisa'];
+// qué le falta a cada paso para poder seguir
+const FALTA = [
+  (f) => `Te falta: ${[!f.nombre.trim() && 'nombre', !f.edad && 'edad', !f.ciudad.trim() && 'ciudad', !f.telefono.trim() && 'WhatsApp'].filter(Boolean).join(', ')}.`,
+  () => '',
+  (f) => (f.fotos[0] || f.fotos[1] ? 'Te falta una foto.' : 'Sube tus dos fotos (o usa las de ejemplo).'),
+  () => 'Acepta el aviso de privacidad para mandarla.',
+];
+
+// fotos de ejemplo para enseñar la demo sin tener que subir nada
+const EJEMPLO = { mujeres: 'sofia', hombres: 'andres' };
 
 function Formulario({ alListo }) {
   const [paso, setPaso] = useState(0);
-  const [f, setF] = useState({ nombre: '', edad: '', ciudad: '', ig: '', telefono: '', board: 'mujeres', estatura: 172, cabello: '', ojos: '', fotos: [null, null], acepto: false });
+  // al cambiar de paso la hoja sube a su inicio (si no, el paso nuevo
+  // aparece a media pantalla, con el título debajo del encabezado)
+  const hoja = useRef(null);
+  const primera = useRef(true);
+  useEffect(() => {
+    if (primera.current) { primera.current = false; return; }
+    hoja.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [paso]);
+  const [f, setF] = useState({ nombre: '', edad: '', ciudad: '', ig: '', telefono: '', board: 'mujeres', estatura: 172, cabello: '', ojos: '', fotos: [null, null], acepto: false, b: '', c: '', h: '' });
   const pon = (k) => (ev) => setF({ ...f, [k]: ev.target.value });
   const menor = f.edad && Number(f.edad) < 18;
   const cumple = f.estatura >= MINIMO[f.board];
@@ -164,11 +201,11 @@ function Formulario({ alListo }) {
     f.acepto,
   ];
   const mandar = () => {
-    const n = postularse({ nombre: f.nombre.trim(), edad: Number(f.edad), estatura: Number(f.estatura), ciudad: f.ciudad.trim(), ig: f.ig || '—', telefono: f.telefono, board: f.board, cabello: f.cabello, ojos: f.ojos, fotos: f.fotos });
+    const n = postularse({ nombre: f.nombre.trim(), edad: Number(f.edad), estatura: Number(f.estatura), ciudad: f.ciudad.trim(), ig: f.ig || '—', telefono: f.telefono, board: f.board, cabello: f.cabello, ojos: f.ojos, fotos: f.fotos, medidas: [Number(f.b) || 0, Number(f.c) || 0, Number(f.h) || 0] });
     alListo(n.id);
   };
   return (
-    <div className="mo-hoja mo-claro mo-asistente">
+    <div ref={hoja} className="mo-hoja mo-claro mo-asistente" style={{ scrollMarginTop: 'calc(var(--mo-barra) + var(--mo-cab, 80px) + 12px)' }}>
       <div className="mo-asistente-cab">
         <div>
           <p className="mo-eti">Tu postulación · paso {paso + 1} de {PASOS.length}</p>
@@ -212,6 +249,11 @@ function Formulario({ alListo }) {
               </div>
             </div>
             <input className="mo-deslizador" type="range" min="150" max="200" value={f.estatura} onChange={(ev) => setF({ ...f, estatura: Number(ev.target.value) })} aria-label="Estatura en centímetros" />
+            <div className="mo-tres">
+              <Campo etiqueta={f.board === 'hombres' ? 'Pecho (cm, opcional)' : 'Busto (cm, opcional)'}><input type="number" inputMode="numeric" value={f.b} onChange={pon('b')} placeholder={f.board === 'hombres' ? 'Ej. 98' : 'Ej. 84'} /></Campo>
+              <Campo etiqueta="Cintura (cm, opcional)"><input type="number" inputMode="numeric" value={f.c} onChange={pon('c')} placeholder={f.board === 'hombres' ? 'Ej. 78' : 'Ej. 61'} /></Campo>
+              <Campo etiqueta={f.board === 'hombres' ? 'Talla de traje (opcional)' : 'Cadera (cm, opcional)'}><input type="number" inputMode="numeric" value={f.h} onChange={pon('h')} placeholder={f.board === 'hombres' ? 'Ej. 40' : 'Ej. 89'} /></Campo>
+            </div>
             <div className="mo-dos">
               <Campo etiqueta="Color de cabello"><input value={f.cabello} onChange={pon('cabello')} placeholder="Ej. castaño oscuro" /></Campo>
               <Campo etiqueta="Color de ojos"><input value={f.ojos} onChange={pon('ojos')} placeholder="Ej. café" /></Campo>
@@ -221,7 +263,7 @@ function Formulario({ alListo }) {
 
         {paso === 2 && (
           <>
-            <div className="mo-dos">
+            <div className="mo-dos mo-fotos-subir">
               <SubirFoto etiqueta="de frente" valor={f.fotos[0]} alCambiar={(v) => setF((x) => ({ ...x, fotos: [v, x.fotos[1]] }))} />
               <SubirFoto etiqueta="de perfil" perfil valor={f.fotos[1]} alCambiar={(v) => setF((x) => ({ ...x, fotos: [x.fotos[0], v] }))} />
             </div>
@@ -229,7 +271,12 @@ function Formulario({ alListo }) {
               <div><b className="mo-ok-txt"><Check size={14} /> Así sí</b><p className="mo-tenue">Luz de día, pared lisa, ropa ajustada y sencilla, cabello suelto o recogido, sin maquillaje.</p></div>
               <div><b style={{ color: 'var(--mo-rojo)' }}><X size={14} /> Así no</b><p className="mo-tenue">Selfies, filtros, lentes de sol, fotos en grupo o con poca luz.</p></div>
             </div>
-            <p className="mo-tenue" style={{ fontSize: '.76rem' }}>En la demo sirve cualquier imagen.</p>
+            <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+              <button type="button" className="mo-boton mo-boton-claro mo-boton-chico" onClick={() => setF((x) => ({ ...x, fotos: [`/modelos/mira/${EJEMPLO[x.board]}-polaroid.webp`, `/modelos/mira/${EJEMPLO[x.board]}-pose.webp`] }))}>
+                <ImagePlus size={15} /> Usar fotos de ejemplo
+              </button>
+              <p className="mo-tenue" style={{ fontSize: '.76rem' }}>Solo en la demo: también sirve cualquier imagen tuya.</p>
+            </div>
           </>
         )}
 
@@ -261,6 +308,8 @@ function Formulario({ alListo }) {
           ? <button type="button" className="mo-boton" disabled={!listo[paso]} onClick={() => setPaso(paso + 1)}>Siguiente <ArrowRight size={16} /></button>
           : <button type="button" className="mo-boton" disabled={!listo.every(Boolean)} onClick={mandar}>Mandar mi postulación <ArrowRight size={16} /></button>}
       </div>
+      {/* en el primer paso, solo cuando ya empezó a llenar (no regañar de entrada) */}
+      {!listo[paso] && (paso > 0 || f.nombre || f.edad || f.ciudad || f.telefono) && <p className="mo-falta" style={{ marginTop: 10, textAlign: 'right' }}>{FALTA[paso](f)}</p>}
     </div>
   );
 }

@@ -54,11 +54,12 @@ export default function Carrusel({ modelos, abrir }) {
       const ancho = tiras.current[0]?.offsetWidth || 60;
       const hueco = lerp(V * 0.045, 16, suave(limitar(p * 3.2, 0, 1)));     // entran separadas y se juntan
       const total = n * ancho + (n - 1) * hueco;
-      // simétrico: entra con la primera a media pantalla (izquierda en negro) y
-      // sale con la última a media pantalla (derecha en negro). El último 10%
+      // simétrico: entra con la primera a un tercio de pantalla (un poco de
+      // negro a la izquierda) y sale con la última a dos tercios. Antes era a
+      // media pantalla y el board se veía medio vacío (22-oct). El último 10%
       // del scroll ya no se mueve, para que ese negro se alcance a ver.
       const q = limitar(p / 0.9, 0, 1);
-      const x = lerp(V * 0.55, V * 0.45 - total, q);
+      const x = lerp(V * 0.3, V * 0.7 - total, q);
       pista.current.style.transform = `translate3d(${x}px,0,0)`;
       pista.current.style.gap = `${hueco}px`;
       const centroFoco = V / 2;                                            // la joroba siempre al centro, como la referencia
@@ -106,7 +107,7 @@ export default function Carrusel({ modelos, abrir }) {
     const { m, t } = lista[i];
     setZoom({ src: fotoDe(m, t), r, abierto: false });
     requestAnimationFrame(() => requestAnimationFrame(() => setZoom((z) => z && { ...z, abierto: true })));
-    setTimeout(() => { abrir(m.id, ids); setZoom(null); }, 750);
+    setTimeout(() => { abrir(m.id, ids, { sinTelon: true }); setZoom(null); }, 750);
   };
 
   const sel = activa != null ? lista[activa] : null;

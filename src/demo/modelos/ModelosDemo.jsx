@@ -8,6 +8,7 @@ import Modelo from './Modelo';
 import Booker from './Booker';
 import Aspirante from './Aspirante';
 import Carga, { yaCargo, olvidarCarga } from './Carga';
+import { AvisoListo } from './comun';
 import './modelos.css';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -154,6 +155,7 @@ export default function ModelosDemo() {
       {rol === 'aspirante' && <Aspirante />}
       {rol === 'modelo' && <Modelo />}
       {rol === 'booker' && <Booker />}
+      <AvisoListo />
     </div>
   );
 }
