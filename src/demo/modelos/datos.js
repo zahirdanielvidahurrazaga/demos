@@ -62,9 +62,9 @@ export const FOTOS_PORTADA = ['book', 'pose', 'bn', 'cerca', 'polaroid'];
 // (public/modelos/mira/giro/<id>/00.webp … del perfil al frente). Para agregar
 // a otra: su video de Gemini → cuadros → recorte → aquí su número.
 export const GIROS = {
-  valeria: { n: 74, vuelta: true },
-  camila: { n: 72, vuelta: true },
-  renata: { n: 72, vuelta: true },
+  valeria: { n: 150, vuelta: true },
+  camila: { n: 183, vuelta: true },
+  renata: { n: 183, vuelta: true },
 };
 
 // la cuenta "Modelo" de la demo

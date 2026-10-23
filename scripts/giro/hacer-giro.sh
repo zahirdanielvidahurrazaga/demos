@@ -12,8 +12,9 @@
 # → en GIROS:  <id>: { n: <n>, vuelta: true }
 # VUELTA COMPLETA REAL ("completa"): el video ya trae la vuelta entera con la
 # cámara quieta (Camila y Renata: 0.8 y 8.35): <inicio> = justo cuando empieza a
-# girar de frente, <fin> = cuando vuelve a quedar de frente. 72 cuadros, sin espejo.
-# → en GIROS:  <id>: { n: 72, vuelta: true }
+# girar de frente, <fin> = cuando vuelve a quedar de frente. TODOS los cuadros del
+# video (~180 por vuelta: con 72 se veía trabado), sin espejo.
+# → en GIROS:  <id>: { n: <n>, vuelta: true }
 # Deja public/modelos/mira/giro/<id>/NN.webp.
 set -e
 video=$1; id=$2; ini=$3; fin=$4; modo=$5
@@ -23,21 +24,21 @@ mkdir -p $tmp/{a,b,c}
 desde=$ini; hasta=$fin; invertir=0
 if (( $(echo "$ini > $fin" | bc) )); then desde=$fin; hasta=$ini; invertir=1; fi
 if [[ $modo == completa ]]; then
-  ffmpeg -v error -y -ss $desde -to $hasta -i "$video" -vf "fps=72/($hasta-$desde)" -frames:v 72 $tmp/a/i%03d.png
+  ffmpeg -v error -y -ss $desde -to $hasta -i "$video" $tmp/a/i%03d.png
 elif [[ $modo == vuelta ]]; then
-  # 37 cuadros parejos en la media vuelta (uno cada 5°)
-  ffmpeg -v error -y -ss $desde -to $hasta -i "$video" -vf "fps=37/($hasta-$desde)" -frames:v 37 $tmp/a/i%03d.png
+  # todos los cuadros de la media vuelta
+  ffmpeg -v error -y -ss $desde -to $hasta -i "$video" $tmp/a/i%03d.png
 else
   ffmpeg -v error -y -ss $desde -to $hasta -i "$video" -vf "minterpolate=fps=60:mi_mode=mci:mc_mode=aobmc:vsbmc=1" $tmp/a/i%03d.png
 fi
 [[ -x $aqui/recortar ]] || swiftc -O $aqui/recortar.swift -o $aqui/recortar
 if [[ -n $modo ]]; then $aqui/recortar $tmp/a $tmp/b persona; else $aqui/recortar $tmp/a $tmp/b; fi
 if (( invertir )); then i=0; for f in $(ls $tmp/b | sort -r); do mv $tmp/b/$f $tmp/b/r$(printf %03d $i).png; i=$((i+1)); done; fi
-if [[ $modo == completa ]]; then python3 $aqui/vuelta.py $tmp/b $tmp/c 1000 completa
-elif [[ $modo == vuelta ]]; then python3 $aqui/vuelta.py $tmp/b $tmp/c 1000; else python3 $aqui/encuadrar.py $tmp/b $tmp/c 1000; fi
+if [[ $modo == completa ]]; then python3 $aqui/vuelta.py $tmp/b $tmp/c 900 completa
+elif [[ $modo == vuelta ]]; then python3 $aqui/vuelta.py $tmp/b $tmp/c 900; else python3 $aqui/encuadrar.py $tmp/b $tmp/c 1000; fi
 destino=$raiz/public/modelos/mira/giro/$id
 rm -rf $destino; mkdir -p $destino
-for f in $tmp/c/*.png; do cwebp -quiet -q 78 -alpha_q 90 "$f" -o "$destino/${${f:t}%.png}.webp"; done
+for f in $tmp/c/*.png; do cwebp -quiet -q 72 -alpha_q 85 "$f" -o "$destino/${${f:t}%.png}.webp"; done
 n=$(ls $destino | wc -l | tr -d ' ')
 rm -rf $tmp
 if [[ -n $modo ]]; then cual="$id: { n: $n, vuelta: true }"; else cual="$id: $n"; fi

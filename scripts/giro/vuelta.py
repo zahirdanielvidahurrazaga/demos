@@ -27,6 +27,12 @@ for f in fs:
             if (alto_c > 105 and saturacion < 0.16) or a < 110:
                 px[x, y] = (r, g, bb, 0)
     ims.append(im)
+# un cuadro donde Vision falló (le borró media figura) se cambia por el de antes
+cob = [sum(1 for v in im.getchannel('A').getdata() if v > 128) for im in ims]
+for i in range(1, len(ims) - 1):
+    if cob[i] < 0.9 * min(cob[i - 1], cob[i + 1]):
+        print('cuadro', i, 'mal recortado: se usa el anterior')
+        ims[i] = ims[i - 1].copy()
 cajas = [im.getchannel('A').point(lambda v: 255 if v > 24 else 0).getbbox() for im in ims]
 centros = sorted((c[0] + c[2]) / 2 for c in cajas)
 eje = centros[len(centros) // 2]

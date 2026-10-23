@@ -112,20 +112,26 @@ function Girar({ id, n, vuelta, interactivo = true, fase = 0 }) {
     const imgs = Array.from({ length: n }, (_, i) => { const im = new Image(); im.src = cuadro(id, i); return im; });
     const quieto = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     let meta = vuelta ? fase : 0, actual = meta, ultimo = -1, raf = 0, tocado = 0, arrastre = null;
+    const listo = (im) => im.complete && im.naturalWidth;
     const pintar = () => {
       // vuelta completa: a = vueltas (0 frente, .5 espalda, 1 frente otra vez, sin tope)
       // medio giro: a = -1 (perfil a un lado) · 0 (frente) · 1 (perfil al otro lado)
-      const i = vuelta
-        ? ((Math.round(actual * n) % n) + n) % n
-        : Math.round((1 - Math.min(1, Math.abs(actual))) * (n - 1));
+      const pos = vuelta ? actual * n : (1 - Math.min(1, Math.abs(actual))) * (n - 1);
+      const base = Math.floor(pos);
+      const i = vuelta ? ((base % n) + n) % n : Math.min(base, n - 1);
+      const j = vuelta ? (i + 1) % n : Math.min(i + 1, n - 1);
+      // entre dos cuadros se funden (8 pasos): la vuelta se ve continua y no a saltos
+      const mezcla = Math.round((pos - base) * 8) / 8;
       const espejo = !vuelta && actual < 0;
-      const clave = i * 2 + (espejo ? 1 : 0);
-      const im = imgs[i];
-      if (clave === ultimo || !im.complete || !im.naturalWidth) return;
-      if (cv.width !== im.naturalWidth) { cv.width = im.naturalWidth; cv.height = im.naturalHeight; }
+      const clave = `${i}·${mezcla}·${espejo}`;
+      const a = imgs[i], b = imgs[j];
+      if (clave === ultimo || !listo(a)) return;
+      if (cv.width !== a.naturalWidth) { cv.width = a.naturalWidth; cv.height = a.naturalHeight; }
       ctx.setTransform(espejo ? -1 : 1, 0, 0, 1, espejo ? cv.width : 0, 0);
       ctx.clearRect(0, 0, cv.width, cv.height);
-      ctx.drawImage(im, 0, 0);
+      ctx.globalAlpha = 1;
+      ctx.drawImage(a, 0, 0);
+      if (mezcla > 0 && j !== i && listo(b)) { ctx.globalAlpha = mezcla; ctx.drawImage(b, 0, 0); ctx.globalAlpha = 1; }
       ultimo = clave;
     };
     const animar = (t) => {
