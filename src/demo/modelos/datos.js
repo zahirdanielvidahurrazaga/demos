@@ -64,10 +64,11 @@ export const FOTOS_PORTADA = ['book', 'pose', 'bn', 'cerca', 'polaroid'];
 // otra: scripts/giro/hacer-giro.sh (hace las dos) → aquí lo que imprime.
 export const GIROS = {
   valeria: { n: 150, ligero: 75, vuelta: true },
-  camila: { n: 183, ligero: 92, vuelta: true },
+  camila: { n: 221, ligero: 111, vuelta: true },
   renata: { n: 183, ligero: 92, vuelta: true },
   diego: { n: 206, ligero: 103, vuelta: true },
   ana: { n: 220, ligero: 110, vuelta: true },
+  andres: { n: 165, ligero: 83, vuelta: true },
 };
 
 // la cuenta "Modelo" de la demo
