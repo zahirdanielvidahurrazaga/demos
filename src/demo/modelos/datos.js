@@ -66,6 +66,8 @@ export const GIROS = {
   valeria: { n: 150, ligero: 75, vuelta: true },
   camila: { n: 183, ligero: 92, vuelta: true },
   renata: { n: 183, ligero: 92, vuelta: true },
+  diego: { n: 206, ligero: 103, vuelta: true },
+  ana: { n: 220, ligero: 110, vuelta: true },
 };
 
 // la cuenta "Modelo" de la demo

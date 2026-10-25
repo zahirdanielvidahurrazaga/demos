@@ -15,6 +15,11 @@
 # girar de frente, <fin> = cuando vuelve a quedar de frente. TODOS los cuadros del
 # video (~180 por vuelta: con 72 se veía trabado), sin espejo.
 # → en GIROS:  <id>: { n: <n>, vuelta: true }
+# Con el prompt nuevo (23-oct: Veo acaba la vuelta al 90% y se queda de frente)
+# <fin> puede ser el final del video: `quietos.py` borra la pausa del final para
+# que el bucle cierre solo, y avisa si el último cuadro no se parece al primero.
+# Si Veo dibuja la base del giratorio con franjas oscuras: BASE=<y de las suelas
+# en el video> antes del comando (`pintar-base.py` la pinta de fondo).
 # Deja public/modelos/mira/giro/<id>/NN.webp.
 set -e
 video=$1; id=$2; ini=$3; fin=$4; modo=$5
@@ -24,7 +29,15 @@ mkdir -p $tmp/{a,b,c}
 desde=$ini; hasta=$fin; invertir=0
 if (( $(echo "$ini > $fin" | bc) )); then desde=$fin; hasta=$ini; invertir=1; fi
 if [[ $modo == completa ]]; then
-  ffmpeg -v error -y -ss $desde -to $hasta -i "$video" $tmp/a/i%03d.png
+  if [[ -n $BASE ]]; then
+    tam=$(ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=p=0:s=x "$video")
+    ffmpeg -v error -ss $desde -to $hasta -i "$video" -f rawvideo -pix_fmt rgb24 - \
+      | python3 $aqui/pintar-base.py ${tam%x*} ${tam#*x} $BASE \
+      | ffmpeg -v error -y -f rawvideo -pix_fmt rgb24 -s $tam -i - $tmp/a/i%03d.png
+  else
+    ffmpeg -v error -y -ss $desde -to $hasta -i "$video" $tmp/a/i%03d.png
+  fi
+  python3 $aqui/quietos.py $tmp/a
 elif [[ $modo == vuelta ]]; then
   # todos los cuadros de la media vuelta
   ffmpeg -v error -y -ss $desde -to $hasta -i "$video" $tmp/a/i%03d.png
