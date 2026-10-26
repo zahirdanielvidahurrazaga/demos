@@ -530,7 +530,7 @@ function Compra({ e, peli, funcion, tipo, alVolver, alListo }) {
   const b = boleto(tipo);
   const [paso, setPaso] = useState(1);
   const [lugar, setLugar] = useState(null);
-  const [datos, setDatos] = useState({ nombre: 'Mariana López', telefono: '222 345 6789', tarjeta: '4242 4242 4242 4242', vence: '12/29', cvc: '123' });
+  const [datos, setDatos] = useState({ nombre: CLIENTE.nombre, telefono: '222 345 6789', tarjeta: '4242 4242 4242 4242', vence: '12/29', cvc: '123' });
   const [combo, setCombo] = useState(false);
   const [pagando, setPagando] = useState(false);
   const [error, setError] = useState('');

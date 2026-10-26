@@ -39,7 +39,7 @@ const GUIA = {
     'El lector USB lee el QR del pase. Aquí lo simulan los pases de prueba (o las teclas 1 a 5).',
     'Si pasa, la pantalla dice en grande A QUÉ LUGAR mandar el auto; si ya entró, es de otra función o es falso, lo dice en rosa.',
     'El mapa se va llenando en vivo con los que llegan.',
-    'El "QR de cliente (Mariana)" es el de su perfil: la reconoce y le suma los Cocopuntos de lo que pagó en taquilla o en la fuente de sodas.',
+    'El "QR de cliente (Karime)" es el de su perfil: la reconoce y le suma los Cocopuntos de lo que pagó en taquilla o en la fuente de sodas.',
   ],
   cocina: [
     'Cada pedido trae el lugar del auto en grande: sale del boleto.',

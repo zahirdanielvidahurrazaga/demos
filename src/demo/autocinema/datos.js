@@ -203,7 +203,7 @@ export const RETOS = [
 // La clienta de la demo. Su QR de cliente (`ACS1.<código>`) es el que se pasa
 // por el lector en taquilla o en la fuente de sodas para sumar puntos de lo que
 // compra en el lugar (no solo en línea).
-export const CLIENTE = { nombre: 'Mariana López', codigo: 'CLI-4821', desde: 'septiembre 2026', iniciales: 'ML' };
+export const CLIENTE = { nombre: 'Karime Pérez', codigo: 'CLI-4821', desde: 'septiembre 2026', iniciales: 'KP' };
 
 export const nivelDe = (pts) => [...NIVELES].reverse().find((n) => pts >= n.desde);
 export const siguienteNivel = (pts) => NIVELES.find((n) => n.desde > pts) || null;
@@ -280,8 +280,8 @@ function programa() {
 }
 
 function sembrar() {
-  const e = { v: 5, modo: MODO, dia: inicioDia(0), funciones: [], ventas: [], ordenes: [], avisos: [], historial: [] };
-  // Mariana ya vino 3 veces antes: llega con saldo para canjear algo y a medio
+  const e = { v: 6, modo: MODO, dia: inicioDia(0), funciones: [], ventas: [], ordenes: [], avisos: [], historial: [] };
+  // Karime ya vino 3 veces antes: llega con saldo para canjear algo y a medio
   // camino del siguiente nivel
   e.puntos = { saldo: 0, ganados: 0, previas: 1, retos: [], cupones: [], movs: [] };
   [[-38, 75, 'Boleto Auto · septiembre'], [-38, 52, 'Pedido a tu auto'], [-24, 75, 'Boleto Auto · octubre'], [-24, 50, 'Visita al autocinema'],
@@ -302,10 +302,6 @@ function sembrar() {
   });
   // la primera función de hoy ya está entrando: 35% llegaron
   const hoy1 = (funcionesDelDia(e, 0)[0] || e.funciones.find((f) => f.t > Date.now()) || e.funciones[0]).id;
-  // Mariana (la clienta de la demo) ya tiene su boleto de esta noche: Fila C · 6
-  const suya = (funcionesDelDia(e, 0).find((f) => f.t > Date.now()) || e.funciones.find((f) => f.t > Date.now()) || e.funciones[0]).id;
-  e.ventas = e.ventas.filter((v) => !(v.funcion === suya && v.lugar === 'C-6'));
-  e.ventas.push({ codigo: codigo(), funcion: suya, tipo: 'auto', lugar: 'C-6', nombre: 'Mariana López', telefono: '222 345 6789', total: 450, t: inicioDia(-2) + 21 * HORA, mio: true, entro: null });
   e.ventas.filter((v) => v.funcion === hoy1 && !v.mio).forEach((v) => { if (Math.random() < 0.35) v.entro = Date.now() - Math.random() * 40 * MIN; });
   // pedidos de esta noche en distintos estados
   const llegaron = e.ventas.filter((v) => v.funcion === hoy1 && v.entro);
@@ -330,11 +326,11 @@ function orden(v, items, estado = 'recibido', t = Date.now(), mio = false) {
 }
 
 // ── almacén ─────────────────────────────────────────────────────────────────
-const LLAVE = `demo_autocinema_v5_${MODO}`;
+const LLAVE = `demo_autocinema_v6_${MODO}`;
 let estado = null;
 const oyentes = new Set();
 function leerFresco() {
-  try { const t = localStorage.getItem(LLAVE); if (t) { const e = JSON.parse(t); if (e.v === 5) return e; } } catch { /* sin almacenamiento */ }
+  try { const t = localStorage.getItem(LLAVE); if (t) { const e = JSON.parse(t); if (e.v === 6) return e; } } catch { /* sin almacenamiento */ }
   return null;
 }
 function guardar() { try { localStorage.setItem(LLAVE, JSON.stringify(estado)); } catch { /* lleno o bloqueado */ } }
@@ -492,7 +488,7 @@ export function pasesDePrueba(e, fid) {
     terror && { etiqueta: 'Auto Terrorífico', codigo: terror.codigo },
     yaEntro && { etiqueta: 'Ya entró', codigo: yaEntro.codigo },
     otra && { etiqueta: 'Otra función', codigo: otra.codigo },
-    { etiqueta: 'QR de cliente (Mariana)', codigo: `ACS1.${CLIENTE.codigo}` },
+    { etiqueta: `QR de cliente (${CLIENTE.nombre.split(' ')[0]})`, codigo: `ACS1.${CLIENTE.codigo}` },
     { etiqueta: 'Código falso', codigo: 'CCZZZZ' },
   ].filter(Boolean);
 }
