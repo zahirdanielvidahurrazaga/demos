@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { CircleCheck, CircleX, Usb } from 'lucide-react';
+import { CircleCheck, CircleX, LifeBuoy, Usb } from 'lucide-react';
 import { useLector } from '../gimnasio/Lector';
 import {
-  CLIENTE, PELICULAS, boleto, nivelDe, puntosEnLugar, diaCorto, funcionPorId, funcionesDelDia, hora, leerPase, nombreLugar, pasesDePrueba, useCine, ventasDe,
+  AYUDAS, CASA, CLIENTE, PELICULAS, atenderAyuda, boleto, nivelDe, puntosEnLugar, diaCorto, funcionPorId, funcionesDelDia, hora, leerPase, nombreLugar, pasesDePrueba, useCine, ventasDe,
 } from './datos';
 import { Controles, Mapa, minutos, useAhora } from './comun';
 
@@ -17,7 +17,12 @@ const RES = {
   'ya-entro': { titulo: 'Ya entró', bien: false },
   'otra-funcion': { titulo: 'Otra función', bien: false },
   'no-existe': { titulo: 'No válido', bien: false },
+  cancelada: { titulo: 'Cancelada', bien: false },
+  reembolsado: { titulo: 'Reembolsado', bien: false },
   cliente: { titulo: 'Cliente', bien: true },
+  casa: { titulo: 'Adelante', bien: true },
+  'casa-ya': { titulo: 'Ya entró', bien: false },
+  'casa-otro-dia': { titulo: 'Otro día', bien: false },
 };
 
 function falta(t) {
@@ -89,6 +94,7 @@ export default function Taquilla() {
               </button>
             ))}
           </div>
+          <AyudaLugar e={e} />
           <div className="ac-tarjeta" style={{ padding: 18 }}>
             <p className="ac-etiqueta" style={{ marginBottom: 6 }}>Últimas llegadas</p>
             <div className="ac-llegadas">
@@ -116,6 +122,7 @@ export default function Taquilla() {
 
 function Resultado({ r, e, alCerrar }) {
   if (r.resultado === 'cliente') return <ResultadoCliente e={e} alCerrar={alCerrar} />;
+  if (r.casa) return <ResultadoCasa r={r} alCerrar={alCerrar} />;
   const cfg = RES[r.resultado];
   const v = r.venta;
   const b = v && boleto(v.tipo);
@@ -131,6 +138,8 @@ function Resultado({ r, e, alCerrar }) {
       {r.resultado === 'ya-entro' && <p>Este pase entró a las {hora(v.entro)} a {nombreLugar(v.lugar)}. Puede ser una captura de pantalla compartida.</p>}
       {r.resultado === 'otra-funcion' && <p>El boleto de {v.nombre} es para {PELICULAS[r.funcion.peli].titulo}, <span>{diaCorto(r.funcion.t)}</span> a las {hora(r.funcion.t)}.</p>}
       {r.resultado === 'no-existe' && <p>El código {r.codigo} no corresponde a ningún boleto vendido.</p>}
+      {r.resultado === 'cancelada' && <p>La función de {PELICULAS[r.funcion.peli].titulo} se canceló por lluvia. {v.nombre} puede cambiar su fecha desde su boleto, en su celular.</p>}
+      {r.resultado === 'reembolsado' && <p>A {v.nombre} ya se le reembolsó este boleto.</p>}
       <p className="ac-res-pie">Toca para seguir</p>
     </div>
   );
@@ -156,6 +165,48 @@ function ResultadoCliente({ e, alCerrar }) {
           </div>
         )}
       <p className="ac-res-pie">{sumado ? `Sumados por la compra en ${sumado.donde}. Toca para seguir` : 'Elige lo que se cobró para sumarle sus puntos'}</p>
+    </div>
+  );
+}
+
+// Boleto de solo Casa del Terror: vale el día de su turno, una sola vez.
+function ResultadoCasa({ r, alCerrar }) {
+  const cfg = RES[r.resultado];
+  const c = r.casa;
+  const tipo = CASA.tipos.find((x) => x.id === c.tipo);
+  return (
+    <div className={`ac-resultado ${cfg.bien ? 'pasa' : 'no'}`} onClick={alCerrar} role="alert">
+      {cfg.bien ? <CircleCheck size={72} strokeWidth={1.5} /> : <CircleX size={72} strokeWidth={1.5} />}
+      <div className="ac-res-titulo">{cfg.titulo}</div>
+      {r.resultado === 'casa' && (<>
+        <div className="ac-res-lugar">Casa del Terror</div>
+        <p>{c.nombre} · {c.personas} {c.personas === 1 ? 'persona' : 'personas'} · turno {hora(c.t)}{c.tipo === 'rapido' ? ' · acceso rápido, sin fila' : ''}</p>
+        <p style={{ fontWeight: 700 }}>Entregar {c.personas} {c.personas === 1 ? 'pulsera' : 'pulseras'} {tipo.nombre.toLowerCase()}</p>
+      </>)}
+      {r.resultado === 'casa-ya' && <p>Este boleto de la Casa del Terror ya se usó a las {hora(c.entro)}.</p>}
+      {r.resultado === 'casa-otro-dia' && <p>El boleto de {c.nombre} es para el {diaCorto(c.t)} a las {hora(c.t)}.</p>}
+      <p className="ac-res-pie">Toca para seguir</p>
+    </div>
+  );
+}
+
+// Solicitudes de ayuda desde el boleto del cliente (perdido, batería, audio).
+function AyudaLugar({ e }) {
+  const abiertas = (e.ayuda || []).filter((a) => a.estado !== 'resuelta');
+  return (
+    <div className="ac-tarjeta" style={{ padding: 18, display: 'grid', gap: 10 }}>
+      <p className="ac-etiqueta" style={{ display: 'flex', gap: 8, alignItems: 'center' }}><LifeBuoy size={15} /> Ayuda en el lugar · {abiertas.length}</p>
+      {abiertas.map((a) => (
+        <div key={a.id} className={`ac-ayuda-pedida ${a.estado}`}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <b>{nombreLugar(a.lugar)}</b>
+            <span>{AYUDAS.find((x) => x.id === a.tipo).nombre} · {a.nombre}{a.mio ? ' (tú)' : ''}</span>
+            <small>hace {minutos(a.t)} min{a.estado === 'camino' ? ' · va alguien en camino' : ''}</small>
+          </div>
+          <button type="button" className={`ac-btn chico ${a.estado === 'pendiente' ? 'acento' : 'fantasma'}`} onClick={() => atenderAyuda(a.id)}>{a.estado === 'pendiente' ? 'Voy' : 'Resuelto'}</button>
+        </div>
+      ))}
+      {!abiertas.length && <p className="ac-suave" style={{ fontSize: 14 }}>Nadie ha pedido ayuda. Llegan solas desde el boleto del cliente.</p>}
     </div>
   );
 }

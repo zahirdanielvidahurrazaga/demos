@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
-import { Megaphone, Plus, Ticket, UtensilsCrossed } from 'lucide-react';
+import { Brain, CloudRain, Megaphone, Plus, Projector, Ticket, UtensilsCrossed, X } from 'lucide-react';
 import {
-  BOLETOS, CUPO_TOTAL, PELICULAS, crearFuncion, diaCorto, dinero, hora, inicioDia, mandarAviso, nombreLugar,
+  BOLETOS, CUPO_TOTAL, PELICULAS, PROPUESTAS, cancelarPorLluvia, climaDe, funcionesDelDia, marcarCotizacion, rankingTrivia, reanudarFuncion, crearFuncion, diaCorto, dinero, hora, inicioDia, mandarAviso, nombreLugar,
   ocupacion, platillo, useCine, ventasDe,
 } from './datos';
 import { Controles, avisarListo, minutos, useAhora } from './comun';
@@ -116,6 +116,84 @@ export default function Dueno() {
           </div>
         </div>
 
+        <div className="ac-tarjeta ac-caja">
+          <h3>Clima <span className="ac-suave" style={{ fontSize: 13, fontWeight: 400 }}>pronóstico y lluvia</span></h3>
+          <div style={{ display: 'flex', gap: 8, marginBottom: 14, overflowX: 'auto' }}>
+            {Array.from({ length: 5 }, (_, d) => inicioDia(d)).map((t) => {
+              const c = climaDe(e, t);
+              return (
+                <div key={t} className={`ac-clima-dia ${c.lluvia >= 50 ? 'alta' : ''}`}>
+                  <small>{d0(t)}</small><CloudRain size={18} /><b>{c.lluvia}%</b>
+                </div>
+              );
+            })}
+          </div>
+          <p className="ac-etiqueta" style={{ marginBottom: 8 }}>Funciones de hoy y mañana</p>
+          {[...funcionesDelDia(e, 0), ...funcionesDelDia(e, 1)].map((f) => {
+            const n = ventasDe(e, f.id).length;
+            const pend = ventasDe(e, f.id).filter((v) => v.pendiente === 'lluvia').length;
+            return (
+              <div key={f.id} className="ac-clima-funcion">
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <b>{PELICULAS[f.peli].titulo}</b>
+                  <span>{diaCorto(f.t)} · {hora(f.t)} · {f.cancelada ? `cancelada · ${pend} por reprogramar` : `${n} boletos · ${climaDe(e, f.t).lluvia}% de lluvia`}</span>
+                </div>
+                {f.cancelada
+                  ? <button type="button" className="ac-btn chico fantasma" onClick={() => reanudarFuncion(f.id)}>Reanudar</button>
+                  : <button type="button" className="ac-btn chico rosa" onClick={() => { cancelarPorLluvia(f.id); avisarListo(`Aviso enviado a ${n} boletos`); }}><CloudRain size={14} /> Cancelar por lluvia</button>}
+              </div>
+            );
+          })}
+          <p className="ac-suave" style={{ fontSize: 12.5, marginTop: 10, lineHeight: 1.45 }}>Al cancelar, todos reciben el aviso y en su boleto eligen otra fecha (con lugar en su misma zona) o su reembolso. Nadie tiene que llamar.</p>
+        </div>
+
+        <TriviaNoche e={e} />
+
+        <div className="ac-tarjeta ac-caja ancho">
+          <h3>Eventos privados <span className="ac-suave" style={{ fontSize: 13, fontWeight: 400 }}>cotizaciones que llegan del sitio</span></h3>
+          <div className="ac-tabla-scroll">
+            <table className="ac-tabla">
+              <thead><tr><th>Quién</th><th>Evento</th><th>Autos</th><th>Cotización</th><th /></tr></thead>
+              <tbody>
+                {(e.cotizaciones || []).map((c) => (
+                  <tr key={c.id}>
+                    <td><b style={{ fontWeight: 600 }}>{c.nombre}</b>{c.mio && <span className="ac-chip ambar" style={{ marginLeft: 6, padding: '2px 8px', fontSize: 11 }}>Nueva</span>}<div className="ac-suave" style={{ fontSize: 12.5 }}>hace {minutos(c.t, ahora) < 120 ? `${minutos(c.t, ahora)} min` : `${Math.round(minutos(c.t, ahora) / 60)} h`}</div></td>
+                    <td>{c.tipo}<div className="ac-suave" style={{ fontSize: 12.5 }}>{c.fecha ? diaCorto(c.fecha) : 'Fecha por definir'}</div></td>
+                    <td className="ac-mono">{c.autos}</td>
+                    <td className="ac-mono">{dinero(c.total)}</td>
+                    <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
+                      {c.estado === 'nueva' && <button type="button" className="ac-btn chico acento" onClick={() => marcarCotizacion(c.id, 'enviada')}>Mandar por WhatsApp</button>}
+                      {c.estado === 'enviada' && <button type="button" className="ac-btn chico fantasma" onClick={() => marcarCotizacion(c.id, 'apartado')}>Marcar apartado</button>}
+                      {c.estado === 'apartado' && <span className="ac-chip verde">Apartado · 30%</span>}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div className="ac-tarjeta ac-caja">
+          <h3>Lo que opina el público</h3>
+          <div className="ac-barras-h">
+            {Object.entries(e.reacciones || {}).filter(([k]) => PELICULAS[k]).map(([k, r]) => ({ k, pct: Math.round((r.encanta / Math.max(1, r.encanta + r.bien + r.no)) * 100), n: r.encanta + r.bien + r.no }))
+              .sort((a, b) => b.pct - a.pct).slice(0, 6).map(({ k, pct, n }) => (
+                <div key={k}><span>{PELICULAS[k].titulo}</span><b className="ac-mono">{pct}%</b><i><span className="acento" style={{ width: `${pct}%` }} /></i><small className="ac-suave" style={{ fontSize: 12 }}>{n} opiniones</small></div>
+              ))}
+          </div>
+        </div>
+
+        <div className="ac-tarjeta ac-caja">
+          <h3>Tú eliges la próxima <span className="ac-suave" style={{ fontSize: 13, fontWeight: 400 }}>votos del público</span></h3>
+          <div className="ac-barras-h">
+            {[...PROPUESTAS].sort((a, b) => (e.votos?.[b.id] || 0) - (e.votos?.[a.id] || 0)).map((x) => (
+              <div key={x.id}><span>{x.titulo}</span><b className="ac-mono">{e.votos?.[x.id] || 0}</b><i><span className="ambar" style={{ width: `${((e.votos?.[x.id] || 0) / Math.max(...Object.values(e.votos || { a: 1 }))) * 100}%` }} /></i></div>
+            ))}
+          </div>
+          <p className="ac-etiqueta" style={{ margin: '16px 0 8px' }}>Propuestas</p>
+          {(e.sugerencias || []).slice(0, 4).map((x) => <p key={x.id} style={{ fontSize: 14, padding: '6px 0', borderBottom: '1px solid var(--ac-linea)' }}>“{x.texto}” <span className="ac-suave" style={{ fontSize: 12.5 }}>· {x.nombre}</span></p>)}
+        </div>
+
         <div className="ac-tarjeta ac-caja ancho">
           <h3>En vivo</h3>
           <div className="ac-feed">
@@ -216,3 +294,39 @@ function VentanaFuncion({ alCerrar }) {
     </div>
   );
 }
+
+const d0 = (t) => (t === inicioDia(0) ? 'Hoy' : t === inicioDia(1) ? 'Mañana' : new Date(t).toLocaleDateString('es-MX', { weekday: 'short' }));
+
+// Trivia de esta noche: el ranking de la próxima función y la vista para la
+// pantalla gigante (16:9, se puede poner en pantalla completa con el botón).
+function TriviaNoche({ e }) {
+  const hoy = funcionesDelDia(e, 0);
+  const f = hoy.find((x) => x.t > Date.now() && !x.cancelada) || hoy[0];
+  const [pantalla, setPantalla] = useState(false);
+  if (!f) return null;
+  const ranking = rankingTrivia(e, f.id);
+  return (
+    <div className="ac-tarjeta ac-caja">
+      <h3><span style={{ display: 'flex', gap: 8, alignItems: 'center' }}><Brain size={17} /> Trivia de esta noche</span><span className="ac-suave" style={{ fontSize: 13, fontWeight: 400 }}>{ranking.length} autos jugaron</span></h3>
+      <p className="ac-suave" style={{ fontSize: 13.5, marginBottom: 10 }}>{PELICULAS[f.peli].titulo} · {hora(f.t)}</p>
+      <ol className="ac-ranking">
+        {ranking.slice(0, 5).map((r, k) => <li key={r.codigo} className={r.mio ? 'mio' : ''}><span>{k + 1}</span><b>{r.nombre}</b><small>{nombreLugar(r.lugar)}</small><em>{r.aciertos}/5</em></li>)}
+      </ol>
+      <button type="button" className="ac-btn ancho" style={{ marginTop: 12 }} onClick={() => setPantalla(true)}><Projector size={16} /> Proyectar en la pantalla</button>
+      {pantalla && (
+        <div className="ac-proyeccion" onClick={() => setPantalla(false)} role="dialog" aria-label="Ranking en la pantalla">
+          <div className="ac-proyeccion-lienzo" onClick={(ev) => ev.stopPropagation()}>
+            <button type="button" className="ac-redondo chico vidrio" onClick={() => setPantalla(false)} aria-label="Cerrar" style={{ position: 'absolute', top: 16, right: 16 }}><X size={17} /></button>
+            <p className="ac-cejilla" style={{ color: 'rgba(255,255,255,.6)' }}>Trivia Cocodrilo · {PELICULAS[f.peli].titulo}</p>
+            <h2>Los que más saben <em>esta noche</em></h2>
+            <ol>
+              {ranking.slice(0, 5).map((r, k) => <li key={r.codigo}><span>{k + 1}</span><b>{r.nombre}</b><small>{nombreLugar(r.lugar)}</small><em>{r.puntaje.toLocaleString('es-MX')}</em></li>)}
+            </ol>
+            <p className="ac-proyeccion-pie">Juega desde tu boleto en el celular · {TRIVIA_TXT}</p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+const TRIVIA_TXT = 'gana Cocopuntos por cada acierto';

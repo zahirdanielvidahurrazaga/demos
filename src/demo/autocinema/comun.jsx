@@ -104,6 +104,7 @@ export function Mapa({ e, funcion, modo = 'compra', zona, elegido, alElegir, rec
       return oc.has(l) ? 'vendido' : 'libre';
     }
     if (l === mio) return 'mio';
+    if (modo === 'ubicar') return 'fuera';   // ayuda para llegar: solo tu lugar
     if (adentro.has(l)) return `adentro${l === recien ? ' recien' : ''}`;
     if (oc.has(l)) return 'esperando';
     return 'fuera';
@@ -146,7 +147,7 @@ export function Mapa({ e, funcion, modo = 'compra', zona, elegido, alElegir, rec
           <span><i className="l-libre" />Libre</span>
           <span><i className="l-vendido" />Vendido</span>
           <span><i className="l-tuyo" />Tu lugar</span>
-        </>) : (<>
+        </>) : modo === 'ubicar' ? <span><i style={{ background: 'var(--ac-ambar)' }} />Tu lugar</span> : (<>
           <span><i className="l-adentro" />Ya llegó</span>
           <span><i className="l-espera" />Por llegar</span>
         </>)}

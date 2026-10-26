@@ -138,6 +138,18 @@ export const BOLETOS = [
 ];
 export const boleto = (id) => BOLETOS.find((b) => b.id === id);
 
+// Casa del Terror por separado (sin película): por persona y por turno.
+// Precios de ejemplo (su sitio solo la vende incluida en el boleto de cine).
+export const CASA = {
+  tipos: [
+    { id: 'general', nombre: 'General', precio: 150, detalle: 'Recorrido de 15 minutos con actores en vivo' },
+    { id: 'rapido', nombre: 'Acceso rápido', precio: 230, detalle: 'Entras sin hacer fila, a cualquier hora de tu turno', destacado: true },
+  ],
+  cupo: 40,
+  turnos: ['18:00', '18:30', '19:00', '19:30', '20:00', '20:30', '21:00', '21:30', '22:00', '22:30', '23:00'],
+};
+export const turnoT = (dia, hhmm) => { const [h, m] = hhmm.split(':').map(Number); return dia + h * HORA + m * MIN; };
+
 // Mapa del lugar: la pantalla arriba; fila A = primera fila (Terrorífico),
 // B–F autos, al frente la zona peatonal y a un lado las casas de campaña.
 export const ZONAS = {
@@ -234,6 +246,127 @@ function revisarRetos(e) {
   });
 }
 
+// ── Tú eliges la próxima (votación) ────────────────────────────────────────
+export const PROPUESTAS = MODO === 'real' ? [
+  { id: 'hocus', titulo: 'Abracadabra (Hocus Pocus)', año: 1993, poster: TMDB + '/by4D4Q9NlUjFSEUA1yrxq6ksXmk.jpg' },
+  { id: 'gremlins', titulo: 'Gremlins', año: 1984, poster: TMDB + '/72Y1X9pMSjXQ7mKB6pBEoMhL0OQ.jpg' },
+  { id: 'cazafantasmas', titulo: 'Los Cazafantasmas', año: 1984, poster: TMDB + '/xdpWriBfVcYUX0RDCqLvtMQdHIQ.jpg' },
+  { id: 'extrano', titulo: 'El Extraño Mundo de Jack', año: 1993, poster: TMDB + '/oQffRNjK8e19rF7xVYEN8ew0j7b.jpg' },
+] : [
+  { id: 'galaxia', titulo: 'Órbita', año: 2025, poster: 'p-galaxia' },
+  { id: 'baile', titulo: 'Noche Disco', año: 2023, poster: 'p-baile' },
+  { id: 'amor', titulo: 'Atardecer en la Costa', año: 2024, poster: 'p-amor' },
+  { id: 'casona', titulo: 'La Casona de la Colina', año: 2022, poster: 'p-casona' },
+];
+
+// ── ayuda en tu lugar ──────────────────────────────────────────────────────
+export const AYUDAS = [
+  { id: 'perdido', nombre: 'No encuentro mi lugar', detalle: 'Un acomodador va por ti con linterna' },
+  { id: 'bateria', nombre: 'Se descargó mi batería', detalle: 'Te llevamos cables para pasar corriente' },
+  { id: 'audio', nombre: 'No escucho la película', detalle: 'Te ayudamos a sintonizar la frecuencia' },
+  { id: 'otro', nombre: 'Otra cosa', detalle: 'Alguien del equipo se acerca a tu auto' },
+];
+
+// ── eventos privados (cotizador) ───────────────────────────────────────────
+// Precios de EJEMPLO para enseñar el cotizador; el autocinema pone los suyos.
+export const EVENTO = {
+  tipos: ['Cumpleaños', 'Empresa', 'Pedida de mano', 'Graduación', 'Otro'],
+  base: 18000, incluye: 20, porAuto: 350,
+  extras: [
+    { id: 'comida', nombre: 'Combo de comida por auto', precio: 250, porAuto: true },
+    { id: 'pantalla', nombre: 'Mensaje o video tuyo en la pantalla', precio: 800 },
+    { id: 'decoracion', nombre: 'Decoración y luces', precio: 3500 },
+    { id: 'terror', nombre: 'Casa del Terror privada', precio: 4000 },
+    { id: 'foto', nombre: 'Fotógrafo (2 horas)', precio: 2800 },
+  ],
+};
+export function cotizar({ autos, extras }) {
+  const lineas = [['Renta del autocinema (hasta ' + EVENTO.incluye + ' autos)', EVENTO.base]];
+  if (autos > EVENTO.incluye) lineas.push([`${autos - EVENTO.incluye} autos extra`, (autos - EVENTO.incluye) * EVENTO.porAuto]);
+  EVENTO.extras.filter((x) => extras.includes(x.id)).forEach((x) => lineas.push([x.porAuto ? `${x.nombre} × ${autos}` : x.nombre, x.porAuto ? x.precio * autos : x.precio]));
+  return { lineas, total: lineas.reduce((n, [, v]) => n + v, 0) };
+}
+
+// ── inventario de la fuente de sodas ────────────────────────────────────────
+// Cada pedido descuenta sus insumos (RECETAS); si un insumo no alcanza, el
+// platillo sale "agotado" en el menú del cliente.
+export const INSUMOS = [
+  { id: 'pan-hd', nombre: 'Pan para hot dog', unidad: 'pzas', max: 240, minimo: 40 },
+  { id: 'salchicha', nombre: 'Salchicha', unidad: 'pzas', max: 240, minimo: 40 },
+  { id: 'pan-ham', nombre: 'Pan brioche', unidad: 'pzas', max: 120, minimo: 20 },
+  { id: 'carne', nombre: 'Carne para hamburguesa', unidad: 'pzas', max: 240, minimo: 40 },
+  { id: 'alitas', nombre: 'Alitas', unidad: 'kg', max: 30, minimo: 5 },
+  { id: 'pizza', nombre: 'Base de pizza', unidad: 'pzas', max: 60, minimo: 10 },
+  { id: 'nachos', nombre: 'Totopos', unidad: 'kg', max: 20, minimo: 4 },
+  { id: 'queso', nombre: 'Queso para nachos', unidad: 'kg', max: 15, minimo: 3 },
+  { id: 'maiz', nombre: 'Maíz palomero', unidad: 'kg', max: 40, minimo: 8 },
+  { id: 'helado', nombre: 'Helado para malteada', unidad: 'L', max: 20, minimo: 4 },
+  { id: 'refresco', nombre: 'Jarabe de refresco', unidad: 'L', max: 60, minimo: 10 },
+  { id: 'vasos', nombre: 'Vasos grandes', unidad: 'pzas', max: 600, minimo: 100 },
+];
+export const RECETAS = {
+  hotdog: [['pan-hd', 1], ['salchicha', 1]],
+  hamburguesa: [['pan-ham', 1], ['carne', 2]],
+  alitas: [['alitas', 0.5]],
+  pizza: [['pizza', 1]],
+  nachos: [['nachos', 0.2], ['queso', 0.15]],
+  palomitas: [['maiz', 0.25]],
+  malteada: [['helado', 0.3], ['vasos', 1]],
+  refresco: [['refresco', 0.4], ['vasos', 1]],
+  combo: [['pan-hd', 2], ['salchicha', 2], ['maiz', 0.25], ['refresco', 0.8], ['vasos', 2]],
+  'combo-familia': [['pizza', 2], ['nachos', 0.2], ['queso', 0.15], ['maiz', 0.25], ['refresco', 1.6], ['vasos', 4]],
+};
+function descontar(e, items) {
+  items.forEach(([pid, q]) => (RECETAS[pid] || []).forEach(([ins, n]) => { e.inventario[ins] = Math.max(0, +(e.inventario[ins] - n * q).toFixed(2)); }));
+}
+export const disponible = (e, pid) => (RECETAS[pid] || []).every(([ins, n]) => (e.inventario?.[ins] ?? 999) >= n);
+// el pedido completo (varios platillos comparten insumos): ¿alcanza todo junto?
+export function alcanza(e, items) {
+  const falta = {};
+  items.forEach(([pid, q]) => (RECETAS[pid] || []).forEach(([ins, n]) => { falta[ins] = (falta[ins] || 0) + n * q; }));
+  return Object.entries(falta).every(([ins, n]) => (e.inventario?.[ins] ?? 999) >= n - 1e-9);
+}
+function reponer(e, items) {
+  items.forEach(([pid, q]) => (RECETAS[pid] || []).forEach(([ins, n]) => { const i = INSUMOS.find((x) => x.id === ins); e.inventario[ins] = Math.min(i.max, +(e.inventario[ins] + n * q).toFixed(2)); }));
+}
+
+// ── trivia antes de la película ─────────────────────────────────────────────
+// 5 preguntas: 2 de la película de tu función (año y director, sacados de los
+// datos, así siempre son correctas) + 3 de cine y autocinema. 20 Cocopuntos por
+// acierto; el ranking de la noche se proyecta en la pantalla.
+export const TRIVIA_SEGUNDOS = 15;
+export const TRIVIA_PUNTOS = 20;
+const TRIVIA_GENERAL = [
+  { p: '¿En qué país abrió el primer autocinema del mundo, en 1933?', o: ['Estados Unidos', 'México', 'Francia', 'Japón'] },
+  { p: '¿Cómo se escucha la película en un autocinema?', o: ['En la radio de tu auto', 'Con audífonos', 'Con bocinas en cada fila', 'Por una app'] },
+  { p: '¿Qué villano usa un guante con navajas?', o: ['Freddy Krueger', 'Jason Voorhees', 'Michael Myers', 'Chucky'] },
+  { p: '¿Cómo se llama el asesino enmascarado de Halloween?', o: ['Michael Myers', 'Freddy Krueger', 'Ghostface', 'Leatherface'] },
+  { p: 'En Coco, ¿cómo se llama el perro de Miguel?', o: ['Dante', 'Pepita', 'Héctor', 'Ernesto'] },
+  { p: '¿Cuántas veces hay que decir su nombre para invocar a Beetlejuice?', o: ['Tres', 'Dos', 'Cinco', 'Siete'] },
+  { p: 'En Coraline, ¿qué tienen los "otros" padres en lugar de ojos?', o: ['Botones', 'Canicas', 'Espejos', 'Monedas'] },
+  { p: '¿Qué investigadores de lo paranormal protagonizan El Conjuro?', o: ['Ed y Lorraine Warren', 'Mulder y Scully', 'Los Winchester', 'Los Addams'] },
+  { p: '¿En qué saga aparece Ghostface?', o: ['Scream', 'Halloween', 'Viernes 13', 'El Conjuro'] },
+  { p: '¿Qué días se celebra el Día de Muertos en México?', o: ['1 y 2 de noviembre', '31 de octubre', '15 y 16 de septiembre', '24 y 25 de diciembre'] },
+];
+const revolver = (a, sem) => { const r = [...a]; let x = sem; for (let i = r.length - 1; i > 0; i--) { x = (x * 9301 + 49297) % 233280; const j = Math.floor((x / 233280) * (i + 1)); [r[i], r[j]] = [r[j], r[i]]; } return r; };
+// Preguntas de una función: siempre las mismas para todos los autos de esa función.
+export function preguntasDe(f) {
+  const p = PELICULAS[f.peli];
+  const sem = [...f.id].reduce((n, c) => n + c.charCodeAt(0), 0);
+  const otras = Object.values(PELICULAS).filter((x) => x !== p);
+  const qs = [];
+  if (typeof p.año === 'number') qs.push({ p: `¿En qué año se estrenó ${p.titulo}?`, o: [p.año, p.año - 2, p.año - 5, p.año - 9].map(String) });
+  const directores = [...new Set(otras.map((x) => x.director).filter((d) => d && d !== p.director))];
+  if (p.director && p.director !== 'El Diablo' && directores.length >= 3) qs.push({ p: `¿Quién dirigió ${p.titulo}?`, o: [p.director, ...revolver(directores, sem).slice(0, 3)] });
+  else qs.push({ p: `¿De qué género es ${p.titulo}?`, o: [p.genero, ...revolver([...new Set(otras.map((x) => x.genero))].filter((g) => g !== p.genero), sem).slice(0, 3)] });
+  qs.push(...revolver(TRIVIA_GENERAL, sem).slice(0, 5 - qs.length));
+  // la buena siempre es la opción 0 en los datos; se revuelven para mostrarlas
+  return qs.map((q, k) => { const orden = revolver([0, 1, 2, 3], sem + k * 7); return { pregunta: q.p, opciones: orden.map((i) => q.o[i]), buena: orden.indexOf(0) }; });
+}
+
+// ── clima y lluvia ──────────────────────────────────────────────────────────
+export const climaDe = (e, t) => e.clima?.[new Date(t).setHours(0, 0, 0, 0)] || { lluvia: 0 };
+
 // ── semilla ─────────────────────────────────────────────────────────────────
 const id = () => Math.random().toString(36).slice(2, 9);
 const azar = (a) => a[Math.floor(Math.random() * a.length)];
@@ -280,7 +413,7 @@ function programa() {
 }
 
 function sembrar() {
-  const e = { v: 6, modo: MODO, dia: inicioDia(0), funciones: [], ventas: [], ordenes: [], avisos: [], historial: [] };
+  const e = { v: 9, modo: MODO, dia: inicioDia(0), funciones: [], ventas: [], ordenes: [], avisos: [], historial: [] };
   // Karime ya vino 3 veces antes: llega con saldo para canjear algo y a medio
   // camino del siguiente nivel
   e.puntos = { saldo: 0, ganados: 0, previas: 1, retos: [], cupones: [], movs: [] };
@@ -300,6 +433,43 @@ function sembrar() {
     const llenado = t < inicioDia(0) ? 0.9 : Math.min(0.93, (finde ? 0.82 : 0.6) - d * 0.06 + (tarde ? 0.05 : -0.08) + (d === 0 ? 0.12 : 0));
     Object.values(ZONAS).forEach((z) => z.lugares.forEach((l) => { if (Math.random() < llenado) e.ventas.push(venta(e, f.id, l)); }));
   });
+  // inventario: la mayoría a buen nivel, algunos ya bajos para que se vea la alerta
+  e.inventario = Object.fromEntries(INSUMOS.map((i) => [i.id, +(i.max * ({ salchicha: 0.18, helado: 0.22, queso: 0.3 }[i.id] || (0.55 + Math.random() * 0.4))).toFixed(1)]));
+  // reacciones de quienes ya vieron cada película (más o menos según la película)
+  e.reacciones = Object.fromEntries(Object.keys(PELICULAS).map((k) => { const n = 80 + Math.floor(Math.random() * 300), gusto = 0.62 + Math.random() * 0.3; return [k, { encanta: Math.round(n * gusto), bien: Math.round(n * (1 - gusto) * 0.7), no: Math.round(n * (1 - gusto) * 0.3) }]; }));
+  e.misReacciones = {};
+  e.votos = Object.fromEntries(PROPUESTAS.map((x, k) => [x.id, [312, 198, 245, 176][k] || 100]));
+  e.miVoto = null;
+  e.sugerencias = [{ id: id(), texto: 'Hocus Pocus 2', nombre: 'Daniela H.', t: Date.now() - 5 * HORA }, { id: id(), texto: 'Volver al Futuro', nombre: 'Jorge L.', t: Date.now() - 26 * HORA }];
+  e.ayuda = [];
+  // pronóstico: mañana con buena probabilidad de lluvia para enseñar el flujo
+  e.clima = {};
+  for (let d = -1; d < 8; d++) e.clima[inicioDia(d)] = { lluvia: d === 1 ? 70 : d === 0 ? 20 : [10, 5, 30, 15, 0, 40][(d + 6) % 6], desde: d === 1 ? '21:00' : '22:00' };
+  e.trivia = {};
+  e.cotizaciones = [
+    { id: id(), nombre: 'Laura Méndez', tipo: 'Cumpleaños', fecha: inicioDia(12), autos: 25, extras: ['comida', 'pantalla'], total: cotizar({ autos: 25, extras: ['comida', 'pantalla'] }).total, t: Date.now() - 20 * HORA, estado: 'nueva', mio: false },
+    { id: id(), nombre: 'Grupo Andrade (RH)', tipo: 'Empresa', fecha: inicioDia(19), autos: 60, extras: ['comida', 'decoracion', 'foto'], total: cotizar({ autos: 60, extras: ['comida', 'decoracion', 'foto'] }).total, t: Date.now() - 50 * HORA, estado: 'enviada', mio: false },
+  ];
+
+  // Casa del Terror: los turnos de la noche se llenan más (y el fin de semana)
+  e.casa = [];
+  for (let d = 0; d < 7; d++) {
+    const dia = inicioDia(d), finde = [5, 6].includes(new Date(dia).getDay());
+    CASA.turnos.forEach((h, k) => {
+      let gente = Math.round(CASA.cupo * Math.min(0.95, (finde ? 0.55 : 0.3) + (k > 3 && k < 9 ? 0.25 : 0) - d * 0.04 + Math.random() * 0.2));
+      while (gente > 0) {
+        const n = Math.min(gente, 1 + Math.floor(Math.random() * 4));
+        e.casa.push({ codigo: 'CT' + codigo().slice(2), t: turnoT(dia, h), personas: n, tipo: Math.random() < 0.3 ? 'rapido' : 'general', nombre: azar(NOMBRES), total: 0, mio: false, entro: null });
+        gente -= n;
+      }
+    });
+  }
+
+  // trivia: algunos autos de las funciones de hoy ya jugaron
+  funcionesDelDia(e, 0).forEach((f) => ventasDe(e, f.id).forEach((v) => {
+    if (Math.random() < 0.45) { const a = Math.floor(Math.random() * 6); e.trivia[v.codigo] = { aciertos: a, puntaje: a * 100 + Math.floor(Math.random() * 60) * a, nombre: v.nombre, lugar: v.lugar, funcion: f.id, t: Date.now() - Math.random() * 2 * HORA }; }
+  }));
+
   // la primera función de hoy ya está entrando: 35% llegaron
   const hoy1 = (funcionesDelDia(e, 0)[0] || e.funciones.find((f) => f.t > Date.now()) || e.funciones[0]).id;
   e.ventas.filter((v) => v.funcion === hoy1 && !v.mio).forEach((v) => { if (Math.random() < 0.35) v.entro = Date.now() - Math.random() * 40 * MIN; });
@@ -326,11 +496,11 @@ function orden(v, items, estado = 'recibido', t = Date.now(), mio = false) {
 }
 
 // ── almacén ─────────────────────────────────────────────────────────────────
-const LLAVE = `demo_autocinema_v6_${MODO}`;
+const LLAVE = `demo_autocinema_v9_${MODO}`;
 let estado = null;
 const oyentes = new Set();
 function leerFresco() {
-  try { const t = localStorage.getItem(LLAVE); if (t) { const e = JSON.parse(t); if (e.v === 6) return e; } } catch { /* sin almacenamiento */ }
+  try { const t = localStorage.getItem(LLAVE); if (t) { const e = JSON.parse(t); if (e.v === 9) return e; } } catch { /* sin almacenamiento */ }
   return null;
 }
 function guardar() { try { localStorage.setItem(LLAVE, JSON.stringify(estado)); } catch { /* lleno o bloqueado */ } }
@@ -378,6 +548,8 @@ export const ocupacion = (e, fid) => ventasDe(e, fid).length / CUPO_TOTAL;
 export const misPases = (e) => e.ventas.filter((v) => v.mio).sort((a, b) => funcionPorId(e, a.funcion).t - funcionPorId(e, b.funcion).t);
 export const pasePorCodigo = (e, c) => e.ventas.find((v) => v.codigo === c);
 export const ordenesDe = (e, c) => e.ordenes.filter((o) => o.codigo === c).sort((a, b) => b.t - a.t);
+export const casaOcupados = (e, t) => (e.casa || []).filter((c) => c.t === t).reduce((n, c) => n + c.personas, 0);
+export const misCasa = (e) => (e.casa || []).filter((c) => c.mio).sort((a, b) => a.t - b.t);
 export const funcionesDelDia = (e, d) => e.funciones.filter((f) => f.t >= inicioDia(d) && f.t < inicioDia(d + 1));
 export const avisosDe = (e, fid) => e.avisos.filter((a) => a.funcion === fid);
 export { inicioDia };
@@ -386,6 +558,7 @@ export { inicioDia };
 export function comprar({ funcion, tipo, lugar, nombre, telefono, combo, cupon }) {
   return cambiar((e) => {
     if (ocupados(e, funcion).has(lugar)) return { ok: false, motivo: 'ocupado' };
+    if (funcionPorId(e, funcion)?.cancelada) return { ok: false, motivo: 'cancelada' };
     const c = cupon && e.puntos.cupones.find((x) => x.id === cupon && !x.usado);
     const gratis = c && tipo === 'auto';
     const total = (gratis ? 0 : boleto(tipo).precio) + (combo ? platillo('combo').precio : 0);
@@ -393,22 +566,30 @@ export function comprar({ funcion, tipo, lugar, nombre, telefono, combo, cupon }
     e.ventas.push(v);
     if (gratis) c.usado = Date.now();
     // el combo pagado por adelantado entra a cocina como orden programada
-    if (combo) e.ordenes.push({ ...orden(v, [['combo', 1]], 'recibido', Date.now(), true), programada: true });
+    if (combo) { e.ordenes.push({ ...orden(v, [['combo', 1]], 'programado', Date.now(), true), programada: true, para: 'llegada', enBoleto: true }); descontar(e, [['combo', 1]]); }
     const pts = sumarPuntos(e, total, `Boleto ${boleto(tipo).nombre}`);
     revisarRetos(e);
     return { ok: true, codigo: v.codigo, puntos: pts };
   });
 }
 
-export function pedir(codigoPase, items) {
+// cuando: 'ahora' · 'llegada' (se prepara cuando la entrada lee tu boleto) ·
+// 'HH:MM' de la noche de tu función (se prepara a esa hora)
+export function pedir(codigoPase, items, cuando = 'ahora') {
   return cambiar((e) => {
     const v = pasePorCodigo(e, codigoPase);
     if (!v) return null;
+    if (!alcanza(e, items)) return { ok: false, motivo: 'agotado' };
     const o = orden(v, items, 'recibido', Date.now(), true);
+    if (cuando !== 'ahora' && !(cuando === 'llegada' && v.entro)) {
+      o.estado = 'programado'; o.programada = true;
+      o.para = cuando === 'llegada' ? 'llegada' : turnoT(new Date(funcionPorId(e, v.funcion).t).setHours(0, 0, 0, 0), cuando);
+    }
+    descontar(e, items);
     e.ordenes.push(o);
     o.puntos = sumarPuntos(e, o.total, `Pedido #${o.numero}`);
     revisarRetos(e);
-    return { id: o.id, puntos: o.puntos };
+    return { ok: true, id: o.id, puntos: o.puntos };
   });
 }
 
@@ -423,6 +604,18 @@ export function avanzarOrden(oid) {
 
 // Taquilla: lo que dice la pantalla cuando el lector pasa un pase.
 // resultado: pasa · ya-entro · otra-funcion · no-existe
+export function comprarCasa({ t, personas, tipo, nombre }) {
+  return cambiar((e) => {
+    e.casa = e.casa || [];
+    if (casaOcupados(e, t) + personas > CASA.cupo) return { ok: false, motivo: 'lleno' };
+    const tp = CASA.tipos.find((x) => x.id === tipo);
+    const c = { codigo: 'CT' + codigo().slice(2), t, personas, tipo, nombre, total: tp.precio * personas, mio: true, entro: null, comprado: Date.now() };
+    e.casa.push(c);
+    const pts = sumarPuntos(e, c.total, `Casa del Terror · ${personas} ${personas === 1 ? 'persona' : 'personas'}`);
+    return { ok: true, codigo: c.codigo, puntos: pts };
+  });
+}
+
 // Compra hecha en el lugar (taquilla o fuente de sodas) con el QR de cliente.
 export function puntosEnLugar(pesos, donde) {
   return cambiar((e) => sumarPuntos(e, pesos, `Compra en ${donde} · ${dinero(pesos)}`));
@@ -435,14 +628,28 @@ export function leerPase(texto, funcionActual) {
     return { resultado: ok ? 'cliente' : 'no-existe', codigo: crudo.slice(5) };
   }
   const c = crudo.replace(/^ACC1\./, '');
+  if (c.startsWith('CT')) {
+    return cambiar((e) => {
+      const v = (e.casa || []).find((x) => x.codigo === c);
+      if (!v) return { resultado: 'no-existe', codigo: c };
+      if (new Date(v.t).setHours(0, 0, 0, 0) !== inicioDia(0)) return { resultado: 'casa-otro-dia', casa: { ...v } };
+      if (v.entro) return { resultado: 'casa-ya', casa: { ...v } };
+      v.entro = Date.now();
+      return { resultado: 'casa', casa: { ...v } };
+    });
+  }
   return cambiar((e) => {
     const v = pasePorCodigo(e, c);
     if (!v) return { resultado: 'no-existe', codigo: c };
     const f = funcionPorId(e, v.funcion);
+    if (v.reembolso) return { resultado: 'reembolsado', venta: { ...v }, funcion: f };
+    if (f.cancelada) return { resultado: 'cancelada', venta: { ...v }, funcion: f };
     if (v.funcion !== funcionActual) return { resultado: 'otra-funcion', venta: { ...v }, funcion: f };
     if (v.entro) return { resultado: 'ya-entro', venta: { ...v }, funcion: f };
     v.entro = Date.now();
     if (v.mio) movimiento(e, 50, 'Visita al autocinema');
+    // lo que pidió "para cuando llegue" entra a cocina en este momento
+    e.ordenes.forEach((o) => { if (o.codigo === v.codigo && o.estado === 'programado' && o.para === 'llegada') { o.estado = 'recibido'; o.cambio = Date.now(); o.llego = true; } });
     return { resultado: 'pasa', venta: { ...v }, funcion: f };
   });
 }
@@ -457,12 +664,120 @@ export function canjear(rid, codigoPase) {
       const v = pasePorCodigo(e, codigoPase);
       if (!v) return { ok: false, motivo: 'sin-boleto' };
       const o = { ...orden(v, [[r.platillo, 1]], 'recibido', Date.now(), true), total: 0, recompensa: r.nombre };
+      descontar(e, [[r.platillo, 1]]);
       e.ordenes.push(o);
     } else {
       e.puntos.cupones.push({ id: id(), recompensa: r.id, nombre: r.nombre, t: Date.now(), usado: null });
     }
     movimiento(e, -r.costo, `Canje: ${r.nombre}`);
     return { ok: true, tipo: r.tipo };
+  });
+}
+
+export function pedirAyuda(codigoPase, tipo) {
+  return cambiar((e) => {
+    const v = pasePorCodigo(e, codigoPase);
+    if (!v) return null;
+    const a = { id: id(), codigo: v.codigo, lugar: v.lugar, nombre: v.nombre, tipo, t: Date.now(), estado: 'pendiente', mio: true };
+    e.ayuda.unshift(a);
+    return a.id;
+  });
+}
+export function atenderAyuda(aid) {
+  cambiar((e) => { const a = e.ayuda.find((x) => x.id === aid); if (a) { a.estado = a.estado === 'pendiente' ? 'camino' : 'resuelta'; a.cambio = Date.now(); } });
+}
+export function reaccionar(peli, tipo) {
+  cambiar((e) => {
+    const antes = e.misReacciones[peli];
+    if (antes) e.reacciones[peli][antes] -= 1;
+    if (antes === tipo) { delete e.misReacciones[peli]; return; }
+    e.reacciones[peli][tipo] += 1; e.misReacciones[peli] = tipo;
+  });
+}
+export function votar(pid) {
+  cambiar((e) => { if (e.miVoto) e.votos[e.miVoto] -= 1; e.votos[pid] += 1; e.miVoto = pid; });
+}
+export function sugerir(texto) {
+  cambiar((e) => { e.sugerencias.unshift({ id: id(), texto, nombre: CLIENTE.nombre, t: Date.now(), mia: true }); });
+}
+export function pedirCotizacion(datos) {
+  return cambiar((e) => {
+    const c = { id: id(), ...datos, total: cotizar(datos).total, t: Date.now(), estado: 'nueva', mio: true };
+    e.cotizaciones.unshift(c);
+    return c.id;
+  });
+}
+export function marcarCotizacion(cid, estado) {
+  cambiar((e) => { const c = e.cotizaciones.find((x) => x.id === cid); if (c) c.estado = estado; });
+}
+export function surtir(ins) {
+  cambiar((e) => { const i = INSUMOS.find((x) => x.id === ins); if (i) e.inventario[ins] = i.max; });
+}
+
+export function terminarTrivia(codigoPase, aciertos, puntaje) {
+  return cambiar((e) => {
+    const v = pasePorCodigo(e, codigoPase);
+    if (!v || e.trivia[v.codigo]) return null;
+    e.trivia[v.codigo] = { aciertos, puntaje, nombre: v.nombre, lugar: v.lugar, funcion: v.funcion, t: Date.now(), mio: true };
+    if (aciertos) movimiento(e, aciertos * TRIVIA_PUNTOS, `Trivia de ${PELICULAS[funcionPorId(e, v.funcion).peli].titulo} · ${aciertos} de 5`);
+    return rankingTrivia(e, v.funcion).findIndex((r) => r.codigo === v.codigo) + 1;
+  });
+}
+export const rankingTrivia = (e, fid) => Object.entries(e.trivia || {}).filter(([, r]) => r.funcion === fid).map(([codigo, r]) => ({ codigo, ...r })).sort((a, b) => b.puntaje - a.puntaje || a.t - b.t);
+
+// Lluvia: el dueño cancela una función; todos sus boletos quedan "por
+// reprogramar" y les llega el aviso. El cliente cambia de fecha (mismo tipo de
+// boleto, lugar en la misma zona, +100 Cocopuntos) o pide su reembolso.
+export function cancelarPorLluvia(fid) {
+  cambiar((e) => {
+    const f = funcionPorId(e, fid); if (!f || f.cancelada) return;
+    f.cancelada = { motivo: 'lluvia', t: Date.now() };
+    ventasDe(e, fid).forEach((v) => { v.pendiente = 'lluvia'; });
+    e.avisos.unshift({ id: id(), funcion: fid, texto: `Por lluvia cancelamos la función de ${PELICULAS[f.peli].titulo} de las ${hora(f.t)}. Cambia tu fecha sin costo o pide tu reembolso desde tu boleto.`, t: Date.now(), lluvia: true });
+  });
+}
+export function reanudarFuncion(fid) {
+  cambiar((e) => {
+    const f = funcionPorId(e, fid); if (!f) return;
+    delete f.cancelada;
+    ventasDe(e, fid).forEach((v) => { delete v.pendiente; });
+    e.avisos = e.avisos.filter((a) => !(a.funcion === fid && a.lluvia));
+  });
+}
+// lugar libre en la nueva función: el mismo si está libre; si no, el más
+// parecido de la misma zona (misma fila primero)
+export function lugarParecido(e, fid, lugar, tipo) {
+  const libre = libres(e, fid, boleto(tipo).zona);
+  if (libre.includes(lugar)) return lugar;
+  const [fila, n] = lugar.split('-');
+  return libre.sort((a, b) => { const [fa, na] = a.split('-'), [fb, nb] = b.split('-'); return (fa !== fila) - (fb !== fila) || Math.abs(na - n) - Math.abs(nb - n); })[0] || null;
+}
+export function cambiarFecha(codigoPase, fid) {
+  return cambiar((e) => {
+    const v = pasePorCodigo(e, codigoPase);
+    // solo boletos que siguen cancelados (evita el doble regalo desde otra pestaña)
+    if (!v || v.pendiente !== 'lluvia') return { ok: false, motivo: 'ya-cambiado' };
+    const lugar = lugarParecido(e, fid, v.lugar, v.tipo);
+    if (!lugar) return { ok: false, motivo: 'lleno' };
+    const de = v.funcion;
+    v.funcion = fid; v.lugar = lugar; delete v.pendiente; v.reprogramado = { de, t: Date.now() };
+    v.entro = null;   // si ya había entrado a la función cancelada, en la nueva todavía no
+    delete e.trivia[v.codigo];   // otra película, otra trivia (los puntos ya ganados se quedan)
+    // la comida programada se va con el boleto; la que era a una hora, a esa hora del nuevo día
+    const corrimiento = new Date(funcionPorId(e, fid).t).setHours(0, 0, 0, 0) - new Date(funcionPorId(e, de).t).setHours(0, 0, 0, 0);
+    e.ordenes.forEach((o) => { if (o.codigo === v.codigo && o.estado === 'programado') { o.funcion = fid; o.lugar = lugar; if (typeof o.para === 'number') o.para += corrimiento; } });
+    if (v.mio) movimiento(e, 100, 'Regalo por cambio de fecha (lluvia)');
+    return { ok: true, lugar };
+  });
+}
+export function pedirReembolso(codigoPase) {
+  cambiar((e) => {
+    const v = pasePorCodigo(e, codigoPase);
+    if (!v || v.pendiente !== 'lluvia') return;
+    let comida = 0;
+    // el combo comprado con el boleto ya viene en v.total; lo pedido aparte se suma
+    e.ordenes.forEach((o) => { if (o.codigo === v.codigo && o.estado === 'programado') { o.estado = 'cancelado'; o.cambio = Date.now(); reponer(e, o.items); if (!o.enBoleto) comida += o.total; } });
+    v.pendiente = null; v.reembolso = { t: Date.now(), total: v.total + comida };
   });
 }
 
@@ -483,11 +798,13 @@ export function pasesDePrueba(e, fid) {
   const terror = de.find((v) => !v.entro && v.tipo === 'auto-terror' && v !== pendiente);
   const yaEntro = de.find((v) => v.entro);
   const otra = e.ventas.find((v) => v.funcion !== fid && funcionPorId(e, v.funcion).t > Date.now());
+  const casaHoy = (e.casa || []).filter((c) => !c.entro && new Date(c.t).setHours(0, 0, 0, 0) === inicioDia(0)).sort((a, b) => b.mio - a.mio)[0];
   return [
     pendiente && { etiqueta: mio ? 'Tu boleto' : 'Boleto de auto', codigo: pendiente.codigo },
     terror && { etiqueta: 'Auto Terrorífico', codigo: terror.codigo },
     yaEntro && { etiqueta: 'Ya entró', codigo: yaEntro.codigo },
     otra && { etiqueta: 'Otra función', codigo: otra.codigo },
+    casaHoy && { etiqueta: 'Solo Casa del Terror', codigo: casaHoy.codigo },
     { etiqueta: `QR de cliente (${CLIENTE.nombre.split(' ')[0]})`, codigo: `ACS1.${CLIENTE.codigo}` },
     { etiqueta: 'Código falso', codigo: 'CCZZZZ' },
   ].filter(Boolean);
@@ -513,12 +830,32 @@ export function simular() {
       if (faltan.length > de.length * 0.3 && Math.random() < 0.25) azar(faltan).entro = Date.now();
       const adentro = ventasDe(e, hoy.id).filter((v) => v.entro && !v.mio);
       if (adentro.length && Math.random() < 0.35) {
-        e.ordenes.push(orden(azar(adentro), [[azar(['combo', 'hamburguesa', 'hotdog', 'alitas', 'nachos', 'pizza']), 1 + (Math.random() < 0.3)], [azar(['refresco', 'malteada', 'palomitas']), 1 + Math.floor(Math.random() * 3)]]));
+        const items = [[azar(['combo', 'hamburguesa', 'hotdog', 'alitas', 'nachos', 'pizza']), 1 + (Math.random() < 0.3)], [azar(['refresco', 'malteada', 'palomitas']), 1 + Math.floor(Math.random() * 3)]].filter(([pid]) => disponible(e, pid));
+        if (items.length) { e.ordenes.push(orden(azar(adentro), items)); descontar(e, items); }
+      }
+      // de vez en cuando alguien pide ayuda en su lugar
+      if (adentro.length && Math.random() < 0.08 && e.ayuda.filter((a) => a.estado !== 'resuelta').length < 4) {
+        const v = azar(adentro);
+        e.ayuda.unshift({ id: id(), codigo: v.codigo, lugar: v.lugar, nombre: v.nombre, tipo: azar(['perdido', 'bateria', 'audio', 'perdido']), t: Date.now(), estado: 'pendiente', mio: false });
       }
     }
+    // tras una cancelación por lluvia, los demás van cambiando su fecha solos
+    e.ventas.forEach((v) => {
+      if (v.pendiente !== 'lluvia' || v.mio || Math.random() > 0.08) return;
+      const f = funcionPorId(e, v.funcion);
+      const otra = e.funciones.find((x) => x.t > f.t && !x.cancelada && x.peli === f.peli) || e.funciones.find((x) => x.t > f.t && !x.cancelada);
+      const lugar = otra && lugarParecido(e, otra.id, v.lugar, v.tipo);
+      if (lugar) { v.reprogramado = { de: v.funcion, t: Date.now() }; v.funcion = otra.id; v.lugar = lugar; delete v.pendiente; }
+    });
+    // los programados a una hora entran a cocina a su hora
+    e.ordenes.forEach((o) => {
+      if (o.estado !== 'programado' || typeof o.para !== 'number' || o.para > Date.now()) return;
+      if (pasePorCodigo(e, o.codigo)?.pendiente) return;   // su función se canceló: espera a que la reprogramen
+      o.estado = 'recibido'; o.cambio = Date.now();
+    });
     // la cocina avanza sola los pedidos de los demás (los tuyos los mueves tú desde Cocina)
     e.ordenes.forEach((o) => {
-      if (o.mio || o.estado === 'entregado') return;
+      if (o.mio || o.estado === 'entregado' || o.estado === 'programado') return;
       const espera = { recibido: 1.2, preparando: 3, camino: 1.5 }[o.estado] * MIN;
       if (Date.now() - o.cambio > espera && Math.random() < 0.5) {
         const i = ESTADOS_ORDEN.findIndex(([k]) => k === o.estado);
