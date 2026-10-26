@@ -288,7 +288,7 @@ function Carrusel({ items, activo, alCambiar, alAbrir }) {
   };
   const arriba = () => {
     if (!arrastre.current) return;
-    let pasos = Math.round(-dx / (ancho * 0.6));
+    let pasos = Math.round(-dx / (ancho * 0.64));
     // un deslizón corto pero rápido (como en el celular) también cuenta
     if (!pasos && Math.abs(dx) > 30 && Date.now() - arrastre.current.t < 350) pasos = dx < 0 ? 1 : -1;
     if (pasos) alCambiar(((activo + pasos) % n + n) % n);
@@ -306,7 +306,7 @@ function Carrusel({ items, activo, alCambiar, alAbrir }) {
           let o = i - activo;
           if (o > n / 2) o -= n;
           if (o < -n / 2) o += n;
-          o -= dx / (ancho * 0.6);
+          o += dx / (ancho * 0.64);   // sigue al dedo: el póster se corre lo mismo que el dedo
           const a = Math.abs(o);
           const p = PELICULAS[s.peli];
           return (
