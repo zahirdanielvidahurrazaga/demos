@@ -1,0 +1,86 @@
+{
+  "lightsout": {
+    "tmdb": 345911,
+    "titulo": "Lights Out",
+    "ruta": "/AjZXonSbqC3LdSr8xCUzMiQksrM.jpg",
+    "ancho": 2000
+  },
+  "pesadilla": {
+    "tmdb": 377,
+    "titulo": "A Nightmare on Elm Street",
+    "ruta": "/wGTpGGRMZmyFCcrY2YoxVTIBlli.jpg",
+    "ancho": 1000
+  },
+  "monsterhouse": {
+    "tmdb": 9297,
+    "titulo": "Monster House",
+    "ruta": "/zCRPr4bkO3ae0U1134vJ39xZnAG.jpg",
+    "ancho": 1366
+  },
+  "weapons": {
+    "tmdb": 1078605,
+    "titulo": "Weapons",
+    "ruta": "/f1IGYeQLHfKFdlzv448vVIBjwXY.jpg",
+    "ancho": 2000
+  },
+  "scream6": {
+    "tmdb": 934433,
+    "titulo": "Scream VI",
+    "ruta": "/kKMvCIE91h4aBot6DDO19QTsVbF.jpg",
+    "ancho": 2000
+  },
+  "beetlejuice": {
+    "tmdb": 4011,
+    "titulo": "Beetlejuice",
+    "ruta": "/z8ykp9HugsetInG2zTbZT6spamT.jpg",
+    "ancho": 2000
+  },
+  "sinners": {
+    "tmdb": 1233413,
+    "titulo": "Sinners",
+    "ruta": "/e4irZZ34S6DcwDhkSyWSi6Xr5LQ.jpg",
+    "ancho": 1000
+  },
+  "halloween": {
+    "tmdb": 948,
+    "titulo": "Halloween",
+    "ruta": "/cYKvU3RhWJIYteJU5PxJWZY4twt.jpg",
+    "ancho": 2000
+  },
+  "siniestro": {
+    "tmdb": 82507,
+    "titulo": "Sinister",
+    "ruta": "/t4GPxaNABn8ANt3kug6B0w8NA3A.jpg",
+    "ancho": 1646
+  },
+  "coraline": {
+    "tmdb": 14836,
+    "titulo": "Coraline",
+    "ruta": "/4jeFXQYytChdZYE9JYO7Un87IlW.jpg",
+    "ancho": 1600
+  },
+  "conjuro": {
+    "tmdb": 138843,
+    "titulo": "The Conjuring",
+    "ruta": "/tdSZGTBTm4EFNCMz3laZ96Ht8ao.jpg",
+    "ancho": 2000
+  },
+  "cadaver": {
+    "tmdb": 3933,
+    "titulo": "Corpse Bride",
+    "ruta": "/isb2Qow76GpqYmsSyfdMfsYAjts.jpg",
+    "ancho": 2000
+  },
+  "hereditary": {
+    "tmdb": 493922,
+    "titulo": "Hereditary",
+    "ruta": "/4GFPuL14eXi66V96xBWY73Y9PfR.jpg",
+    "ancho": 2000
+  },
+  "coco": {
+    "tmdb": 354912,
+    "titulo": "Coco",
+    "ruta": "/6Ryitt95xrO8KXuqRGm1fUuNwqF.jpg",
+    "ancho": 2000
+  }
+}

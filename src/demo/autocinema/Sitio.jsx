@@ -5,7 +5,7 @@ import {
   Gift, Minus, Play, Plus, Popcorn, Radio, Search, Smartphone, Sparkles, Ticket, Trophy, UtensilsCrossed, Wallet, X,
 } from 'lucide-react';
 import {
-  BOLETOS, CLIENTE, ESTADOS_ORDEN, IMG, RECOMPENSAS, RETOS, canjear, duracion, nivelDe, progresoReto, siguienteNivel, MENU, NEGOCIO, PELICULAS, avisosDe, boleto, comprar, diaCorto, diaLargo, dinero,
+  BOLETOS, CLIENTE, MODO, ESTADOS_ORDEN, IMG, RECOMPENSAS, RETOS, canjear, duracion, nivelDe, progresoReto, siguienteNivel, MENU, NEGOCIO, PELICULAS, avisosDe, boleto, comprar, diaCorto, diaLargo, dinero,
   funcionPorId, funcionesDelDia, hora, inicioDia, misPases, nombreDia, nombreLugar, ordenesDe,
   pedir, platillo, quedan, useCine, ventasDe,
 } from './datos';
@@ -246,6 +246,7 @@ function Inicio({ e, alPelicula, alMenu }) {
         <footer className="ac-pie">
           <span>© {new Date().getFullYear()} {NEGOCIO.nombre} · San Andrés Cholula, Puebla</span>
           <span className="ac-serif">“El cine es el pretexto perfecto.”</span>
+          {MODO === 'real' && <span style={{ flexBasis: '100%', fontSize: 12 }}>Pósters e información de películas: TMDB. Este producto usa la API de TMDB, pero no está avalado ni certificado por TMDB.</span>}
         </footer>
       </div>
     </>

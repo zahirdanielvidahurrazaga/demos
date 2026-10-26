@@ -5,12 +5,18 @@ import { IMG, ZONAS, ocupados, ventasDe } from './datos';
 // Piezas compartidas por el sitio y los paneles del equipo.
 
 // Foto con respaldo: si la imagen no carga queda el texto sobre el gris.
+// crossOrigin: así la copia en caché sirve también para leer su color (useTono);
+// sin eso el canvas queda bloqueado y el boleto sale gris.
 export function Foto({ nombre, texto = '', className = '', style, prioridad }) {
-  const [falla, setFalla] = useState(false);
+  // 0 = con CORS · 1 = sin CORS (si una copia vieja en caché la bloqueó) · 2 = no cargó
+  const [intento, setIntento] = useState(0);
   return (
     <div className={`ac-foto ${className}`} style={style}>
-      {!falla && <img src={IMG(nombre)} alt={texto} loading={prioridad ? 'eager' : 'lazy'} draggable={false} referrerPolicy="no-referrer" onError={() => setFalla(true)} />}
-      {falla && <div className="ac-foto-falta">{texto}</div>}
+      {intento < 2 && (
+        <img key={intento} src={IMG(nombre)} alt={texto} loading={prioridad ? 'eager' : 'lazy'} draggable={false}
+          referrerPolicy="no-referrer" crossOrigin={intento === 0 ? 'anonymous' : undefined} onError={() => setIntento((n) => n + 1)} />
+      )}
+      {intento === 2 && <div className="ac-foto-falta">{texto}</div>}
     </div>
   );
 }
@@ -192,7 +198,8 @@ export function useTono(src) {
         if (vivo) setTono(t);
       } catch { tonos.set(src, null); }
     };
-    img.src = src;
+    // de TMDB basta la miniatura de 92 px (pesa nada y no choca con la copia grande en caché)
+    img.src = src.replace('/t/p/w780/', '/t/p/w92/');
     return () => { vivo = false; };
   }, [src]);
   return tono || '#2A3350';

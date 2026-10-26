@@ -32,8 +32,8 @@ export const IMG = (n) => (String(n).startsWith('http') ? n : `/autocinema/${n}.
 // 'real'    → la de Autocinema Cocodrilo (Noches de Terror 26-oct → 2-nov-2026,
 //             sacada de su sitio: fecha, hora, idioma y clasificación de cada
 //             arte; año, duración y director de cada producto). Pósters
-//             oficiales cargados de Wikipedia (baja resolución; pendiente
-//             TMDB). NO se guardan en el repo: es público.
+//             oficiales de TMDB (originales en inglés). NO se guardan en el
+//             repo: es público.
 // 'ejemplo' → películas inventadas con pósters de Codex, para enseñarla a
 //             cualquier autocinema o en redes sin problemas de derechos.
 // Se elige con ?cartelera=real|ejemplo o desde la guía (se recuerda).
@@ -53,36 +53,41 @@ export function cambiarCartelera(m) {
   window.location.replace(u.toString());
 }
 
+// Pósters oficiales de TMDB (rutas sacadas con scripts/tmdb/posters.mjs, que
+// usa la llave del llavero solo en la Mac; aquí no va ninguna llave). w780 se
+// ve nítido en retina. Se cargan de image.tmdb.org, no se guardan en el repo.
+const TMDB = 'https://image.tmdb.org/t/p/w780';
+
 const REALES = {
-  lightsout: { titulo: 'Lights Out', genero: 'Terror', clas: 'B15', min: 81, idioma: 'Subtitulada', año: 2016, director: 'David F. Sandberg', poster: 'https://upload.wikimedia.org/wikipedia/en/d/dc/Lights_Out_2016_poster.jpg',
+  lightsout: { titulo: 'Lights Out', genero: 'Terror', clas: 'B15', min: 81, idioma: 'Subtitulada', año: 2016, director: 'David F. Sandberg', poster: TMDB + '/AjZXonSbqC3LdSr8xCUzMiQksrM.jpg',
     sinopsis: 'Cada vez que se apaga la luz, algo aparece en la oscuridad. Una joven descubre que el ente que aterrorizó su infancia ha vuelto por su familia.' },
-  pesadilla: { titulo: 'Pesadilla en la Calle del Infierno', genero: 'Terror', clas: 'C', min: 101, idioma: 'Subtitulada', año: 1984, director: 'Wes Craven', poster: 'https://upload.wikimedia.org/wikipedia/en/f/fa/A_Nightmare_on_Elm_Street_%281984%29_theatrical_poster.jpg',
+  pesadilla: { titulo: 'Pesadilla en la Calle del Infierno', genero: 'Terror', clas: 'C', min: 101, idioma: 'Subtitulada', año: 1984, director: 'Wes Craven', poster: TMDB + '/wGTpGGRMZmyFCcrY2YoxVTIBlli.jpg',
     sinopsis: 'Un grupo de adolescentes comparte la misma pesadilla: un hombre con guante de navajas que los persigue en sueños. Si mueres soñando, mueres de verdad.' },
-  monsterhouse: { titulo: 'Monster House', genero: 'Animada', clas: 'A', min: 87, idioma: 'Doblada', año: 2006, director: 'Gil Kenan', poster: 'https://upload.wikimedia.org/wikipedia/en/7/7c/Monster_House_poster.jpg',
+  monsterhouse: { titulo: 'Monster House', genero: 'Animada', clas: 'A', min: 87, idioma: 'Doblada', año: 2006, director: 'Gil Kenan', poster: TMDB + '/zCRPr4bkO3ae0U1134vJ39xZnAG.jpg',
     sinopsis: 'Tres amigos descubren que la casa de enfrente está viva y se traga todo lo que se acerca. La noche de Halloween tienen que detenerla.' },
-  weapons: { titulo: 'La Hora de la Desaparición', genero: 'Terror', clas: 'C', min: 128, idioma: 'Subtitulada', año: 2025, director: 'Zach Cregger', poster: 'https://upload.wikimedia.org/wikipedia/en/6/6d/Weapons_film_2025.jpeg',
+  weapons: { titulo: 'La Hora de la Desaparición', genero: 'Terror', clas: 'C', min: 128, idioma: 'Subtitulada', año: 2025, director: 'Zach Cregger', poster: TMDB + '/f1IGYeQLHfKFdlzv448vVIBjwXY.jpg',
     sinopsis: 'A las 2:17 de la madrugada, todos los niños de un mismo salón salen de sus casas y desaparecen. Todos menos uno.' },
-  scream6: { titulo: 'Scream VI', genero: 'Terror', clas: 'B15', min: 123, idioma: 'Doblada', año: 2023, director: 'Matt Bettinelli-Olpin', poster: 'https://upload.wikimedia.org/wikipedia/en/c/c9/Scream_VI_poster.jpg',
+  scream6: { titulo: 'Scream VI', genero: 'Terror', clas: 'B15', min: 123, idioma: 'Doblada', año: 2023, director: 'Matt Bettinelli-Olpin', poster: TMDB + '/kKMvCIE91h4aBot6DDO19QTsVbF.jpg',
     sinopsis: 'Los sobrevivientes dejan Woodsboro para empezar de nuevo en Nueva York, pero Ghostface los sigue hasta la gran ciudad.' },
   sorpresa: { titulo: 'Función de Terror Sorpresa', genero: 'Sorpresa', clas: '¿?', min: null, idioma: '¿?', año: '¿?', director: 'El Diablo', poster: 'sorpresa',
     sinopsis: 'No te diremos nada… muajajaja. Llega, sintoniza y prepárate: la película se revela cuando se apagan las luces.' },
-  beetlejuice: { titulo: 'Beetlejuice', genero: 'Comedia de terror', clas: 'B', min: 93, idioma: 'Doblada', año: 1988, director: 'Tim Burton', poster: 'https://upload.wikimedia.org/wikipedia/en/7/76/Beetlejuice_%281988_film_poster%29.png',
+  beetlejuice: { titulo: 'Beetlejuice', genero: 'Comedia de terror', clas: 'B', min: 93, idioma: 'Doblada', año: 1988, director: 'Tim Burton', poster: TMDB + '/z8ykp9HugsetInG2zTbZT6spamT.jpg',
     sinopsis: 'Una pareja de fantasmas quiere sacar de su casa a la familia que se mudó. Para lograrlo contratan al bioexorcista más impredecible del más allá.' },
-  sinners: { titulo: 'Sinners', genero: 'Terror', clas: 'B15', min: 137, idioma: 'Subtitulada', año: 2025, director: 'Ryan Coogler', poster: 'https://upload.wikimedia.org/wikipedia/en/5/5f/Sinners_%282025_film%29_poster.jpg',
+  sinners: { titulo: 'Sinners', genero: 'Terror', clas: 'B15', min: 137, idioma: 'Subtitulada', año: 2025, director: 'Ryan Coogler', poster: TMDB + '/e4irZZ34S6DcwDhkSyWSi6Xr5LQ.jpg',
     sinopsis: 'Dos gemelos vuelven a su pueblo en el Mississippi de 1932 para empezar de cero, y descubren que un mal mucho peor los espera.' },
-  halloween: { titulo: 'Halloween (1978)', genero: 'Terror', clas: 'B', min: 93, idioma: 'Subtitulada', año: 1978, director: 'John Carpenter', poster: 'https://upload.wikimedia.org/wikipedia/en/a/af/Halloween_%281978%29_theatrical_poster.jpg',
+  halloween: { titulo: 'Halloween (1978)', genero: 'Terror', clas: 'B', min: 93, idioma: 'Subtitulada', año: 1978, director: 'John Carpenter', poster: TMDB + '/cYKvU3RhWJIYteJU5PxJWZY4twt.jpg',
     sinopsis: 'Quince años después de su primer crimen, Michael Myers escapa y regresa a Haddonfield la noche de Halloween. El clásico que lo empezó todo.' },
-  siniestro: { titulo: 'Siniestro', genero: 'Terror', clas: 'B', min: 110, idioma: 'Subtitulada', año: 2012, director: 'Scott Derrickson', poster: 'https://upload.wikimedia.org/wikipedia/en/f/f8/SinisterMoviePoster2012.jpg',
+  siniestro: { titulo: 'Siniestro', genero: 'Terror', clas: 'B', min: 110, idioma: 'Subtitulada', año: 2012, director: 'Scott Derrickson', poster: TMDB + '/t4GPxaNABn8ANt3kug6B0w8NA3A.jpg',
     sinopsis: 'Un escritor encuentra en el ático de su nueva casa unas cintas caseras que muestran crímenes. Mientras más las ve, más cerca está de lo que las grabó.' },
-  coraline: { titulo: 'Coraline', genero: 'Animada', clas: 'A', min: 97, idioma: 'Doblada', año: 2009, director: 'Henry Selick', poster: 'https://upload.wikimedia.org/wikipedia/en/3/36/Coraline_poster.jpg',
+  coraline: { titulo: 'Coraline', genero: 'Animada', clas: 'A', min: 97, idioma: 'Doblada', año: 2009, director: 'Henry Selick', poster: TMDB + '/4jeFXQYytChdZYE9JYO7Un87IlW.jpg',
     sinopsis: 'Detrás de una puerta secreta, Coraline encuentra una casa igual a la suya con una familia perfecta… y botones en lugar de ojos.' },
-  conjuro: { titulo: 'El Conjuro', genero: 'Terror', clas: 'B15', min: 112, idioma: 'Subtitulada', año: 2013, director: 'James Wan', poster: 'https://upload.wikimedia.org/wikipedia/en/8/8c/The_Conjuring_poster.jpg',
+  conjuro: { titulo: 'El Conjuro', genero: 'Terror', clas: 'B15', min: 112, idioma: 'Subtitulada', año: 2013, director: 'James Wan', poster: TMDB + '/tdSZGTBTm4EFNCMz3laZ96Ht8ao.jpg',
     sinopsis: 'Los investigadores Ed y Lorraine Warren ayudan a una familia aterrorizada por una presencia oscura en su granja. Basada en un caso real.' },
-  cadaver: { titulo: 'El Cadáver de la Novia', genero: 'Animada', clas: 'A', min: 75, idioma: 'Doblada', año: 2005, director: 'Tim Burton', poster: 'https://upload.wikimedia.org/wikipedia/en/a/a6/Corpse_Bride_film_poster.jpg',
+  cadaver: { titulo: 'El Cadáver de la Novia', genero: 'Animada', clas: 'A', min: 75, idioma: 'Doblada', año: 2005, director: 'Tim Burton', poster: TMDB + '/isb2Qow76GpqYmsSyfdMfsYAjts.jpg',
     sinopsis: 'Ensayando sus votos en el bosque, Víctor se casa por accidente con una novia que ya estaba muerta y termina en el mundo de los difuntos.' },
-  hereditary: { titulo: 'Hereditary', genero: 'Terror', clas: 'B15', min: 126, idioma: 'Subtitulada', año: 2018, director: 'Ari Aster', poster: 'https://upload.wikimedia.org/wikipedia/en/d/d9/Hereditary.png',
+  hereditary: { titulo: 'Hereditary', genero: 'Terror', clas: 'B15', min: 126, idioma: 'Subtitulada', año: 2018, director: 'Ari Aster', poster: TMDB + '/4GFPuL14eXi66V96xBWY73Y9PfR.jpg',
     sinopsis: 'Tras la muerte de la abuela, una familia empieza a descubrir secretos cada vez más oscuros sobre su herencia.' },
-  coco: { titulo: 'Coco', genero: 'Animada', clas: 'A', min: 109, idioma: 'Doblada', año: 2017, director: 'Lee Unkrich', poster: 'https://upload.wikimedia.org/wikipedia/en/9/98/Coco_%282017_film%29_poster.jpg',
+  coco: { titulo: 'Coco', genero: 'Animada', clas: 'A', min: 109, idioma: 'Doblada', año: 2017, director: 'Lee Unkrich', poster: TMDB + '/6Ryitt95xrO8KXuqRGm1fUuNwqF.jpg',
     sinopsis: 'Miguel sueña con ser músico a pesar de la prohibición de su familia. En Día de Muertos cruza a la Tierra de los Muertos y descubre su verdadero legado.' },
 };
 // [día desde el 26-oct, película, hora]
