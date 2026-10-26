@@ -16,7 +16,7 @@
 //                     (tabla pedidos_negocios, ruta /pedidos/<clave>)
 //   tipo: 'gimnasio' → `clave` es un gimnasio de la demo de control de acceso
 //                     (tabla gym_negocios, ruta /gimnasio/<clave>)
-//   tipo: 'sorteos' / 'modelos' → maquetas sin base de datos (/sorteos/<clave>, /modelos/<clave>)
+//   tipo: 'sorteos' / 'modelos' / 'autocinema' → maquetas sin base de datos (/sorteos/<clave>, /modelos/<clave>)
 //   tipo: 'externa' → `url` a una demo desplegada aparte
 //
 // Para agregar una: un bloque más aquí. Nada más se toca.
@@ -91,6 +91,21 @@ export const SECTORES = [
     ],
   },
 
+  {
+    id: 'entretenimiento',
+    titulo: 'Autocinemas y entretenimiento',
+    descripcion: 'Cartelera, boletos con lugar en el mapa, pase QR, pedir comida al auto, entrada con lector y cocina por lugar.',
+    demos: [
+      {
+        tipo: 'autocinema',
+        clave: 'cocodrilo',
+        nombre: 'Autocinema Cocodrilo',
+        detalle: 'Autocinema y fuente de sodas · San Andrés Cholula',
+        nota: 'propuesta de modernización',
+      },
+    ],
+  },
+
   // ── Plantillas para cuando existan. Se dejan comentadas a propósito: un
   // ── catálogo con enlaces muertos vende peor que uno corto.
   //
@@ -127,5 +142,6 @@ export function destinoDe(demo) {
   if (demo.tipo === 'gimnasio') return `/gimnasio/${demo.clave}`;
   if (demo.tipo === 'sorteos') return `/sorteos/${demo.clave}`;
   if (demo.tipo === 'modelos') return `/modelos/${demo.clave}`;
+  if (demo.tipo === 'autocinema') return `/autocinema/${demo.clave}`;
   return `/demo/${demo.clave}`;
 }

@@ -28,6 +28,7 @@ const PedidosDemo = lazy(() => import('./demo/pedidos/PedidosDemo'));
 const GimnasioDemo = lazy(() => import('./demo/gimnasio/GimnasioDemo'));
 const SorteosDemo = lazy(() => import('./demo/sorteos/SorteosDemo'));
 const ModelosDemo = lazy(() => import('./demo/modelos/ModelosDemo'));
+const AutocinemaDemo = lazy(() => import('./demo/autocinema/AutocinemaDemo'));
 
 // Regreso de la pasarela de prueba (src/demo/PasarelaPrueba.jsx): el pago se
 // "cobra" dentro de la maqueta de la que salió la compra.
@@ -70,6 +71,8 @@ export default function AppDemos() {
                 <Route path="/sorteos/:negocio" element={<SorteosDemo />} />
                 {/* Agencia de modelos: también sin base de datos. */}
                 <Route path="/modelos/:negocio" element={<ModelosDemo />} />
+                {/* Autocinema: también sin base de datos. */}
+                <Route path="/autocinema/:negocio" element={<AutocinemaDemo />} />
                 {/* Cualquier otra dirección regresa al índice: si una prospecta borra
                     el path del link, aterriza en algo tuyo y no en otra marca. */}
                 <Route path="*" element={<Navigate to="/" replace />} />
