@@ -111,7 +111,7 @@ function Inicio({ e, alPelicula, alMenu }) {
     <>
       <section className="ac-portada">
         <div className="ac-ambiente" aria-hidden="true">
-          {semana.map((s) => <img key={s.peli} src={IMG(PELICULAS[s.peli].poster)} alt="" referrerPolicy="no-referrer" className={s.peli === actual?.peli ? 'activa' : ''} />)}
+          {actual && <img key={actual.peli} src={IMG(PELICULAS[actual.peli].poster)} alt="" referrerPolicy="no-referrer" className="activa" />}
         </div>
         <div className="ac-envoltura ac-portada-grid">
           <div className="ac-portada-cab">
@@ -278,7 +278,8 @@ function Carrusel({ items, activo, alCambiar, alAbrir }) {
     return () => clearTimeout(id);
   }, [activo, quieto, n, alCambiar]);
 
-  const abajo = (ev) => { arrastre.current = { x: ev.clientX, movio: false }; setArrastrando(true); setQuieto(true); };
+  const ultimoArrastre = useRef(0);
+  const abajo = (ev) => { arrastre.current = { x: ev.clientX, t: Date.now(), movio: false }; setArrastrando(true); setQuieto(true); };
   const mover = (ev) => {
     if (!arrastre.current) return;
     const d = ev.clientX - arrastre.current.x;
@@ -287,10 +288,13 @@ function Carrusel({ items, activo, alCambiar, alAbrir }) {
   };
   const arriba = () => {
     if (!arrastre.current) return;
-    const pasos = Math.round(-dx / (ancho * 0.6));
+    let pasos = Math.round(-dx / (ancho * 0.6));
+    // un deslizón corto pero rápido (como en el celular) también cuenta
+    if (!pasos && Math.abs(dx) > 30 && Date.now() - arrastre.current.t < 350) pasos = dx < 0 ? 1 : -1;
     if (pasos) alCambiar(((activo + pasos) % n + n) % n);
+    if (arrastre.current.movio) ultimoArrastre.current = Date.now();
+    arrastre.current = null;
     setDx(0); setArrastrando(false);
-    setTimeout(() => { arrastre.current = null; }, 0);
   };
 
   return (
@@ -308,13 +312,14 @@ function Carrusel({ items, activo, alCambiar, alAbrir }) {
           return (
             <button key={s.peli} type="button" className="ac-carrusel-item"
               aria-label={p.titulo} tabIndex={i === activo ? 0 : -1}
-              onClick={() => { if (arrastre.current?.movio) return; if (i === activo) alAbrir(s); else alCambiar(i); }}
+              onClick={() => { if (Date.now() - ultimoArrastre.current < 450) return; if (i === activo) alAbrir(s); else alCambiar(i); }}
               style={{
                 transform: `translateX(${o * 64}%) scale(${1 - Math.min(a, 2) * 0.14})`,
                 opacity: a > 2.4 ? 0 : 1 - Math.min(a, 2) * 0.28,
                 zIndex: 20 - Math.round(a * 2),
-                filter: `brightness(${1 - Math.min(a, 1.5) * 0.3})`,
+                '--sombra': Math.min(a, 1.5) * 0.3,
                 pointerEvents: a > 2.4 ? 'none' : 'auto',
+                visibility: a > 3 ? 'hidden' : 'visible',
               }}>
               <Foto nombre={p.poster} texto={p.titulo} prioridad={a < 1.5} />
               <span className="ac-chips-poster">

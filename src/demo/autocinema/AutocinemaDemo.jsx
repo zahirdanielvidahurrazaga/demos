@@ -62,7 +62,10 @@ export default function AutocinemaDemo() {
   const [guia, setGuia] = useState(false);
   const tema = useTemaInicial();
   // pantalla completa = modo app: sin la barra de KaiZen ni la guía, como la app sola
-  const [app, setApp] = useState(() => !!document.fullscreenElement);
+  // (también si se abrió desde la pantalla de inicio del celular: modo standalone)
+  const instalada = window.matchMedia?.('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  const [completa, setApp] = useState(() => !!document.fullscreenElement);
+  const app = completa || instalada;
   useEffect(() => {
     const f = () => { setApp(!!document.fullscreenElement); if (document.fullscreenElement) setGuia(false); };
     document.addEventListener('fullscreenchange', f);
