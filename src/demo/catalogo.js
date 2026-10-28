@@ -16,7 +16,7 @@
 //                     (tabla pedidos_negocios, ruta /pedidos/<clave>)
 //   tipo: 'gimnasio' → `clave` es un gimnasio de la demo de control de acceso
 //                     (tabla gym_negocios, ruta /gimnasio/<clave>)
-//   tipo: 'sorteos' / 'modelos' / 'autocinema' → maquetas sin base de datos (/sorteos/<clave>, /modelos/<clave>)
+//   tipo: 'sorteos' / 'modelos' / 'autocinema' / 'florerias' → maquetas sin base de datos (/sorteos/<clave>, /modelos/<clave>)
 //   tipo: 'externa' → `url` a una demo desplegada aparte
 //
 // Para agregar una: un bloque más aquí. Nada más se toca.
@@ -106,6 +106,21 @@ export const SECTORES = [
     ],
   },
 
+  {
+    id: 'florerias',
+    titulo: 'Florerías',
+    descripcion: 'Catálogo por ocasión, arma tu ramo, entrega a domicilio el mismo día, foto del arreglo y de la entrega.',
+    demos: [
+      {
+        tipo: 'florerias',
+        clave: 'dalia',
+        nombre: 'Dalia · casa floral',
+        detalle: 'Florería con entrega a domicilio · Puebla',
+        nota: 'florería de ejemplo',
+      },
+    ],
+  },
+
   // ── Plantillas para cuando existan. Se dejan comentadas a propósito: un
   // ── catálogo con enlaces muertos vende peor que uno corto.
   //
@@ -143,5 +158,6 @@ export function destinoDe(demo) {
   if (demo.tipo === 'sorteos') return `/sorteos/${demo.clave}`;
   if (demo.tipo === 'modelos') return `/modelos/${demo.clave}`;
   if (demo.tipo === 'autocinema') return `/autocinema/${demo.clave}`;
+  if (demo.tipo === 'florerias') return `/florerias/${demo.clave}`;
   return `/demo/${demo.clave}`;
 }
