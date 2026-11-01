@@ -14,8 +14,8 @@ gsap.registerPlugin(ScrollTrigger);
 // · recorrido → cifras: la hoja de piedra sube sobre el último cuadro, que se
 //   aleja y se oscurece (`.re-panel`; pasar el fondo de azul a piedra se veía
 //   gris a la mitad);
-// · cifras → sala: la sala corre en un recuadro chico que se abre hasta
-//   llenar la pantalla, y al llenarla sube su texto;
+// · cifras → edificio: la foto del atardecer y la noche baja como cortina
+//   (la sección "sala que se abre" se quitó: repetía la sala del recorrido);
 // · amenidades: la sección se pega y la galería corre de lado;
 // · barrio: entra como un círculo que se abre desde el punto del edificio;
 // · rótulos gigantes por sección (`Rotulo`), cada uno con su entrada:
@@ -27,7 +27,7 @@ gsap.registerPlugin(ScrollTrigger);
 // · las fotos entran desenfocadas y se enfocan, y se mueven más lento
 //   que la página
 //   (`--re-par` en cada `[data-par]`, así sirve aunque la foto se cambie);
-// · las cifras cuentan, la torre se llena piso por piso desde abajo, las
+// · las cifras cuentan, la fachada se marca piso por piso desde abajo, las
 //   rutas del mapa se dibujan y las listas entran de una en una.
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -44,12 +44,15 @@ export function useInmersion(raiz) {
         scrollTrigger: { trigger: hoja, start: 'top bottom', end: 'top top', scrub: true },
       });
 
-      // la sala: recuadro → pantalla completa, luego el texto
-      const tl = gsap.timeline({ scrollTrigger: { trigger: '.re-sala', start: 'top top', end: 'bottom bottom', scrub: true } });
-      tl.fromTo('.re-sala-marco', { clipPath: 'inset(26% 32% 26% 32%)' }, { clipPath: 'inset(0% 0% 0% 0%)', ease: 'power2.inOut', duration: 0.6 })
-        .fromTo('.re-sala-marco .re-toma', { scale: 1.35 }, { scale: 1, ease: 'power2.inOut', duration: 0.6 }, 0)
-        .fromTo('.re-sala-txt > *', { opacity: 0, y: 40 }, { opacity: 1, y: 0, stagger: 0.06, duration: 0.25 }, 0.62)
-        .to({}, { duration: 0.15 });
+      // el edificio: la noche baja como cortina (máscara) con el scroll
+      gsap.fromTo('.re-edificio', { '--re-noche-a': -40 }, {
+        '--re-noche-a': 140, ease: 'none',
+        scrollTrigger: { trigger: '.re-edificio', start: 'top top', end: 'bottom bottom', scrub: true },
+      });
+      gsap.fromTo('.re-edificio-txt > *', { opacity: 0, y: 30 }, {
+        opacity: 1, y: 0, stagger: 0.1, ease: 'power2.out',
+        scrollTrigger: { trigger: '.re-edificio', start: 'top 60%', end: 'top top', scrub: true },
+      });
 
       // amenidades de lado: el alto de la sección = lo que corre la pista
       // más una pantalla
@@ -133,9 +136,10 @@ export function useInmersion(raiz) {
         });
       });
 
-      gsap.from('.re-piso', {
-        opacity: 0, x: -14, duration: 0.5, ease: 'power2.out', stagger: { each: 0.025, from: 'end' },
-        scrollTrigger: { trigger: '.re-torre', start: 'top 75%' },
+      // la fachada se marca piso por piso desde abajo
+      gsap.from('.re-f', {
+        opacity: 0, duration: 0.5, ease: 'power2.out', stagger: { each: 0.05, from: 'end' },
+        scrollTrigger: { trigger: '.re-fachada', start: 'top 70%' },
       });
 
       gsap.fromTo('.re-mapa .ruta', { strokeDashoffset: 1 }, {

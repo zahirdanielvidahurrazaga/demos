@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Recorrido from './Recorrido';
 import Toma from './Toma';
 import { Palabras, Rotulo } from './Palabras';
+import { FACHADA, FACHADA_FOTO } from './fachada';
 import { useInmersion } from './inmersion';
 import {
   AMENIDADES, ESTADOS, HORAS, IMG, TIPOS, TOMAS, TORRE, TRAYECTOS, UNIDADES,
@@ -70,7 +71,7 @@ function Encabezado({ onReservar, lista }) {
       // claro sobre las láminas de piedra; transparente sobre las de noche
       // (recorrido, amenidades, pie): mira qué hay debajo de él
       const debajo = document.elementsFromPoint(window.innerWidth / 2, 72).find((el) => !el.closest('.re-cab'));
-      setSolido(!!debajo && !debajo.closest('.re-viaje, .re-sala-marco, .re-amen, .re-pie'));
+      setSolido(!!debajo && !debajo.closest('.re-viaje, .re-edificio, .re-amen, .re-pie'));
     };
     revisar();
     window.addEventListener('scroll', revisar, { passive: true });
@@ -110,17 +111,20 @@ function Cifras() {
   );
 }
 
-// La sala en un recuadro chico que se abre hasta llenar la pantalla con el
-// scroll; al llenarla sube el texto.
-function Sala() {
+// El edificio de la tarde a la noche: la misma foto (Codex, la noche hecha
+// A PARTIR del atardecer para que todo coincida) y con el scroll la noche
+// baja como una cortina de luz: primero el cielo, luego las ventanas de
+// arriba abajo (--re-noche-a en inmersion.js mueve la máscara). Encimarlas
+// parejas al 50% se veía suave.
+function Edificio() {
   return (
-    <section className="re-sala" aria-label="Interiors">
-      <div className="re-sala-pegado">
-        <div className="re-sala-marco"><Toma de={196} a={240} cps={5} /></div>
-        <div className="re-sala-txt">
-          <p className="re-sobre">Interiors</p>
-          <h2>Finished <em>to live in.</em></h2>
-          <p>Wide-plank oak, marble and custom walnut millwork come standard in every residence.</p>
+    <section className="re-edificio" aria-label="The building from dusk to night">
+      <div className="re-edificio-pegado">
+        <img src={`${IMG}/edificio-atardecer.webp`} alt="The Halden at golden hour" />
+        <img src={`${IMG}/edificio-noche.webp`} alt="" className="noche" />
+        <div className="re-edificio-txt">
+          <p className="re-sobre">Architecture</p>
+          <h2>Quiet by day, <em>glowing by night.</em></h2>
         </div>
       </div>
     </section>
@@ -147,9 +151,10 @@ function Plano({ t }) {
   );
 }
 
-// Cada tipo enseña un tramo distinto del recorrido, corriendo en bucle
-// (cuadros del render; ver TRAMOS en datos.js para qué se ve en cada uno).
-const TOMA_TIPO = { studio: [150, 180], '1br': [250, 280], '2br': [200, 236], '3br': [300, 332], ph: [360, 396] };
+// Cada tipo enseña una escena distinta en bucle (clips/ en public): la
+// recámara de frente y hacia la ventana, la cocina, la sala y, el penthouse,
+// el edificio de noche. Antes casi todos eran la sala y se sentía repetido.
+const TOMA_TIPO = { studio: 'res-studio', '1br': 'res-1br', '2br': 'res-2br', '3br': 'res-3br', ph: null };
 
 function Residencias({ onVerDisponibles }) {
   const [id, setId] = useState('2br');
@@ -170,7 +175,7 @@ function Residencias({ onVerDisponibles }) {
       </div>
       <div className="re-res-cuerpo" key={id}>
         <figure className="re-res-foto re-descubre">
-          <Toma de={TOMA_TIPO[id][0]} a={TOMA_TIPO[id][1]} />
+          {TOMA_TIPO[id] ? <Toma clip={TOMA_TIPO[id]} /> : <Toma foto="edificio-noche" />}
         </figure>
         <div className="re-res-ficha">
           <Plano t={t} />
@@ -194,11 +199,6 @@ function Residencias({ onVerDisponibles }) {
 function Disponibilidad({ filtro, setFiltro, onReservar }) {
   const [sel, setSel] = useState(null);
   const [tope, setTope] = useState(0);
-  const pisos = useMemo(() => {
-    const m = new Map();
-    UNIDADES.forEach((u) => { if (!m.has(u.piso)) m.set(u.piso, []); m.get(u.piso).push(u); });
-    return [...m.entries()];
-  }, []);
   const coincide = (u) => (filtro === 'todas' || u.tipo === filtro) && (!tope || u.precio <= tope);
   const libres = UNIDADES.filter((u) => u.estado === 'disponible' && coincide(u));
   // si el filtro deja fuera la elegida, se suelta
@@ -229,31 +229,29 @@ function Disponibilidad({ filtro, setFiltro, onReservar }) {
       </div>
 
       <div className="re-disp-cuerpo">
-        <div className="re-torre" role="grid" aria-label="Residences by floor">
-          <div className="re-corona">The Crown · 48</div>
-          {pisos.map(([piso, us]) => (
-            <div key={piso} className="re-piso" role="row">
-              <span className="re-piso-n">{piso}</span>
-              <div className={`re-unidades ${us.length === 1 ? 'ph' : ''}`}>
-                {us.map((x) => (
-                  <button
-                    key={x.id} type="button" role="gridcell"
-                    className={`re-u ${x.estado} ${coincide(x) ? '' : 'fuera'} ${u?.id === x.id ? 'sel' : ''}`}
-                    disabled={!coincide(x)}
-                    onClick={() => setSel(x.id)}
-                    aria-label={`Residence ${x.id}, ${tipo(x.tipo).nombre}, ${ESTADOS[x.estado]}`}
-                  >
-                    {x.u}
-                  </button>
-                ))}
-              </div>
-            </div>
-          ))}
-          <div className="re-podio">Lobby · Amenities · 1–5</div>
-          <p className="re-leyenda">
+        <figure className="re-fachada">
+          {/* la foto del edificio con cada residencia marcada (fachada.js); se
+              toca la que interesa y su ficha sale a un lado */}
+          <svg viewBox={FACHADA_FOTO.vista} role="group" aria-label="Residences on the building facade">
+            <image href={`${IMG}/${FACHADA_FOTO.src}`} x="0" y="0" width={FACHADA_FOTO.ancho} height={FACHADA_FOTO.alto} />
+            {UNIDADES.map((x) => (
+              <g
+                key={x.id}
+                role="button"
+                tabIndex={coincide(x) ? 0 : -1}
+                aria-label={`Residence ${x.id}, ${tipo(x.tipo).nombre}, ${ESTADOS[x.estado]}`}
+                className={`re-f ${x.estado} ${coincide(x) ? '' : 'fuera'} ${u?.id === x.id ? 'sel' : ''}`}
+                onClick={() => coincide(x) && setSel(x.id)}
+                onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && coincide(x) && (e.preventDefault(), setSel(x.id))}
+              >
+                {FACHADA[x.id].map((pts, i) => <polygon key={i} points={pts.map((q) => q.join(',')).join(' ')} />)}
+              </g>
+            ))}
+          </svg>
+          <figcaption className="re-leyenda">
             <span className="disponible" />Available <span className="apartada" />Reserved <span className="vendida" />Sold
-          </p>
-        </div>
+          </figcaption>
+        </figure>
 
         <aside className={`re-detalle ${u ? 'lleno' : ''}`} aria-live="polite">
           {u ? (
@@ -276,8 +274,8 @@ function Disponibilidad({ filtro, setFiltro, onReservar }) {
             </>
           ) : (
             <div className="re-vacio">
-              <p>Tap a residence in the tower to see its plan, exposure and price.</p>
-              <p className="re-nota">Corners A and D face Manhattan and the Statue of Liberty.</p>
+              <p>Tap a residence on the building to see its plan, exposure and price.</p>
+              <p className="re-nota">The C homes, on the right, have the widest balconies and face Manhattan.</p>
             </div>
           )}
         </aside>
@@ -294,13 +292,13 @@ function Amenidades() {
       <div className="re-amen-pegado">
         <header className="re-sec-cab">
           <Rotulo tipo="enfoca">Amenities</Rotulo>
-          <h2 className="re-revela"><Palabras>Forty thousand square feet</Palabras> <em><Palabras>of not leaving home</Palabras></em></h2>
+          <h2 className="re-revela"><Palabras>Everything close,</Palabras> <em><Palabras>nothing crowded</Palabras></em></h2>
         </header>
         <ol className="re-amen-pista">
           {AMENIDADES.map((x) => (
-            <li key={x.nombre} className={`re-amen-carta ${x.foto ? 'foto' : ''}`}>
-              {x.foto && <img src={`${IMG}/${x.foto}.webp`} alt="" loading="lazy" />}
-              <span>{x.piso}</span>
+            <li key={x.nombre} className="re-amen-carta foto">
+              <img src={`${IMG}/${x.foto}.webp`} alt="" loading="lazy" />
+              <span>{x.lugar}</span>
               <div><b>{x.nombre}</b><p>{x.texto}</p></div>
             </li>
           ))}
@@ -439,7 +437,7 @@ function Pie({ onReservar }) {
   return (
     <footer className="re-pie">
       <div className="re-pie-cta">
-        <Toma de={350} a={396} cps={4} />
+        <Toma clip="cierre" />
         <h2 className="re-revela"><Palabras>Come see the view</Palabras> <em><Palabras>in person</Palabras></em></h2>
         <button type="button" className="re-btn claro" onClick={() => onReservar()}>Book a private tour</button>
       </div>
@@ -493,7 +491,7 @@ export default function RealEstateDemo() {
       <Encabezado onReservar={reservar} lista={lista} />
       <Recorrido onReservar={reservar} onAvance={setAvance} />
       <Cifras />
-      <Sala />
+      <Edificio />
       <Residencias onVerDisponibles={(id) => { setFiltro(id); document.getElementById('availability')?.scrollIntoView({ behavior: 'smooth' }); }} />
       <Recorrido toma={TOMAS.recamara} onReservar={reservar} />
       <Disponibilidad filtro={filtro} setFiltro={setFiltro} onReservar={reservar} />

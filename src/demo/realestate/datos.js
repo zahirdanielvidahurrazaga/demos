@@ -13,8 +13,8 @@ export const TORRE = {
   nombre: 'The Halden',
   barrio: 'Paulus Hook · Jersey City',
   direccion: '1 Halden Wharf, Jersey City, NJ 07302',
-  pisos: 48,
-  residencias: 212,
+  pisos: 8,
+  residencias: 19,
   desde: 865000,
   entrega: 'Fall 2027',
   telefono: '(201) 555-0148',
@@ -32,21 +32,33 @@ export const TORRE = {
 // segundo (791 cuadros: los 396 originales + intermedios renderizados aparte);
 // celular: rm/ a 12 por segundo (396, para no duplicar el peso). Los tramos
 // van en cuadros de la versión a 12 (0..395) y cada serie los escala.
-// vh de la sección: la toma ocupa 900 vh de scroll y los últimos 100 vh el
+// vh de la sección: la toma ocupa 1150 vh de scroll y los últimos 100 vh el
 // último cuadro se queda quieto mientras sube encima la hoja de piedra.
-export const ALTO_RECORRIDO = 1100;
+export const ALTO_RECORRIDO = 1350;
+
+// LA LLEGADA (1-nov): la toma empieza AFUERA. Foto de la entrada hecha por
+// Codex a partir de un render de la torre (Sketchfab, zigurat, CC BY) →
+// video de Gemini/Veo avanzando hacia el lobby (un solo movimiento, solo
+// primer cuadro: lo que sí le sale) → fundido de las puertas al pasillo →
+// el recorrido. Todo es UNA serie de cuadros (~/Desktop/Recorrido NJ/
+// serie-llegada/): en compu 240 + 24 + 791 = 1055 (24 por s) y en celular la
+// mitad, 120 + 12 + 396 = 528. Los tramos van en cuadros de la de celular.
+export const LLEGADA = 132; // primer cuadro del pasillo (en cuadros de celular)
 
 // Tramos del scroll: la cámara va del cuadro `de` al `a` mientras pasa `dur`
 // del scroll (suman 1). Los que llevan `texto` avanzan despacio (pocos
 // cuadros en mucho scroll) para que se lea, sin congelar la imagen.
+const L = LLEGADA;
 export const TRAMOS = [
-  { de: 0, a: 10, dur: 0.08, texto: 'portada' },
-  { de: 10, a: 200, dur: 0.3 },              // pasillo → se abre la sala
-  { de: 200, a: 236, dur: 0.13, texto: 'sala' },
-  { de: 236, a: 322, dur: 0.2 },             // gira hacia la cocina
-  { de: 322, a: 350, dur: 0.12, texto: 'cocina' },
-  { de: 350, a: 384, dur: 0.07 },
-  { de: 384, a: 395, dur: 0.1, texto: 'cierre' },
+  { de: 0, a: 4, dur: 0.05, texto: 'portada' },  // afuera, frente a la entrada
+  { de: 4, a: 119, dur: 0.16 },                  // avanza hacia el lobby
+  { de: 119, a: L, dur: 0.05 },                  // las puertas se funden con el pasillo
+  { de: L, a: L + 200, dur: 0.25 },              // pasillo → se abre la sala
+  { de: L + 200, a: L + 236, dur: 0.1, texto: 'sala' },
+  { de: L + 236, a: L + 322, dur: 0.15 },        // gira hacia la cocina
+  { de: L + 322, a: L + 350, dur: 0.09, texto: 'cocina' },
+  { de: L + 350, a: L + 384, dur: 0.06 },
+  { de: L + 384, a: L + 395, dur: 0.09, texto: 'cierre' },
 ];
 
 // La recámara (1-nov): otra toma continua, aparte, de 144 cuadros a 24 por
@@ -61,7 +73,7 @@ export const TRAMOS_RECAMARA = [
 // las unidades de sus tramos, alto de la sección en vh y si la tapa la hoja
 // que sube (entonces su scroll termina una pantalla antes).
 export const TOMAS = {
-  recorrido: { id: 'recorrido', compu: 'r', n: 791, movil: 'rm', nMovil: 396, base: 395, tramos: TRAMOS, alto: ALTO_RECORRIDO, tapa: true, etiqueta: 'Scroll tour of a residence at The Halden' },
+  recorrido: { id: 'recorrido', compu: 'r', n: 1055, movil: 'rm', nMovil: 528, base: L + 395, tramos: TRAMOS, alto: ALTO_RECORRIDO, tapa: true, etiqueta: 'Scroll tour of a residence at The Halden' },
   recamara: { id: 'recamara', compu: 'c', n: 144, movil: 'cm', nMovil: 144, base: 143, tramos: TRAMOS_RECAMARA, alto: 460, tapa: false, etiqueta: 'Scroll tour of a primary bedroom' },
 };
 
@@ -144,16 +156,16 @@ export const TIPOS = [
 export const tipo = (id) => TIPOS.find((t) => t.id === id);
 
 // ── Disponibilidad ──────────────────────────────────────────────────────────
-// Pisos 6 a 47 (1-5 son el podio de piedra, 48 la corona). Seis unidades por
-// piso; las A y B miran a Manhattan. Del 44 al 47 una sola unidad: penthouse.
-// El estado sale de una semilla fija: mismo edificio en cada visita.
+// Edificio BOUTIQUE de 8 pisos (1-nov: es lo que se ve en la foto; antes era
+// una torre de 48): planta baja con el lobby, pisos 2 a 7 con tres
+// residencias (A izquierda, B centro, C derecha, la de los balcones hacia
+// Manhattan) y el 8 entero es el penthouse. Dónde cae cada una en la foto de
+// frente: fachada.js. El estado sale de una semilla fija: mismo edificio en
+// cada visita.
 const COLUMNAS = [
-  { u: 'A', tipo: '2br', vista: 'Manhattan · corner' },
-  { u: 'B', tipo: '1br', vista: 'Manhattan' },
-  { u: 'C', tipo: 'studio', vista: 'Hudson River' },
-  { u: 'D', tipo: '3br', vista: 'River & Statue of Liberty · corner' },
-  { u: 'E', tipo: 'studio', vista: 'Paulus Hook' },
-  { u: 'F', tipo: '1br', vista: 'Jersey City skyline' },
+  { u: 'A', tipo: (p) => (p < 5 ? '1br' : '2br'), vista: 'River · west' },
+  { u: 'B', tipo: (p) => (p < 5 ? 'studio' : '1br'), vista: 'Courtyard · south' },
+  { u: 'C', tipo: (p) => (p < 5 ? '2br' : '3br'), vista: 'Manhattan · east' },
 ];
 
 function semilla(n) {
@@ -163,22 +175,17 @@ function semilla(n) {
 
 export const UNIDADES = (() => {
   const r = semilla(48);
-  const lista = [];
-  for (let piso = 47; piso >= 6; piso--) {
-    if (piso >= 44) {
-      const x = r();
-      lista.push({ id: `PH${piso - 43}`, piso, u: 'PH', tipo: 'ph', vista: '360° · wraparound terrace', estado: x < 0.5 ? 'vendida' : x < 0.7 ? 'apartada' : 'disponible', precio: Math.round((5900000 + (piso - 44) * 650000) / 5000) * 5000, ft: 2900 + (piso - 44) * 160 });
-      continue;
-    }
+  const lista = [{ id: 'PH', piso: 8, u: 'PH', tipo: 'ph', vista: '360° · wraparound terrace', estado: 'disponible', precio: 5900000, ft: 3150 }];
+  for (let piso = 7; piso >= 2; piso--) {
     for (const c of COLUMNAS) {
-      const t = tipo(c.tipo);
+      const t = tipo(c.tipo(piso));
       const x = r();
-      // más vendido abajo y en las esquinas a Manhattan
-      const presion = (c.u === 'A' || c.u === 'D' ? 0.15 : 0) + (piso < 20 ? 0.12 : 0);
-      const estado = x < 0.42 + presion ? 'vendida' : x < 0.52 + presion ? 'apartada' : 'disponible';
-      const premium = 1 + (piso - 6) * 0.011 + (c.u === 'A' || c.u === 'B' ? 0.06 : 0);
+      // más vendido abajo y en la esquina
+      const presion = (c.u === 'C' ? 0.12 : 0) + (piso < 5 ? 0.1 : 0);
+      const estado = x < 0.38 + presion ? 'vendida' : x < 0.5 + presion ? 'apartada' : 'disponible';
+      const premium = 1 + (piso - 2) * 0.03 + (c.u === 'C' ? 0.06 : 0);
       lista.push({
-        id: `${piso}${c.u}`, piso, u: c.u, tipo: c.tipo, vista: c.vista, estado,
+        id: `${piso}${c.u}`, piso, u: c.u, tipo: t.id, vista: c.vista, estado,
         precio: Math.round((t.desde * premium) / 5000) * 5000,
         ft: Math.round(t.ft[0] + (t.ft[1] - t.ft[0]) * r()),
       });
@@ -195,12 +202,14 @@ export const ESTADOS = {
 
 // ── Amenidades ──────────────────────────────────────────────────────────────
 export const AMENIDADES = [
-  { piso: '48', foto: 'k4-rooftop', nombre: 'The Crown', texto: '75-ft infinity pool, cabanas and a sunset bar under glass.' },
-  { piso: '47', foto: 'k5-noche', nombre: 'Sky Lounge', texto: 'Private dining room with a chef’s kitchen and a wine wall.' },
-  { piso: '7', nombre: 'Wellness', texto: 'Fitness studio, Pilates, cold plunge, sauna and steam.' },
-  { piso: '6', nombre: 'Garden terrace', texto: 'Landscaped deck with grills, fire pits and a dog run.' },
-  { piso: '2', nombre: 'Work lounge', texto: 'Library, phone booths and bookable meeting rooms.' },
-  { piso: '1', foto: 's-lobby', nombre: 'Lobby', texto: '24-hour doorman, concierge, package room and valet.' },
+// Fotos de Codex con los materiales del edificio y del departamento como
+// referencia (1-nov), en amenidades/; el lobby es la entrada del edificio.
+  { lugar: 'Rooftop', foto: 'amenidades/rooftop', nombre: 'The Rooftop', texto: 'Heated pool, cabanas and a sunset bar facing the Manhattan skyline.' },
+  { lugar: 'Rooftop', foto: 'amenidades/lounge', nombre: 'Residents’ lounge', texto: 'Private dining room with a chef’s kitchen and a wine wall.' },
+  { lugar: 'Lower level', foto: 'amenidades/wellness', nombre: 'Wellness', texto: 'Fitness studio, Pilates, cold plunge, sauna and steam.' },
+  { lugar: 'Ground floor', foto: 'amenidades/patio', nombre: 'Garden courtyard', texto: 'Landscaped courtyard with grills, a fire pit and a dog run.' },
+  { lugar: 'Mezzanine', foto: 'amenidades/work', nombre: 'Work lounge', texto: 'Library, phone booths and a bookable meeting room.' },
+  { lugar: 'Ground floor', foto: 'edificio-entrada', nombre: 'Lobby', texto: '24-hour doorman, concierge, package room and valet.' },
 ];
 
 // ── El barrio (tiempos aproximados) ─────────────────────────────────────────
