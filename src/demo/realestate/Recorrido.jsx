@@ -12,7 +12,8 @@ gsap.registerPlugin(ScrollTrigger);
 // pegado a la pantalla en una sección alta; el scroll mueve la cámara según
 // TRAMOS (datos.js) y los tramos con texto avanzan despacio para leerlos.
 //
-// Cuadros webp a 1920 (1280 en celular), 12 por segundo, fundiendo cada uno
+// Cuadros webp a 1920 (en celular solo el centro, a resolución completa), 12
+// por segundo, fundiendo cada uno
 // con el siguiente; se piden por pasadas (1 de cada 8, 4, 2, 1) y se
 // decodifican al llegar. El avance alcanza al scroll poco a poco (la rueda
 // salta ~100 px por giro).

@@ -6,13 +6,15 @@ import { fundido } from './fundido';
 // Una toma "viva": los cuadros `de`..`a` del render del recorrido corriendo
 // solos de ida y vuelta, despacio, como un video corto en bucle (1-nov-2026:
 // que las imágenes del render sean las protagonistas del resto de la página).
-// Usa los MISMOS archivos que el recorrido (r/ y rm/), así que salen de la
+// Usa los MISMOS archivos que el recorrido (r/), así que salen de la
 // caché y, cuando llegan los cuadros finales del render, se ven solos.
 // Solo corre mientras está en pantalla; con movimiento reducido se queda en
 // el primer cuadro.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const ruta = (k) => `${IMG}/${window.innerWidth < 820 ? 'rm' : 'r'}/${String(k).padStart(4, '0')}.webp`;
+// siempre los completos (r/): las tomas van en marcos horizontales también en
+// el celular, y los de rm/ son solo el centro del cuadro (ver recorrido.sh)
+const ruta = (k) => `${IMG}/r/${String(k).padStart(4, '0')}.webp`;
 const sirve = (im) => im?.complete && im.naturalWidth > 0;
 
 function cubrir(ctx, im, w, h, alfa = 1) {
