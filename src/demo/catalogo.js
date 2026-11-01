@@ -121,6 +121,21 @@ export const SECTORES = [
     ],
   },
 
+  {
+    id: 'realestate',
+    titulo: 'Real estate',
+    descripcion: 'Landing de preventa con recorrido que avanza con el scroll, disponibilidad piso por piso y agenda de visitas. En inglés, para EE.UU.',
+    demos: [
+      {
+        tipo: 'realestate',
+        clave: 'halden',
+        nombre: 'The Halden · Jersey City',
+        detalle: 'Torre residencial frente a Manhattan · New Jersey',
+        nota: 'desarrollo ficticio',
+      },
+    ],
+  },
+
   // ── Plantillas para cuando existan. Se dejan comentadas a propósito: un
   // ── catálogo con enlaces muertos vende peor que uno corto.
   //
