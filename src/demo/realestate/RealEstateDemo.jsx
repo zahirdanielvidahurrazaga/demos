@@ -4,7 +4,7 @@ import Toma from './Toma';
 import { Palabras, Rotulo } from './Palabras';
 import { useInmersion } from './inmersion';
 import {
-  AMENIDADES, ESTADOS, HORAS, IMG, TIPOS, TORRE, TRAYECTOS, UNIDADES,
+  AMENIDADES, ESTADOS, HORAS, IMG, TIPOS, TOMAS, TORRE, TRAYECTOS, UNIDADES,
   archivoVisita, diasDeVisita, dinero, dineroCorto, tipo,
 } from './datos';
 import './realestate.css';
@@ -495,6 +495,7 @@ export default function RealEstateDemo() {
       <Cifras />
       <Sala />
       <Residencias onVerDisponibles={(id) => { setFiltro(id); document.getElementById('availability')?.scrollIntoView({ behavior: 'smooth' }); }} />
+      <Recorrido toma={TOMAS.recamara} onReservar={reservar} />
       <Disponibilidad filtro={filtro} setFiltro={setFiltro} onReservar={reservar} />
       <Amenidades />
       <Barrio />

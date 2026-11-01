@@ -28,10 +28,10 @@ export const TORRE = {
 // + videos por escenas) se descartó: solo se sentía inmersivo al inicio y el
 // color cambiaba entre clips. Escena, cámara y render en
 // ~/Desktop/Recorrido NJ/blender/ (armar.py, render.py); los cuadros se
-// convierten con scripts/realestate/recorrido.sh → r/NNNN.webp (1920, q85) y
-// rm/ (1280, celular). 12 cuadros por segundo; el lienzo funde cada uno con
-// el siguiente.
-export const CUADROS = 396;
+// convierten con scripts/realestate/recorrido.sh. Compu: r/ a 24 por
+// segundo (791 cuadros: los 396 originales + intermedios renderizados aparte);
+// celular: rm/ a 12 por segundo (396, para no duplicar el peso). Los tramos
+// van en cuadros de la versión a 12 (0..395) y cada serie los escala.
 // vh de la sección: la toma ocupa 900 vh de scroll y los últimos 100 vh el
 // último cuadro se queda quieto mientras sube encima la hoja de piedra.
 export const ALTO_RECORRIDO = 1100;
@@ -49,9 +49,27 @@ export const TRAMOS = [
   { de: 384, a: 395, dur: 0.1, texto: 'cierre' },
 ];
 
+// La recámara (1-nov): otra toma continua, aparte, de 144 cuadros a 24 por
+// segundo (armar-recamara.py). Del pie de la cama hacia la ventana.
+export const TRAMOS_RECAMARA = [
+  { de: 0, a: 8, dur: 0.2, texto: 'recamara' },
+  { de: 8, a: 118, dur: 0.55 },
+  { de: 118, a: 143, dur: 0.25, texto: 'recamara2' },
+];
+
+// Cada toma: carpetas y cuadros en compu y celular, `base` = último cuadro en
+// las unidades de sus tramos, alto de la sección en vh y si la tapa la hoja
+// que sube (entonces su scroll termina una pantalla antes).
+export const TOMAS = {
+  recorrido: { id: 'recorrido', compu: 'r', n: 791, movil: 'rm', nMovil: 396, base: 395, tramos: TRAMOS, alto: ALTO_RECORRIDO, tapa: true, etiqueta: 'Scroll tour of a residence at The Halden' },
+  recamara: { id: 'recamara', compu: 'c', n: 144, movil: 'cm', nMovil: 144, base: 143, tramos: TRAMOS_RECAMARA, alto: 460, tapa: false, etiqueta: 'Scroll tour of a primary bedroom' },
+};
+
 export const TEXTOS = {
   sala: { titulo: 'Light that', em: 'stays late', texto: 'West-facing living rooms catch the last hour of sun, with warm oak, marble and ten-foot ceilings.' },
   cocina: { titulo: 'A kitchen', em: 'at the window', texto: 'Induction cooking under the city view, walnut millwork and integrated appliances, all included.' },
+  recamara: { titulo: 'The primary', em: 'suite', texto: 'Oak-paneled walls, a floating headboard and sheers that soften the morning light.' },
+  recamara2: { titulo: 'Morning light,', em: 'by design', texto: 'Every primary suite opens to its own window wall, so the day starts with the city.' },
   cierre: { titulo: 'Make it', em: 'your home', texto: `Residences from $865,000. Occupancy Fall 2027.`, cta: true },
 };
 

@@ -39,7 +39,7 @@ export function useInmersion(raiz) {
     mm.add('(prefers-reduced-motion: no-preference)', () => {
       // el último cuadro del recorrido se aleja y se oscurece mientras sube
       // la hoja
-      gsap.fromTo('.re-viaje .re-pegado', { scale: 1, opacity: 1 }, {
+      gsap.fromTo('.re-viaje[data-toma="recorrido"] .re-pegado', { scale: 1, opacity: 1 }, {
         scale: 0.94, opacity: 0.45, ease: 'none',
         scrollTrigger: { trigger: hoja, start: 'top bottom', end: 'top top', scrub: true },
       });

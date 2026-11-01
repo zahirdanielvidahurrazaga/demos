@@ -2,26 +2,29 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { fundido } from './fundido';
-import { ALTO_RECORRIDO, CUADROS, IMG, TEXTOS, TORRE, TRAMOS, dineroCorto } from './datos';
+import { IMG, TEXTOS, TOMAS, TORRE, dineroCorto } from './datos';
 
 gsap.registerPlugin(ScrollTrigger);
 
 // ─────────────────────────────────────────────────────────────────────────────
-// El recorrido: UNA toma continua por el departamento (render de Blender,
-// 1-nov-2026), del pasillo a la sala y a la ventana de la cocina. Lienzo
-// pegado a la pantalla en una sección alta; el scroll mueve la cámara según
-// TRAMOS (datos.js) y los tramos con texto avanzan despacio para leerlos.
+// Una toma continua del render de Blender (1-nov-2026) que avanza con el
+// scroll: el recorrido (pasillo → sala → cocina, abre la página) o la
+// recámara (`toma`, ver TOMAS en datos.js). Lienzo pegado a la pantalla en
+// una sección alta; el scroll mueve la cámara según sus tramos y los tramos
+// con texto avanzan despacio para leerlos.
 //
-// Cuadros webp a 1920 (en celular solo el centro, a resolución completa), 12
-// por segundo, fundiendo cada uno
-// con el siguiente; se piden por pasadas (1 de cada 8, 4, 2, 1) y se
-// decodifican al llegar. El avance alcanza al scroll poco a poco (la rueda
-// salta ~100 px por giro).
+// Cuadros webp a 1920 (en celular solo el centro, a resolución completa),
+// fundiendo cada uno con el siguiente solo en el cambio (fundido.js); se
+// piden por pasadas (≈50 primero, luego la mitad que falta…) y se
+// decodifican al llegar. El recorrido se pide de inmediato (es la portada);
+// las demás tomas al acercarse. El avance alcanza al scroll poco a poco (la
+// rueda salta ~100 px por giro).
 // ─────────────────────────────────────────────────────────────────────────────
 
 const chico = () => window.innerWidth < 820;
 const quieto = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-const ruta = (k) => `${IMG}/${chico() ? 'rm' : 'r'}/${String(k + 1).padStart(4, '0')}.webp`;
+// la serie de cuadros que toca según la pantalla
+const serie = (toma) => (chico() ? { dir: toma.movil, n: toma.nMovil } : { dir: toma.compu, n: toma.n });
 const sirve = (im) => !!im?.decodificada && im.naturalWidth > 0;
 
 
@@ -47,11 +50,11 @@ function cubrir(ctx, im, w, h, alfa = 1) {
 }
 
 // Dónde va el scroll `p`: { n: índice del tramo, t: 0 a 1 dentro de él }.
-function ubicar(p) {
+function ubicar(tramos, p) {
   let a = 0;
-  for (let n = 0; n < TRAMOS.length; n++) {
-    const d = TRAMOS[n].dur;
-    if (p <= a + d || n === TRAMOS.length - 1) return { n, t: Math.min(1, Math.max(0, (p - a) / d)) };
+  for (let n = 0; n < tramos.length; n++) {
+    const d = tramos[n].dur;
+    if (p <= a + d || n === tramos.length - 1) return { n, t: Math.min(1, Math.max(0, (p - a) / d)) };
     a += d;
   }
   return { n: 0, t: 0 };
@@ -72,9 +75,12 @@ function Portada({ onReservar, opacidad }) {
   );
 }
 
-// `onAvance(0..1)`: cuánto va de la primera pasada (1 de cada 8 cuadros), lo
-// que necesita la pantalla de carga para soltar la página.
-export default function Recorrido({ onReservar, onAvance }) {
+// `onAvance(0..1)`: cuánto va de la primera pasada, lo que necesita la
+// pantalla de carga para soltar la página (solo el recorrido).
+export default function Recorrido({ toma = TOMAS.recorrido, onReservar, onAvance }) {
+  const { tramos } = toma;
+  const sr = useRef(null); // serie elegida al montar (no cambia si giran el teléfono)
+  sr.current ??= serie(toma);
   const raiz = useRef(null);
   const lienzo = useRef(null);
   const cuadros = useRef([]);
@@ -85,7 +91,7 @@ export default function Recorrido({ onReservar, onAvance }) {
 
   function cuadroCerca(k) {
     const hay = cuadros.current;
-    for (let d = 0; d < CUADROS; d++) {
+    for (let d = 0; d < sr.current.n; d++) {
       for (const j of d ? [k - d, k + d] : [k]) if (sirve(hay[j])) return hay[j];
     }
     return null;
@@ -107,9 +113,10 @@ export default function Recorrido({ onReservar, onAvance }) {
   }
 
   function aplicar(p) {
-    const u = ubicar(p);
-    const tr = TRAMOS[u.n];
-    actual.current = tr.de + (tr.a - tr.de) * u.t;
+    const u = ubicar(tramos, p);
+    const tr = tramos[u.n];
+    // de unidades de los tramos a cuadros de la serie
+    actual.current = ((tr.de + (tr.a - tr.de) * u.t) / toma.base) * (sr.current.n - 1);
     dibujar();
     setDonde((d) => (d.n === u.n && Math.abs(d.t - u.t) < 0.02 ? d : u));
   }
@@ -123,14 +130,18 @@ export default function Recorrido({ onReservar, onAvance }) {
     if (!a.ciclo) dibujar(); // ya quieto: un solo cuadro nítido
   }
 
-  // Es lo primero de la página: se piden de una vez, por pasadas.
+  // Por pasadas: primero ≈50 repartidos, luego los de en medio…
   useEffect(() => {
     let vivo = true;
     const a = prog.current;
+    const { dir, n } = sr.current;
+    const ruta = (k) => `${IMG}/${dir}/${String(k + 1).padStart(4, '0')}.webp`;
+    let paso = 1;
+    while (n / paso > 60) paso *= 2;
     const pendientes = [];
-    for (const paso of [8, 4, 2, 1]) for (let k = 0; k < CUADROS; k += paso) pendientes.push(k);
+    for (let p = paso; p >= 1; p /= 2) for (let k = 0; k < n; k += p) pendientes.push(k);
     let sig = 0;
-    const primera = Math.ceil(CUADROS / 8);
+    const primera = Math.ceil(n / paso);
     let listos = 0;
     const lanzar = () => {
       while (vivo && sig < pendientes.length) {
@@ -139,17 +150,23 @@ export default function Recorrido({ onReservar, onAvance }) {
         cuadros.current[k] = cargar(ruta(k), () => {
           if (!vivo) return;
           if (k === 0) setLista(true);
-          if (k % 8 === 0) onAvance?.(Math.min(1, ++listos / primera));
+          if (k % paso === 0) onAvance?.(Math.min(1, ++listos / primera));
           dibujar();
           lanzar();
         });
         return;
       }
     };
-    for (let n = 0; n < 6; n++) lanzar();
+    const empezar = () => { for (let i = 0; i < 6; i++) lanzar(); };
+    let io = null;
+    if (toma.tapa) empezar();
+    else {
+      io = new IntersectionObserver(([e]) => { if (e.isIntersecting) { io.disconnect(); empezar(); } }, { rootMargin: '150% 0px' });
+      io.observe(raiz.current);
+    }
     // al desmontar (StrictMode monta dos veces) se olvidan: sus avisos ya no
     // dibujan y, si se quedaran, la segunda vuelta no los volvería a pedir
-    return () => { vivo = false; cuadros.current = []; cancelAnimationFrame(a.ciclo); };
+    return () => { vivo = false; io?.disconnect(); cuadros.current = []; cancelAnimationFrame(a.ciclo); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -171,8 +188,9 @@ export default function Recorrido({ onReservar, onAvance }) {
 
   useLayoutEffect(() => {
     const st = ScrollTrigger.create({
-      // termina una pantalla antes: la última la tapa la hoja que sube
-      trigger: raiz.current, start: 'top top', end: () => `+=${raiz.current.offsetHeight - 2 * window.innerHeight}`,
+      // el recorrido termina una pantalla antes: la última la tapa la hoja
+      trigger: raiz.current, start: 'top top',
+      end: () => `+=${raiz.current.offsetHeight - (toma.tapa ? 2 : 1) * window.innerHeight}`,
       onUpdate: (s) => {
         const a = prog.current;
         a.meta = s.progress;
@@ -186,15 +204,15 @@ export default function Recorrido({ onReservar, onAvance }) {
 
   // Texto del tramo en curso: entra en su primer 20% y se va en el último
   // (la portada ya está al llegar y el cierre se queda).
-  const tr = TRAMOS[donde.n];
+  const tr = tramos[donde.n];
   const clave = tr.texto;
   const primero = donde.n === 0;
-  const ultimo = donde.n === TRAMOS.length - 1;
+  const ultimo = donde.n === tramos.length - 1;
   const op = clave ? Math.min(primero ? 1 : donde.t / 0.2, ultimo ? 1 : (1 - donde.t) / 0.2, 1) : 0;
   const texto = clave && TEXTOS[clave];
 
   return (
-    <section ref={raiz} className="re-viaje" style={{ height: `${ALTO_RECORRIDO}vh` }} aria-label="Scroll tour of a residence at The Halden">
+    <section ref={raiz} className="re-viaje" data-toma={toma.id} style={{ height: `${toma.alto}vh` }} aria-label={toma.etiqueta}>
       <div className="re-pegado">
         <canvas ref={lienzo} className={`re-lienzo ${lista ? 'listo' : ''}`} aria-hidden />
         <div className="re-velo" />

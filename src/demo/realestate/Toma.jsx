@@ -13,8 +13,10 @@ import { fundido } from './fundido';
 // ─────────────────────────────────────────────────────────────────────────────
 
 // siempre los completos (r/): las tomas van en marcos horizontales también en
-// el celular, y los de rm/ son solo el centro del cuadro (ver recorrido.sh)
-const ruta = (k) => `${IMG}/r/${String(k).padStart(4, '0')}.webp`;
+// el celular, y los de rm/ son solo el centro del cuadro (ver recorrido.sh).
+// `de`/`a` van en la numeración a 12 por segundo (1..396); r/ va a 24, donde
+// el cuadro k es el 2k-1: se usan solo esos (para un bucle lento sobran).
+const ruta = (k) => `${IMG}/r/${String(2 * k - 1).padStart(4, '0')}.webp`;
 const sirve = (im) => im?.complete && im.naturalWidth > 0;
 
 function cubrir(ctx, im, w, h, alfa = 1) {

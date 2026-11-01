@@ -1,26 +1,29 @@
 #!/bin/zsh
-# Convierte los cuadros del render de Blender en los que el recorrido de
-# The Halden dibuja con el scroll.
-#   scripts/realestate/recorrido.sh <carpeta con 0001.png ... 0396.png>
-# Deja public/realestate/halden/r/NNNN.webp (1920 px, calidad 85, compu) y
-# rm/NNNN.webp (celular: el CENTRO del cuadro a resolución completa, 810×1080,
-# calidad 82). Reemplaza los que ya existan.
-# 1-nov: en el celular (vertical) el lienzo solo enseña el centro del cuadro
-# y lo estira; con la versión a 1280 de ancho se veía bajo de calidad, por
-# eso se recorta del original en vez de achicarlo.
-# El render (Cycles, 1920×1080, 12 por segundo) sale de
-# ~/Desktop/Recorrido NJ/blender/ (armar.py arma la escena, render.py la
-# renderiza). Medido 1-nov: q85 pesa ~190 KB por cuadro y ya no se distingue
-# del PNG; q60 dejaba ver la compresión en la madera.
+# Convierte cuadros del render de Blender (PNG 1920×1080) en los webp que la
+# página de The Halden dibuja con el scroll.
+#   scripts/realestate/recorrido.sh <carpeta de PNG> <destino> [movil]
+# <destino> es la carpeta dentro de public/realestate/halden/:
+#   r   ← cuadros-24fps/ (recorrido a 24 por segundo, compu, calidad 85)
+#   rm  ← cuadros/       (recorrido a 12 por segundo, celular)
+#   c   ← recamara/      (recámara, compu)
+#   cm  ← recamara/      (recámara, celular)
+# `movil` = el CENTRO del cuadro a resolución completa (810×1080, calidad 82):
+# en vertical el lienzo solo enseña el centro y lo estira; achicar todo el
+# cuadro a 1280 se veía bajo de calidad (1-nov). Los archivos van numerados
+# 0001… en el orden de la carpeta. Reemplaza los que ya existan.
+# El render (Cycles) sale de ~/Desktop/Recorrido NJ/blender/: armar.py y
+# armar-recamara.py arman las escenas; render.py, render24.py (intermedios
+# para 24 por segundo) y render-recamara.py las renderizan.
 set -e
-origen=${1:A}
-[[ -d $origen ]] || { echo "Uso: recorrido.sh <carpeta de PNG>"; exit 1; }
+origen=${1:A}; destino=$2; modo=$3
+[[ -d $origen && -n $destino ]] || { echo "Uso: recorrido.sh <carpeta de PNG> <r|rm|c|cm> [movil]"; exit 1; }
 aqui=${0:A:h}; raiz=${aqui:h:h}
-destino=$raiz/public/realestate/halden
-mkdir -p $destino/r $destino/rm
-ls $origen/[0-9][0-9][0-9][0-9].png | xargs -P 4 -I{} zsh -c '
-  n=${1:t:r}
-  cwebp -quiet -q 85 -m 4 "$1" -o "$2/r/$n.webp"
-  cwebp -quiet -q 82 -m 4 -crop 555 0 810 1080 "$1" -o "$2/rm/$n.webp"
-' _ {} $destino
-echo "$(ls $destino/r | wc -l | tr -d ' ') cuadros en $destino/r"
+salida=$raiz/public/realestate/halden/$destino
+mkdir -p $salida
+if [[ $modo == movil ]]; then opciones=(-q 82 -crop 555 0 810 1080); else opciones=(-q 85); fi
+i=0
+for png in $origen/[0-9][0-9][0-9][0-9].png; do
+  i=$((i + 1))
+  printf '%s\0%s\0' "$png" "$salida/$(printf %04d $i).webp"
+done | xargs -0 -P 4 -n 2 zsh -c 'cwebp -quiet -m 4 '"${opciones[*]}"' "$1" -o "$2"' _
+echo "$(ls $salida | wc -l | tr -d ' ') cuadros en $salida ($(du -sh $salida | cut -f1))"
