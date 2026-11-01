@@ -174,5 +174,6 @@ export function destinoDe(demo) {
   if (demo.tipo === 'modelos') return `/modelos/${demo.clave}`;
   if (demo.tipo === 'autocinema') return `/autocinema/${demo.clave}`;
   if (demo.tipo === 'florerias') return `/florerias/${demo.clave}`;
+  if (demo.tipo === 'realestate') return `/realestate/${demo.clave}`;
   return `/demo/${demo.clave}`;
 }
