@@ -16,7 +16,7 @@
 //                     (tabla pedidos_negocios, ruta /pedidos/<clave>)
 //   tipo: 'gimnasio' → `clave` es un gimnasio de la demo de control de acceso
 //                     (tabla gym_negocios, ruta /gimnasio/<clave>)
-//   tipo: 'sorteos' / 'modelos' / 'autocinema' / 'florerias' → maquetas sin base de datos (/sorteos/<clave>, /modelos/<clave>)
+//   tipo: 'sorteos' / 'modelos' / 'autocinema' / 'florerias' / 'clinica' → maquetas sin base de datos (/sorteos/<clave>, /modelos/<clave>)
 //   tipo: 'externa' → `url` a una demo desplegada aparte
 //
 // Para agregar una: un bloque más aquí. Nada más se toca.
@@ -139,6 +139,21 @@ export const SECTORES = [
   // ── Plantillas para cuando existan. Se dejan comentadas a propósito: un
   // ── catálogo con enlaces muertos vende peor que uno corto.
   //
+  {
+    id: 'salud',
+    titulo: 'Consultorios y clínicas',
+    descripcion: 'Agenda en línea con anticipo, expediente, app del paciente con su plan de nutrición, recetas, odontograma y cobros.',
+    demos: [
+      {
+        tipo: 'clinica',
+        clave: 'raiz',
+        nombre: 'Raíz · clínica integral',
+        detalle: 'Nutrición, médico general y dentista · Puebla',
+        nota: 'clínica de ejemplo',
+      },
+    ],
+  },
+
   // {
   //   id: 'comercio',
   //   titulo: 'Comercio y punto de venta',

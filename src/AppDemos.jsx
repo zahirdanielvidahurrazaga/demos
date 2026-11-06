@@ -30,6 +30,7 @@ const SorteosDemo = lazy(() => import('./demo/sorteos/SorteosDemo'));
 const ModelosDemo = lazy(() => import('./demo/modelos/ModelosDemo'));
 const AutocinemaDemo = lazy(() => import('./demo/autocinema/AutocinemaDemo'));
 const FloreriasDemo = lazy(() => import('./demo/florerias/FloreriasDemo'));
+const ClinicaDemo = lazy(() => import('./demo/clinica/ClinicaDemo'));
 const RealEstateDemo = lazy(() => import('./demo/realestate/RealEstateDemo'));
 
 // Regreso de la pasarela de prueba (src/demo/PasarelaPrueba.jsx): el pago se
@@ -77,6 +78,8 @@ export default function AppDemos() {
                 <Route path="/autocinema/:negocio" element={<AutocinemaDemo />} />
                 {/* Florería: también sin base de datos. */}
                 <Route path="/florerias/:negocio" element={<FloreriasDemo />} />
+                {/* Clínica (nutrición, médico, dentista): también sin base de datos. */}
+                <Route path="/clinica/:negocio" element={<ClinicaDemo />} />
                 {/* Real estate (EE.UU., en inglés y sin marca KaiZen): solo scroll, sin base de datos. */}
                 <Route path="/realestate/:negocio" element={<RealEstateDemo />} />
                 {/* Cualquier otra dirección regresa al índice: si una prospecta borra
