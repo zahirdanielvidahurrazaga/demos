@@ -1,13 +1,13 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import {
-  ArrowLeft, ArrowRight, ArrowUpRight, CalendarDays, CircleUser, Car, Check, ChevronLeft, ChevronRight, Clock, CreditCard, Film, MapPin, Megaphone,
+  ArrowLeft, ArrowRight, ArrowUpRight, BadgePercent, CalendarDays, CircleUser, Car, Check, ChevronLeft, ChevronRight, Clock, CreditCard, Film, MapPin, Megaphone,
   Gift, Minus, Play, Plus, Popcorn, Radio, Search, Smartphone, Ticket, Trophy, Ghost, CalendarHeart, Heart, ThumbsUp, ThumbsDown, LifeBuoy, Navigation, Send, Vote, CloudRain, Brain, CircleCheck, CircleX, CalendarSync, UtensilsCrossed, Wallet, X,
 } from 'lucide-react';
 import {
-  AYUDAS, TRIVIA_PUNTOS, TRIVIA_SEGUNDOS, cambiarFecha, climaDe, lugarParecido, pedirReembolso, preguntasDe, rankingTrivia, terminarTrivia, BOLETOS, CASA, CLIENTE, EVENTO, MODO, PROPUESTAS, cotizar, disponible, alcanza, pedirAyuda, pedirCotizacion, reaccionar, sugerir, votar, casaOcupados, comprarCasa, misCasa, turnoT, ESTADOS_ORDEN, IMG, RECOMPENSAS, RETOS, canjear, duracion, nivelDe, progresoReto, siguienteNivel, MENU, NEGOCIO, PELICULAS, avisosDe, boleto, comprar, diaCorto, diaLargo, dinero,
+  AYUDAS, TRIVIA_PUNTOS, TRIVIA_SEGUNDOS, cambiarFecha, climaDe, lugarParecido, pedirReembolso, preguntasDe, rankingTrivia, terminarTrivia, BOLETOS, CASA, CLIENTE, EVENTO, MODO, PROPUESTAS, cotizar, disponible, alcanza, pedirAyuda, pedirCotizacion, reaccionar, sugerir, votar, casaOcupados, comprarCasa, misCasa, turnoT, ESTADOS_ORDEN, IMG, RECOMPENSAS, RETOS, canjear, comprarVarios, cuentaCompra, PROMOS, PUNTOS_POR_PESO, ZONAS, duracion, nivelDe, progresoReto, siguienteNivel, MENU, NEGOCIO, PELICULAS, avisosDe, boleto, diaCorto, diaLargo, dinero,
   funcionPorId, funcionesDelDia, hora, inicioDia, misPases, nombreDia, nombreLugar, ordenesDe,
-  pedir, platillo, quedan, useCine, ventasDe,
+  ocupados, pedir, platillo, quedan, useCine, ventasDe,
 } from './datos';
 import { Controles, Foto, Mapa, avisarListo, minutos, useAhora, useTono } from './comun';
 import { useDialogo } from '../sorteos/comun';
@@ -75,7 +75,7 @@ export default function Sitio() {
       {vista.id === 'casa' && <CasaTerror e={e} alVolver={() => ir({ id: 'inicio' })} alListo={(codigo) => ir({ id: 'pases', codigo })} />}
       {vista.id === 'nosotros' && <Nosotros alCartelera={() => ir({ id: 'inicio' })} alEventos={() => ir({ id: 'eventos' })} />}
       {vista.id === 'pelicula' && <Pelicula e={e} peli={vista.peli} funcionInicial={vista.funcion} alVolver={() => ir({ id: 'inicio' })}
-        alComprar={(funcion, tipo) => ir({ id: 'compra', peli: vista.peli, funcion, tipo })} />}
+        alComprar={(funcion, cant) => ir({ id: 'compra', peli: vista.peli, funcion, cant })} />}
       {vista.id === 'compra' && <Compra e={e} {...vista} alVolver={() => ir({ id: 'pelicula', peli: vista.peli, funcion: vista.funcion })}
         alListo={(codigo) => ir({ id: 'pases', codigo })} />}
       {vista.id === 'pases' && <MisBoletos e={e} codigoInicial={vista.codigo} alCartelera={() => ir({ id: 'inicio' })} alPedir={(codigo) => ir({ id: 'menu', codigo })} />}
@@ -722,7 +722,14 @@ function Pelicula({ e, peli, funcionInicial, alVolver, alComprar }) {
   const p = PELICULAS[peli];
   const funciones = e.funciones.filter((f) => f.peli === peli && vigente(f) && !f.cancelada);
   const [funcion, setFuncion] = useState(funcionInicial && funciones.some((f) => f.id === funcionInicial) ? funcionInicial : funciones[0]?.id);
-  const [tipo, setTipo] = useState(null);
+  // cuántos boletos de cada tipo (se pueden llevar varios y mezclar tipos)
+  const [cant, setCant] = useState({});
+  const nBol = Object.values(cant).reduce((n, q) => n + q, 0);
+  const subtotal = Object.entries(cant).reduce((n, [t, q]) => n + boleto(t).precio * q, 0);
+  const MAX_BOLETOS = 8;
+  const cambiarCant = (t, d) => setCant((c) => { const q = Math.max(0, Math.min(quedan(e, funcion, t), (c[t] || 0) + d)); const n = { ...c, [t]: q }; if (!q) delete n[t]; return n; });
+  // al cambiar de función se vuelve a empezar (otra disponibilidad)
+  useEffect(() => { setCant({}); }, [funcion]);
   const [mas, setMas] = useState(false);
   const [avance, setAvance] = useState(false);
   const f = funcionPorId(e, funcion);
@@ -752,6 +759,7 @@ function Pelicula({ e, peli, funcionInicial, alVolver, alComprar }) {
               <span className="ac-chip contorno">{p.clas}</span>
               <span className="ac-chip contorno">{p.idioma}</span>
             </div>
+            <button type="button" className="ac-btn fantasma chico ac-ver-avance" style={{ marginTop: 14 }} onClick={() => setAvance(true)}><Play size={14} fill="currentColor" /> Ver avance</button>
             <p className="ac-sinopsis" style={mas ? undefined : { display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{p.sinopsis}</p>
             {!mas && <button type="button" className="ac-leer" onClick={() => setMas(true)}>Leer más</button>}
             <Reacciones e={e} peli={peli} />
@@ -783,28 +791,35 @@ function Pelicula({ e, peli, funcionInicial, alVolver, alComprar }) {
         {f && (
           <section className="ac-seccion" style={{ paddingTop: 40 }}>
             <div className="ac-seccion-cab">
-              <h2>Tu boleto</h2>
+              <h2>Tus boletos</h2>
               <span className="ac-suave" style={{ fontSize: 14 }}>{diaLargo(f.t)} · {hora(f.t)}</span>
             </div>
+            <p className="ac-suave" style={{ fontSize: 14, margin: '-6px 0 16px' }}>¿Vienen en varios autos o con amigos a pie? Agrega los boletos que necesites, de uno o varios tipos.</p>
             <div className="ac-boletos">
               {BOLETOS.map((b) => {
                 const q = quedan(e, funcion, b.id);
+                const n = cant[b.id] || 0;
+                const lleno = nBol >= MAX_BOLETOS;
                 return (
-                  <button key={b.id} type="button" disabled={!q} className={`ac-tarjeta ac-boleto ${tipo === b.id ? 'elegido' : ''}`} onClick={() => setTipo(b.id)} aria-pressed={tipo === b.id}>
-                    <span className="ac-marca">{tipo === b.id && <Check size={13} strokeWidth={3} />}</span>
+                  <div key={b.id} className={`ac-tarjeta ac-boleto ${n ? 'elegido' : ''} ${!q ? 'agotado' : ''}`}>
                     {b.destacado && <span className="ac-chip ambar" style={{ width: 'fit-content', marginBottom: 4 }}>El más completo</span>}
                     <h3>{b.nombre}</h3>
                     <span className="ac-precio">{dinero(b.precio)}</span>
                     <span className="ac-suave" style={{ fontSize: 13 }}>{b.personas}</span>
                     <ul>{b.incluye.map((x) => <li key={x}><Check size={14} />{x}</li>)}</ul>
-                    <span className={`ac-quedan ${q < 5 ? 'pocos' : ''}`} style={{ marginTop: 'auto', paddingTop: 8 }}>{q ? <>Quedan <b>{q}</b></> : <b>Agotado</b>}</span>
-                  </button>
+                    <div className="ac-boleto-pie">
+                      <span className={`ac-quedan ${q < 5 ? 'pocos' : ''}`}>{q ? <>Quedan <b>{q}</b></> : <b>Agotado</b>}</span>
+                      {n
+                        ? <span className="ac-cant"><button type="button" onClick={() => cambiarCant(b.id, -1)} aria-label={`Quitar un ${b.nombre}`}><Minus size={15} /></button><span>{n}</span><button type="button" className="mas" disabled={n >= q || lleno} onClick={() => cambiarCant(b.id, 1)} aria-label={`Agregar otro ${b.nombre}`}><Plus size={15} /></button></span>
+                        : <button type="button" className="ac-btn chico" disabled={!q || lleno} onClick={() => cambiarCant(b.id, 1)}><Plus size={15} /> Agregar</button>}
+                    </div>
+                  </div>
                 );
               })}
             </div>
             <div className="ac-pegado">
-              <span>{tipo ? <>{boleto(tipo).nombre}<b>{dinero(boleto(tipo).precio)}</b></> : <>Elige tu boleto<b>Desde {dinero(Math.min(...BOLETOS.map((b) => b.precio)))}</b></>}</span>
-              <button type="button" className="ac-btn" disabled={!tipo} onClick={() => alComprar(funcion, tipo)}>Elegir mi lugar <ArrowRight size={17} /></button>
+              <span>{nBol ? <>{nBol} {nBol === 1 ? 'boleto' : 'boletos'}<b>{dinero(subtotal)}</b></> : <>Agrega tus boletos<b>Desde {dinero(Math.min(...BOLETOS.map((b) => b.precio)))}</b></>}</span>
+              <button type="button" className="ac-btn" disabled={!nBol} onClick={() => alComprar(funcion, cant)}>Elegir {nBol > 1 ? 'mis lugares' : 'mi lugar'} <ArrowRight size={17} /></button>
             </div>
           </section>
         )}
@@ -824,7 +839,7 @@ function Reacciones({ e, peli }) {
   const op = [['encanta', 'Me encantó', Heart], ['bien', 'Estuvo bien', ThumbsUp], ['no', 'No me gustó', ThumbsDown]];
   return (
     <div className="ac-reacciones">
-      <p><b>{pct}%</b> le encantó · {total.toLocaleString('es-MX')} opiniones</p>
+      <p>{total ? <><b>{pct}%</b> le encantó · {total.toLocaleString('es-MX')} opiniones</> : 'Estreno: sé de los primeros en opinar'}</p>
       <div>
         {op.map(([k, t, Icon]) => (
           <button key={k} type="button" className={`ac-chip contorno ${mia === k ? 'activo' : ''}`} onClick={() => reaccionar(peli, k)} aria-pressed={mia === k}>
@@ -836,113 +851,271 @@ function Reacciones({ e, peli }) {
   );
 }
 
+// Avance: el tráiler oficial (YouTube, sin cookies de rastreo hasta darle play)
+// en una ventana de cine. Las películas de ejemplo no tienen tráiler real: ahí
+// se dice cómo se vería.
 function Avance({ p, alCerrar }) {
   const caja = useRef(null);
   useDialogo(caja, alCerrar);
+  const yt = p.avance;
   return enRaiz(
-    <div className="ac-velo" onClick={alCerrar}>
-      <div className="ac-ventana" ref={caja} onClick={(ev) => ev.stopPropagation()} role="dialog" aria-modal="true" aria-label="Avance">
-        <div style={{ position: 'relative', aspectRatio: '16/9', borderRadius: 18, overflow: 'hidden' }}>
-          <Foto nombre={p.poster} texto={p.titulo} style={{ position: 'absolute', inset: 0 }} />
-          <span className="ac-redondo vidrio" style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%,-50%)', width: 58, height: 58 }}><Play size={22} fill="currentColor" /></span>
+    <div className="ac-velo ac-velo-avance" onClick={alCerrar}>
+      <div className="ac-avance" ref={caja} onClick={(ev) => ev.stopPropagation()} role="dialog" aria-modal="true" aria-label={`Avance de ${p.titulo}`}>
+        <div className="ac-avance-cab">
+          <span><small className="ac-cejilla">Avance</small><b>{p.titulo}</b></span>
+          <button type="button" className="ac-redondo vidrio" onClick={alCerrar} aria-label="Cerrar avance"><X size={18} /></button>
         </div>
-        <h2>{p.titulo}</h2>
-        <p className="ac-suave" style={{ lineHeight: 1.55 }}>En el sitio real aquí se reproduce el avance oficial de la película (YouTube o video propio). En esta demostración las películas son de ejemplo.</p>
-        <button type="button" className="ac-btn" onClick={alCerrar}>Cerrar</button>
+        <div className="ac-avance-video">
+          {yt ? (
+            <iframe src={`https://www.youtube-nocookie.com/embed/${yt}?autoplay=1&playsinline=1&rel=0&modestbranding=1`} title={`Avance de ${p.titulo}`}
+              allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowFullScreen referrerPolicy="strict-origin-when-cross-origin" />
+          ) : (<>
+            <Foto nombre={p.poster} texto={p.titulo} className="ac-avance-ken" />
+            <span className="ac-avance-nota">Película de ejemplo: en el sitio real aquí corre el tráiler oficial.</span>
+          </>)}
+        </div>
+        {yt && <a className="ac-leer" href={`https://www.youtube.com/watch?v=${yt}`} target="_blank" rel="noreferrer" style={{ justifySelf: 'center' }}>¿No carga? Verlo en YouTube <ArrowUpRight size={14} /></a>}
       </div>
     </div>
   );
 }
 
 // ── compra ──────────────────────────────────────────────────────────────────
-function Compra({ e, peli, funcion, tipo, alVolver, alListo }) {
+// Paso a paso, como en el cine: 1 Lugares (uno por boleto, en el mapa) →
+// 2 Dulcería (te la llevamos a tu lugar al llegar) → 3 Pago (cupones,
+// Cocopuntos y tarjeta). La cuenta la hace `cuentaCompra` (datos.js), la misma
+// que valida `comprarVarios`, así lo que ves es lo que se cobra.
+const PASOS_COMPRA = ['Boletos', 'Lugares', 'Dulcería', 'Pago'];
+const zonaDe = (l) => Object.entries(ZONAS).find(([, z]) => z.lugares.includes(l))?.[0];
+const ZONA_TXT = { vip: 'la primera fila (A)', auto: 'las filas B a F', campana: 'las casas de campaña', peatonal: 'la zona peatonal' };
+
+function Compra({ e, peli, funcion, cant, alVolver, alListo }) {
   const p = PELICULAS[peli];
   const f = funcionPorId(e, funcion);
-  const b = boleto(tipo);
+  // un renglón por boleto: { k, tipo, n } (n = número dentro de su tipo)
+  const boletos = useMemo(() => BOLETOS.flatMap((b) => Array.from({ length: cant?.[b.id] || 0 }, (_, i) => ({ k: `${b.id}-${i}`, tipo: b.id, n: i + 1 }))), [cant]);
   const [paso, setPaso] = useState(1);
-  const [lugar, setLugar] = useState(null);
+  const [lugares, setLugares] = useState({});
+  const [dulce, setDulce] = useState({});
+  const [dulceEn, setDulceEn] = useState(null);
+  const [cat, setCat] = useState('Combos');
+  const [cupon, setCupon] = useState(null);
+  const [codigoCupon, setCodigoCupon] = useState('');
+  const [usarPuntos, setUsarPuntos] = useState(false);
+  const [puntos, setPuntos] = useState(0);
   const [datos, setDatos] = useState({ nombre: CLIENTE.nombre, telefono: '222 345 6789', tarjeta: '4242 4242 4242 4242', vence: '12/29', cvc: '123' });
-  const [combo, setCombo] = useState(false);
   const [pagando, setPagando] = useState(false);
   const [error, setError] = useState('');
-  const cupon = tipo === 'auto' ? e.puntos.cupones.find((c) => !c.usado && c.recompensa === 'auto-gratis') : null;
-  const [usarCupon, setUsarCupon] = useState(!!cupon);
-  const conCupon = !!(cupon && usarCupon);
-  const total = (conCupon ? 0 : b.precio) + (combo ? platillo('combo').precio : 0);
-  const ganas = Math.floor((total / 10) * (1 + nivelDe(e.puntos.ganados).extra));
 
-  // si otra persona (o la simulación) ganó el lugar mientras lo veías
+  const elegidos = boletos.map((b) => lugares[b.k]).filter(Boolean);
+  const pendientes = boletos.filter((b) => !lugares[b.k]);
+  const conLugar = boletos.map((b) => ({ tipo: b.tipo, lugar: lugares[b.k] }));
+  const c = cuentaCompra(e, { boletos: conLugar, dulce, cupon, puntos: usarPuntos ? puntos : 0 });
+  const cats = useMemo(() => [...new Set(MENU.map((m) => m.cat))], []);
+  const cabeUno = (pid) => alcanza(e, Object.entries({ ...dulce, [pid]: (dulce[pid] || 0) + 1 }));
+  const cambiarDulce = (pid, d) => setDulce((x) => { const q = Math.max(0, (x[pid] || 0) + d); const n = { ...x, [pid]: q }; if (!q) delete n[pid]; return n; });
+  const piezas = Object.values(dulce).reduce((n, q) => n + q, 0);
+  const promosVivas = PROMOS.filter((x) => !(e.puntos.promos || []).includes(x.codigo));
+  const misCupones = e.puntos.cupones.filter((x) => !x.usado);
+
+  // si otra persona (o la simulación) ganó alguno de tus lugares mientras elegías
   useEffect(() => {
-    if (lugar && ventasDe(e, funcion).some((v) => v.lugar === lugar) && !pagando) {
-      setLugar(null); setPaso(1); setError('Alguien acaba de comprar ese lugar. Escoge otro.');
-    }
-  }, [e, lugar, funcion, pagando]);
+    if (pagando) return;
+    const oc = ocupados(e, funcion);
+    const perdidos = Object.entries(lugares).filter(([, l]) => oc.has(l));
+    if (!perdidos.length) return;
+    setLugares((x) => { const n = { ...x }; perdidos.forEach(([k]) => delete n[k]); return n; });
+    setPaso(1);
+    setError(`Alguien acaba de comprar ${perdidos.map(([, l]) => nombreLugar(l)).join(' y ')}. Escoge otro.`);
+  }, [e, lugares, funcion, pagando]);
+  // la dulcería va al primer lugar si no se eligió otro
+  useEffect(() => { if (!elegidos.includes(dulceEn)) setDulceEn(elegidos[0] || null); }, [elegidos.join(), dulceEn]); // eslint-disable-line react-hooks/exhaustive-deps
+  // el tope de puntos baja si cambia la cuenta
+  useEffect(() => { if (puntos > c.maxPuntos) setPuntos(c.maxPuntos); }, [c.maxPuntos, puntos]);
 
+  const tocarLugar = (l) => {
+    setError('');
+    const ya = Object.entries(lugares).find(([, x]) => x === l);
+    if (ya) { setLugares((x) => { const n = { ...x }; delete n[ya[0]]; return n; }); return; }
+    // primero un boleto de esa zona que aún no tenga lugar; si todos tienen,
+    // se mueve el último de esa zona (así con un solo boleto basta tocar otro)
+    const z = zonaDe(l);
+    const b = pendientes.find((x) => boleto(x.tipo).zona === z) || [...boletos].reverse().find((x) => boleto(x.tipo).zona === z);
+    if (b) setLugares((x) => ({ ...x, [b.k]: l }));
+  };
+
+  const aplicarCodigo = () => {
+    const cod = codigoCupon.trim().toUpperCase();
+    if (!cod) return;
+    setCupon(cod);
+  };
+
+  const ir = (n) => { setPaso(n); window.scrollTo({ top: 0, behavior: 'instant' }); };
   const pagar = () => {
-    if (datos.tarjeta.replace(/\s/g, '') === '4000000000000002') { setError('La tarjeta fue rechazada. Prueba con otra.'); return; }
+    if (c.total > 0 && datos.tarjeta.replace(/\s/g, '') === '4000000000000002') { setError('La tarjeta fue rechazada. Prueba con otra.'); return; }
     setError(''); setPagando(true);
     setTimeout(() => {
-      const r = comprar({ funcion, tipo, lugar, nombre: datos.nombre, telefono: datos.telefono, combo, cupon: conCupon ? cupon.id : null });
+      const r = comprarVarios({ funcion, boletos: conLugar, dulce, dulceEn, cupon, puntos: usarPuntos ? puntos : 0, nombre: datos.nombre, telefono: datos.telefono, total: c.total });
       setPagando(false);
-      if (!r.ok) { setLugar(null); setPaso(1); setError('Alguien acaba de comprar ese lugar. Escoge otro.'); return; }
-      avisarListo(r.puntos ? `Listo: tu boleto está en Mis boletos · +${r.puntos} puntos` : 'Listo: tu boleto está en Mis boletos');
+      if (!r.ok) {
+        if (r.motivo === 'ocupado') { setLugares((x) => Object.fromEntries(Object.entries(x).filter(([, l]) => !r.lugares.includes(l)))); ir(1); setError('Alguien acaba de comprar uno de tus lugares. Escoge otro.'); }
+        else if (r.motivo === 'agotado') { ir(2); setError('Se acaba de terminar algo de tu dulcería. Quita un producto.'); }
+        else if (r.motivo === 'cambio') setError(`Tu saldo de Cocopuntos cambió y el total ahora es ${dinero(r.total)}. Revísalo antes de pagar.`);
+        else setError(r.texto || 'No se pudo completar la compra.');
+        return;
+      }
+      const n = conLugar.length;
+      avisarListo(`Listo: ${n > 1 ? `tus ${n} boletos están` : 'tu boleto está'} en Mis boletos${r.puntos ? ` · +${r.puntos} puntos` : ''}`);
       alListo(r.codigo);
     }, 1600);
   };
 
+  const cuponAplicado = cupon && c.cuponOk;
+  const botones = {
+    1: <button type="button" className="ac-btn ancho" disabled={pendientes.length > 0} onClick={() => ir(2)}>{pendientes.length ? `Falta${pendientes.length > 1 ? 'n' : ''} ${pendientes.length} ${pendientes.length > 1 ? 'lugares' : 'lugar'}` : <>Continuar a dulcería <ArrowRight size={17} /></>}</button>,
+    2: <button type="button" className="ac-btn ancho" onClick={() => ir(3)}>{piezas ? <>Continuar al pago <ArrowRight size={17} /></> : <>Sin dulcería, ir al pago <ArrowRight size={17} /></>}</button>,
+    3: <button type="button" className="ac-btn ancho" disabled={!datos.nombre.trim()} onClick={pagar}>{c.total ? `Pagar ${dinero(c.total)}` : 'Confirmar sin costo'}</button>,
+  };
+
   return (
     <div className="ac-envoltura" style={{ paddingTop: 22 }}>
-      <button type="button" className="ac-volver" onClick={paso === 2 ? () => setPaso(1) : alVolver}>
-        <span className="ac-redondo chico"><ArrowLeft size={16} /></span> {paso === 2 ? 'Cambiar lugar' : p.titulo}
+      <button type="button" className="ac-volver" onClick={paso > 1 ? () => ir(paso - 1) : alVolver}>
+        <span className="ac-redondo chico"><ArrowLeft size={16} /></span> {paso > 1 ? PASOS_COMPRA[paso - 1] : `${p.titulo} · boletos`}
       </button>
-      <div className="ac-pasos-compra"><span className="hecho" /><span className={paso >= 2 ? 'hecho' : ''} /><span /></div>
+      <ol className="ac-pasos-compra" aria-label="Pasos de la compra">
+        {PASOS_COMPRA.map((t, i) => (
+          <li key={t} className={i < paso ? 'hecho' : i === paso ? 'actual' : ''} aria-current={i === paso ? 'step' : undefined}>
+            <span />{t}
+          </li>
+        ))}
+      </ol>
       <div className="ac-compra">
         <div>
-          {paso === 1 && (
-            <>
-              <h2>Escoge tu lugar</h2>
-              <p className="ac-suave" style={{ marginBottom: 18 }}>
-                Tu boleto <b style={{ color: 'var(--ac-texto)' }}>{b.nombre}</b> va en {b.zona === 'vip' ? 'la primera fila (A)' : b.zona === 'auto' ? 'las filas B a F' : b.zona === 'campana' ? 'las casas de campaña' : 'la zona peatonal'}.
-              </p>
-              {error && <p className="ac-chip rosa" style={{ marginBottom: 12, whiteSpace: 'normal' }}>{error}</p>}
-              <Mapa e={e} funcion={funcion} zona={b.zona} elegido={lugar} alElegir={(l) => { setLugar(l); setError(''); }} />
-            </>
-          )}
-          {paso === 2 && (
+          {error && <p className="ac-chip rosa" style={{ marginBottom: 14, whiteSpace: 'normal' }}>{error}</p>}
+
+          {paso === 1 && (<>
+            <h2>{boletos.length > 1 ? 'Escoge tus lugares' : 'Escoge tu lugar'}</h2>
+            <p className="ac-suave" style={{ marginBottom: 16 }}>
+              {boletos.length > 1 ? 'Toca un lugar para cada boleto. Tócalo otra vez para soltarlo.' : `Tu boleto ${boleto(boletos[0]?.tipo)?.nombre} va en ${ZONA_TXT[boleto(boletos[0]?.tipo)?.zona]}.`}
+            </p>
+            {boletos.length > 1 && (
+              <div className="ac-lista-lugares">
+                {boletos.map((b) => {
+                  const l = lugares[b.k];
+                  const sig = !l && pendientes[0]?.k === b.k;
+                  return (
+                    <div key={b.k} className={`ac-lugar-fila ${l ? 'listo' : ''} ${sig ? 'siguiente' : ''}`}>
+                      <span className="ac-lugar-num">{l ? <Check size={14} strokeWidth={3} /> : boletos.indexOf(b) + 1}</span>
+                      <span style={{ flex: 1 }}><b>{boleto(b.tipo).nombre}{(cant[b.tipo] || 0) > 1 ? ` ${b.n}` : ''}</b><small>{l ? nombreLugar(l) : `Toca un lugar en ${ZONA_TXT[boleto(b.tipo).zona]}`}</small></span>
+                      {l && <button type="button" className="ac-leer" onClick={() => tocarLugar(l)}>Cambiar</button>}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+            <Mapa e={e} funcion={funcion} zonas={boletos.map((b) => boleto(b.tipo).zona)} elegidos={elegidos} alElegir={tocarLugar} />
+          </>)}
+
+          {paso === 2 && (<>
+            <p className="ac-cejilla" style={{ marginBottom: 8 }}>Opcional · te la llevamos a tu lugar</p>
+            <h2>Dulcería</h2>
+            <p className="ac-suave" style={{ marginBottom: 16 }}>Pídela ahora y no hagas fila: empezamos a prepararla cuando escanean tu boleto en la entrada.</p>
+            {elegidos.length > 1 && (
+              <div className="ac-bloque" style={{ marginTop: 0, marginBottom: 14 }}>
+                <p className="ac-etiqueta">¿A qué lugar la llevamos?</p>
+                <div className="ac-horas">{elegidos.map((l) => <button key={l} type="button" className={`ac-hora-btn ${dulceEn === l ? 'activo' : ''}`} onClick={() => setDulceEn(l)}>{nombreLugar(l)}</button>)}</div>
+              </div>
+            )}
+            <div className="ac-cats">{cats.map((x) => <button key={x} type="button" className={`ac-chip ${cat === x ? 'activo' : ''}`} style={{ padding: '9px 16px', fontSize: 14 }} onClick={() => setCat(x)}>{x}</button>)}</div>
+            <div className="ac-platillos">
+              {MENU.filter((m) => m.cat === cat).map((m) => (
+                <div key={m.id} className="ac-tarjeta ac-platillo">
+                  <Foto nombre={m.foto} texto={m.nombre} />
+                  <div className="ac-platillo-info">
+                    <h3>{m.nombre}{!disponible(e, m.id) && <span className="ac-chip rosa" style={{ marginLeft: 4, padding: '3px 9px', fontSize: 11.5 }}>Agotado</span>}</h3>
+                    <p>{m.desc}</p>
+                    <div className="ac-platillo-pie">
+                      <b>{dinero(m.precio)}</b>
+                      {dulce[m.id]
+                        ? <span className="ac-cant"><button type="button" onClick={() => cambiarDulce(m.id, -1)} aria-label="Quitar"><Minus size={15} /></button><span>{dulce[m.id]}</span><button type="button" className="mas" disabled={!cabeUno(m.id)} style={{ opacity: cabeUno(m.id) ? 1 : 0.35 }} onClick={() => cambiarDulce(m.id, 1)} aria-label="Agregar"><Plus size={15} /></button></span>
+                        : <button type="button" className="ac-redondo chico" disabled={!cabeUno(m.id)} style={{ opacity: cabeUno(m.id) ? 1 : 0.35 }} onClick={() => cambiarDulce(m.id, 1)} aria-label={`Agregar ${m.nombre}`}><Plus size={17} /></button>}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>)}
+
+          {paso === 3 && (
             <div style={{ display: 'grid', gap: 14 }}>
-              <h2>Tus datos y pago</h2>
+              <h2>Pago</h2>
               <div className="ac-dos">
                 <label className="ac-campo"><span>Nombre</span><input value={datos.nombre} onChange={(ev) => setDatos({ ...datos, nombre: ev.target.value })} /></label>
-                <label className="ac-campo"><span>WhatsApp (te mandamos el boleto)</span><input value={datos.telefono} onChange={(ev) => setDatos({ ...datos, telefono: ev.target.value })} /></label>
+                <label className="ac-campo"><span>WhatsApp (te mandamos los boletos)</span><input value={datos.telefono} onChange={(ev) => setDatos({ ...datos, telefono: ev.target.value })} /></label>
               </div>
-              {cupon && (
-                <label className="ac-extra" style={{ borderStyle: 'dashed', borderColor: 'var(--ac-acento)' }}>
-                  <input type="checkbox" checked={usarCupon} onChange={(ev) => setUsarCupon(ev.target.checked)} />
-                  <span className="ac-redondo acento" style={{ width: 56, height: 56 }}><Gift size={22} /></span>
-                  <div style={{ flex: 1 }}>
-                    <b style={{ fontWeight: 600 }}>Usar mi boleto de auto gratis</b>
-                    <p className="ac-suave" style={{ fontSize: 13.5, marginTop: 3 }}>Lo canjeaste con tus Cocopuntos.</p>
+
+              {/* Cupones: los que lanza el autocinema + los que canjeaste con puntos */}
+              <div className="ac-tarjeta ac-pago-bloque">
+                <p className="ac-etiqueta" style={{ display: 'flex', alignItems: 'center', gap: 8 }}><BadgePercent size={15} /> Cupones</p>
+                {cuponAplicado ? (
+                  <div className="ac-cupon-op aplicado">
+                    <Check size={18} strokeWidth={2.6} />
+                    <span style={{ flex: 1 }}><b>{c.cuponTexto}</b><small>Ahorras {dinero(c.descuento)}</small></span>
+                    <button type="button" className="ac-leer" onClick={() => { setCupon(null); setCodigoCupon(''); }}>Quitar</button>
                   </div>
-                </label>
-              )}
-              <label className="ac-extra">
-                <input type="checkbox" checked={combo} onChange={(ev) => setCombo(ev.target.checked)} />
-                <Foto nombre="c-combo" texto="Combo" />
-                <div style={{ flex: 1 }}>
-                  <b style={{ fontWeight: 600 }}>Agrega el Combo Cocodrilo · {dinero(platillo('combo').precio)}</b>
-                  <p className="ac-suave" style={{ fontSize: 13.5, marginTop: 3 }}>{platillo('combo').desc}. Te lo llevamos a tu lugar al llegar.</p>
-                </div>
-              </label>
-              <div className="ac-tarjeta" style={{ padding: 20, display: 'grid', gap: 12 }}>
-                <p className="ac-etiqueta" style={{ display: 'flex', alignItems: 'center', gap: 8 }}><CreditCard size={15} /> Pago de prueba</p>
-                <label className="ac-campo"><span>Número de tarjeta</span><input className="ac-mono" value={datos.tarjeta} onChange={(ev) => setDatos({ ...datos, tarjeta: ev.target.value })} /></label>
-                <div className="ac-dos">
-                  <label className="ac-campo"><span>Vence</span><input className="ac-mono" value={datos.vence} onChange={(ev) => setDatos({ ...datos, vence: ev.target.value })} /></label>
-                  <label className="ac-campo"><span>CVC</span><input className="ac-mono" value={datos.cvc} onChange={(ev) => setDatos({ ...datos, cvc: ev.target.value })} /></label>
-                </div>
-                <p className="ac-suave" style={{ fontSize: 12.5 }}>Es una demostración: no se cobra nada. 4000 0000 0000 0002 simula una tarjeta rechazada.</p>
+                ) : (<>
+                  <div className="ac-cupon-entrada">
+                    <input className="ac-mono" placeholder="Escribe tu código" value={codigoCupon} onChange={(ev) => { setCodigoCupon(ev.target.value.toUpperCase()); if (cupon) setCupon(null); }}
+                      onKeyDown={(ev) => { if (ev.key === 'Enter') aplicarCodigo(); }} aria-label="Código de cupón" autoCapitalize="characters" />
+                    <button type="button" className="ac-btn chico" disabled={!codigoCupon.trim()} onClick={aplicarCodigo}>Aplicar</button>
+                  </div>
+                  {cupon && c.cuponError && <p className="ac-chip rosa" style={{ whiteSpace: 'normal', justifySelf: 'start' }}>{c.cuponError}</p>}
+                  {(misCupones.length > 0 || promosVivas.length > 0) && <>
+                    <small className="ac-suave">Disponibles para ti</small>
+                    <div className="ac-cupones">
+                      {misCupones.map((x) => (
+                        <button key={x.id} type="button" className="ac-cupon-op" onClick={() => { setCupon(x.id); setCodigoCupon(''); }}>
+                          <Gift size={18} /><span><b>{x.nombre}</b><small>Canjeado con Cocopuntos</small></span>
+                        </button>
+                      ))}
+                      {promosVivas.map((x) => (
+                        <button key={x.codigo} type="button" className="ac-cupon-op" onClick={() => { setCupon(x.codigo); setCodigoCupon(x.codigo); }}>
+                          <BadgePercent size={18} /><span><b>{x.titulo}</b><small><span className="ac-mono">{x.codigo}</span> · {x.detalle}</small></span>
+                        </button>
+                      ))}
+                    </div>
+                  </>}
+                </>)}
               </div>
-              {error && <p className="ac-chip rosa" style={{ whiteSpace: 'normal' }}>{error}</p>}
+
+              {/* Cocopuntos como dinero */}
+              <div className="ac-tarjeta ac-pago-bloque">
+                <label className="ac-puntos-sw">
+                  <span style={{ flex: 1 }}>
+                    <span className="ac-etiqueta" style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Gift size={15} /> Pagar con Cocopuntos</span>
+                    <small className="ac-suave">Tienes <b style={{ color: 'var(--ac-texto)' }}>{e.puntos.saldo.toLocaleString('es-MX')}</b> puntos · {PUNTOS_POR_PESO} puntos = $1</small>
+                  </span>
+                  <input type="checkbox" role="switch" checked={usarPuntos} disabled={!c.maxPuntos && !usarPuntos}
+                    onChange={(ev) => { setUsarPuntos(ev.target.checked); if (ev.target.checked && !puntos) setPuntos(c.maxPuntos); }} />
+                </label>
+                {usarPuntos && c.maxPuntos > 0 && (<>
+                  <input type="range" className="ac-rango" min={0} max={c.maxPuntos} step={PUNTOS_POR_PESO} value={Math.min(puntos, c.maxPuntos)} onChange={(ev) => setPuntos(Number(ev.target.value))} aria-label="Puntos a usar" />
+                  <div className="ac-resumen-fila"><span className="ac-suave">Usas {c.puntos.toLocaleString('es-MX')} puntos</span><b style={{ color: 'var(--ac-acento)' }}>−{dinero(c.pesosPuntos)}</b></div>
+                </>)}
+                {!c.maxPuntos && !usarPuntos && <small className="ac-suave">Tu cuenta ya está en $0.</small>}
+              </div>
+
+              {c.total > 0 ? (
+                <div className="ac-tarjeta ac-pago-bloque">
+                  <p className="ac-etiqueta" style={{ display: 'flex', alignItems: 'center', gap: 8 }}><CreditCard size={15} /> Pago de prueba</p>
+                  <label className="ac-campo"><span>Número de tarjeta</span><input className="ac-mono" value={datos.tarjeta} onChange={(ev) => setDatos({ ...datos, tarjeta: ev.target.value })} /></label>
+                  <div className="ac-dos">
+                    <label className="ac-campo"><span>Vence</span><input className="ac-mono" value={datos.vence} onChange={(ev) => setDatos({ ...datos, vence: ev.target.value })} /></label>
+                    <label className="ac-campo"><span>CVC</span><input className="ac-mono" value={datos.cvc} onChange={(ev) => setDatos({ ...datos, cvc: ev.target.value })} /></label>
+                  </div>
+                  <p className="ac-suave" style={{ fontSize: 12.5 }}>Es una demostración: no se cobra nada. 4000 0000 0000 0002 simula una tarjeta rechazada.</p>
+                </div>
+              ) : <p className="ac-chip verde" style={{ justifySelf: 'start' }}><Check size={14} /> Tu compra queda cubierta: no hace falta tarjeta.</p>}
             </div>
           )}
         </div>
@@ -956,16 +1129,30 @@ function Compra({ e, peli, funcion, tipo, alVolver, alListo }) {
             </div>
           </div>
           <hr className="ac-sep" />
-          <div className="ac-resumen-fila"><span>{b.nombre}</span><b>{conCupon ? <><s className="ac-suave" style={{ fontWeight: 400, marginRight: 6 }}>{dinero(b.precio)}</s>Gratis</> : dinero(b.precio)}</b></div>
-          <div className="ac-resumen-fila"><span className="ac-suave">Lugar</span><b style={{ color: lugar ? 'var(--ac-acento)' : 'var(--ac-suave)' }}>{lugar ? nombreLugar(lugar) : 'Sin elegir'}</b></div>
-          {combo && <div className="ac-resumen-fila"><span>Combo Cocodrilo</span><b>{dinero(platillo('combo').precio)}</b></div>}
+          {boletos.map((b) => (
+            <div key={b.k} className="ac-resumen-fila">
+              <span>{boleto(b.tipo).nombre}<small className="ac-suave" style={{ display: 'block', fontSize: 12.5 }}>{lugares[b.k] ? nombreLugar(lugares[b.k]) : 'Lugar sin elegir'}</small></span>
+              <b>{dinero(boleto(b.tipo).precio)}</b>
+            </div>
+          ))}
+          {c.items.length > 0 && <>
+            <hr className="ac-sep" />
+            {c.items.map(([pid, q]) => <div key={pid} className="ac-resumen-fila"><span>{q > 1 ? `${q} × ` : ''}{platillo(pid).nombre}</span><b>{dinero(platillo(pid).precio * q)}</b></div>)}
+            {dulceEn && <small className="ac-suave">A {nombreLugar(dulceEn)}, al llegar</small>}
+          </>}
+          {(c.descuento > 0 || c.pesosPuntos > 0) && <hr className="ac-sep" />}
+          {c.descuento > 0 && <div className="ac-resumen-fila"><span>Cupón</span><b style={{ color: 'var(--ac-acento)' }}>−{dinero(c.descuento)}</b></div>}
+          {c.pesosPuntos > 0 && <div className="ac-resumen-fila"><span>Cocopuntos ({c.puntos.toLocaleString('es-MX')})</span><b style={{ color: 'var(--ac-acento)' }}>−{dinero(c.pesosPuntos)}</b></div>}
           <hr className="ac-sep" />
-          <div className="ac-resumen-fila" style={{ alignItems: 'baseline' }}><span>Total</span><span className="ac-resumen-total">{dinero(total)}</span></div>
-          {ganas > 0 && <p className="ac-chip verde" style={{ justifySelf: 'start' }}><Gift size={14} /> Ganas {ganas} Cocopuntos</p>}
-          {paso === 1
-            ? <button type="button" className="ac-btn ancho" disabled={!lugar} onClick={() => setPaso(2)}>Continuar <ArrowRight size={17} /></button>
-            : <button type="button" className="ac-btn ancho" disabled={!datos.nombre.trim()} onClick={pagar}>Pagar {dinero(total)}</button>}
+          <div className="ac-resumen-fila" style={{ alignItems: 'baseline' }}><span>Total</span><span className="ac-resumen-total">{dinero(c.total)}</span></div>
+          {c.ganas > 0 && <p className="ac-chip verde" style={{ justifySelf: 'start' }}><Gift size={14} /> Ganas {c.ganas} Cocopuntos</p>}
+          <div className="ac-resumen-boton">{botones[paso]}</div>
         </aside>
+      </div>
+      {/* en celular el botón del paso va pegado abajo (el resumen queda al final de la página) */}
+      <div className="ac-compra-pie">
+        <span>{paso === 1 && pendientes.length ? `${elegidos.length} de ${boletos.length} lugares` : 'Total'}<b>{dinero(c.total)}</b></span>
+        {botones[paso]}
       </div>
       {pagando && <Procesando texto="Procesando tu pago…" />}
     </div>
@@ -1064,7 +1251,7 @@ function MisBoletos({ e, codigoInicial, alCartelera, alPedir }) {
         )}
         {avisos.filter((a) => !(a.lluvia && v.pendiente === 'lluvia')).map((a) => <div key={a.id} className="ac-aviso-dueno"><Megaphone size={18} /><div><b>Aviso del autocinema</b><br />{a.texto}</div></div>)}
         {!sel.casa && v.reprogramado && <p className="ac-chip verde" style={{ margin: '0 auto 14px', display: 'flex', width: 'fit-content', whiteSpace: 'normal' }}><CalendarSync size={14} /> Cambiaste de fecha por lluvia · +100 Cocopuntos</p>}
-        {!sel.casa && v.reembolso && <p className="ac-chip" style={{ margin: '0 auto 14px', display: 'flex', width: 'fit-content' }}>Reembolso en camino: {dinero(v.reembolso.total)} a tu tarjeta</p>}
+        {!sel.casa && v.reembolso && <p className="ac-chip" style={{ margin: '0 auto 14px', display: 'flex', width: 'fit-content' }}>Reembolso en camino: {dinero(v.reembolso.total)} a tu tarjeta{v.reembolso.puntos ? ` · ${v.reembolso.puntos.toLocaleString('es-MX')} Cocopuntos de regreso` : ''}</p>}
         {!sel.casa && !v.pendiente && !v.reembolso && <TriviaTarjeta e={e} v={v} alJugar={() => setTrivia(v.codigo)} />}
         <div className="ac-mis-acciones">
           {!sel.casa && !v.pendiente && !v.reembolso && <button type="button" className="ac-btn ancho acento" onClick={() => alPedir(v.codigo)}><UtensilsCrossed size={18} /> Pedir comida a mi auto</button>}
@@ -1483,6 +1670,21 @@ function Puntos({ e, alPase, alCartelera }) {
               <ArrowRight size={18} />
             </button>
           ))}
+
+          {/* Cupones que lanza el autocinema (redes, temporada): se aplican en el pago */}
+          <div className="ac-promos">
+            <p className="ac-promos-tit">Cupones de la semana · se aplican al pagar tus boletos</p>
+            {PROMOS.map((x) => {
+              const usado = (pz.promos || []).includes(x.codigo);
+              return (
+                <button key={x.codigo} type="button" className="ac-cupon-op" disabled={usado} style={usado ? { opacity: 0.5 } : undefined} onClick={alCartelera}>
+                  <BadgePercent size={18} />
+                  <span style={{ flex: 1 }}><b>{x.titulo}</b><small>{usado ? 'Ya lo usaste' : x.detalle}</small></span>
+                  <span className="ac-promo-codigo ac-mono">{x.codigo}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         <section className="ac-seccion" style={{ paddingTop: 40 }}>

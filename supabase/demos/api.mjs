@@ -11,10 +11,10 @@ import os from 'node:os';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 
-const REF = 'qwqrbckivrkmeykiukug';
-const API = 'https://api.supabase.com/v1';
+export const REF = 'qwqrbckivrkmeykiukug';
+export const API = 'https://api.supabase.com/v1';
 
-function leerToken() {
+export function leerToken() {
   if (process.env.SUPABASE_DEMOS_TOKEN) return process.env.SUPABASE_DEMOS_TOKEN.trim();
   const archivo = path.join(os.homedir(), '.supabase-demos-token');
   if (fs.existsSync(archivo)) return fs.readFileSync(archivo, 'utf8').replace(/^﻿/, '').trim();

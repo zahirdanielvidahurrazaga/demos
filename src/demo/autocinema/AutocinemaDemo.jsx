@@ -29,8 +29,8 @@ const ROLES = [
 const GUIA = {
   cliente: [
     'Desliza el carrusel de la semana (el fondo toma el color de cada póster) o toca un horario en la cartelera por día: te lleva directo a esa función.',
-    'Elige día, hora y boleto: los seis se comparan lado a lado, con lo que incluye cada uno y cuántos quedan.',
-    'Elige tu lugar exacto en el mapa (la primera fila es del boleto Terrorífico) y paga con la tarjeta de prueba que ya viene llena.',
+    'Toca "Ver avance" para ver el tráiler oficial. Elige día, hora y CUÁNTOS boletos de cada tipo (puedes llevar varios autos o mezclar tipos).',
+    'Paso a paso: un lugar en el mapa por cada boleto → la dulcería (te la llevan a tu lugar al llegar) → el pago, con cupones (prueba NOCHE20) y tus Cocopuntos como dinero.',
     'Tu pase llega con QR y lugar. Desde ahí pides comida y te la llevan a tu auto: ya no hay que escribir el código en comentarios.',
     'Mira el seguimiento del pedido mientras lo mueves desde Cocina en otra pestaña.',
     'En tu boleto de hoy juega la Trivia: 5 preguntas, 15 segundos cada una, Cocopuntos por acierto y tu lugar en el ranking de la noche.',
@@ -53,7 +53,7 @@ const GUIA = {
     'Los programados "listos al llegar" entran a cocina solos cuando la entrada lee el boleto.',
     'Inventario: cada pedido descuenta sus insumos; lo que se está acabando avisa arriba y lo agotado ya no se puede pedir en el menú.',
     'Los pedidos de otras personas avanzan solos; los tuyos los mueves con el botón y el cliente lo ve en su pase.',
-    'El combo que se paga junto con el boleto llega marcado "Pagado con el boleto".',
+    'La dulcería que se paga junto con los boletos llega marcada "Pagado con el boleto".',
   ],
   dueno: [
     'Boletos y fuente de sodas en un mismo tablero (hoy son dos sistemas distintos).',

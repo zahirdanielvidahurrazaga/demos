@@ -94,13 +94,17 @@ export function AvisoListo() {
 // primera fila (A) y filas B–F de autos.
 //   modo 'compra'  → solo se tocan los libres de `zona`; `elegido` en verde
 //   modo 'vivo'    → entrada y dueño: adentro (verde) · vendido sin llegar (contorno) · libre
-export function Mapa({ e, funcion, modo = 'compra', zona, elegido, alElegir, recien, mio }) {
+// Compra de varios boletos: `elegidos` (lista de lugares) y `zonas` (las de los
+// boletos que aún buscan lugar). Con un solo boleto siguen sirviendo elegido/zona.
+export function Mapa({ e, funcion, modo = 'compra', zona, zonas, elegido, elegidos, alElegir, recien, mio }) {
   const oc = ocupados(e, funcion);
+  const mios = new Set(elegidos || (elegido ? [elegido] : []));
+  const activas = new Set(zonas || [zona]);
   const adentro = new Set(ventasDe(e, funcion).filter((v) => v.entro).map((v) => v.lugar));
   const clase = (l, z) => {
     if (modo === 'compra') {
-      if (l === elegido) return 'elegido';
-      if (z !== zona) return 'fuera';
+      if (mios.has(l)) return 'elegido';
+      if (!activas.has(z)) return 'fuera';
       return oc.has(l) ? 'vendido' : 'libre';
     }
     if (l === mio) return 'mio';

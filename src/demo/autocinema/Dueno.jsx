@@ -1,11 +1,12 @@
-import { useRef, useState } from 'react';
-import { Brain, CloudRain, Megaphone, Plus, Projector, Ticket, UtensilsCrossed, X } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { Brain, Clapperboard, CloudRain, ImagePlus, Loader2, Megaphone, Search, Plus, Projector, Ticket, UtensilsCrossed, X } from 'lucide-react';
 import {
-  BOLETOS, CUPO_TOTAL, PELICULAS, PROPUESTAS, cancelarPorLluvia, climaDe, funcionesDelDia, marcarCotizacion, rankingTrivia, reanudarFuncion, crearFuncion, diaCorto, dinero, hora, inicioDia, mandarAviso, nombreLugar,
+  BOLETOS, CUPO_TOTAL, PELICULAS, PROPUESTAS, cancelarPorLluvia, climaDe, funcionesDelDia, marcarCotizacion, rankingTrivia, reanudarFuncion, crearFuncion, crearPelicula, claveYoutube, diaCorto, dinero, hora, inicioDia, mandarAviso, nombreLugar,
   ocupacion, platillo, useCine, ventasDe,
 } from './datos';
-import { Controles, avisarListo, minutos, useAhora } from './comun';
+import { Controles, Foto, avisarListo, minutos, useAhora } from './comun';
 import { useDialogo } from '../sorteos/comun';
+import { leerCodigo } from '../acceso/acceso';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // DUEÑO — la noche en números: boletos y comida en un solo lugar (hoy viven en
@@ -18,6 +19,7 @@ export default function Dueno() {
   const e = useCine();
   const ahora = useAhora(20000);
   const [aviso, setAviso] = useState(null);
+  const [nuevaPeli, setNuevaPeli] = useState(false);
   const [nueva, setNueva] = useState(false);
   const hoy0 = inicioDia(0);
 
@@ -45,7 +47,7 @@ export default function Dueno() {
     <div className="ac-envoltura ac-panel">
       <div className="ac-panel-cab">
         <div><p className="ac-etiqueta">Dirección</p><h1>Hoy en el Cocodrilo</h1></div>
-        <div className="ac-der"><button type="button" className="ac-btn chico" onClick={() => setNueva(true)}><Plus size={15} /> Nueva función</button><Controles vidrio={false} /></div>
+        <div className="ac-der"><button type="button" className="ac-btn chico fantasma" onClick={() => setNuevaPeli(true)}><Clapperboard size={15} /> Nueva película</button><button type="button" className="ac-btn chico" onClick={() => setNueva(true)}><Plus size={15} /> Nueva función</button><Controles vidrio={false} /></div>
       </div>
 
       <div className="ac-kpis">
@@ -206,6 +208,7 @@ export default function Dueno() {
 
       {aviso && <VentanaAviso f={aviso} n={ventasDe(e, aviso.id).length} alCerrar={() => setAviso(null)} />}
       {nueva && <VentanaFuncion alCerrar={() => setNueva(false)} />}
+      {nuevaPeli && <VentanaPelicula alCerrar={() => setNuevaPeli(false)} />}
     </div>
   );
 }
@@ -261,7 +264,7 @@ function VentanaAviso({ f, n, alCerrar }) {
 function VentanaFuncion({ alCerrar }) {
   const caja = useRef(null);
   useDialogo(caja, alCerrar);
-  const [peli, setPeli] = useState('pantano');
+  const [peli, setPeli] = useState(() => Object.keys(PELICULAS)[0]);
   const [dia, setDia] = useState(2);
   const [hh, setHh] = useState('20:30');
   const guardar = () => {
@@ -289,6 +292,182 @@ function VentanaFuncion({ alCerrar }) {
         <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
           <button type="button" className="ac-btn fantasma" onClick={alCerrar}>Cancelar</button>
           <button type="button" className="ac-btn" onClick={guardar}>Agregar</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── película nueva desde cero ───────────────────────────────────────────────
+// El póster se sube del celular o la compu y se recorta a 2:3 (480×720, JPEG)
+// para que pese poco; el tráiler es el link de YouTube tal cual lo copian.
+function leerPoster(file) {
+  return new Promise((ok, mal) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      const w = 480, h = 720;
+      const c = document.createElement('canvas'); c.width = w; c.height = h;
+      const r = Math.max(w / img.width, h / img.height);
+      c.getContext('2d').drawImage(img, (w - img.width * r) / 2, (h - img.height * r) / 2, img.width * r, img.height * r);
+      URL.revokeObjectURL(url);
+      ok(c.toDataURL('image/jpeg', 0.82));
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); mal(new Error('imagen')); };
+    img.src = url;
+  });
+}
+
+const CLASIFICACIONES = ['AA', 'A', 'B', 'B15', 'C', 'D'];
+
+// Búsqueda en TMDB por la función de servidor `tmdb-pelicula` (base Demos): la
+// llave de TMDB vive allá, aquí solo va la llave PÚBLICA de Supabase y el
+// código de acceso de la demo (la función lo exige, igual que el candado).
+async function tmdb(cuerpo) {
+  const url = import.meta.env.VITE_SUPABASE_URL;
+  const llave = import.meta.env.VITE_SUPABASE_ANON_KEY;
+  const r = await fetch(`${url}/functions/v1/tmdb-pelicula`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json', apikey: llave, Authorization: `Bearer ${llave}` }, body: JSON.stringify({ ...cuerpo, codigo: leerCodigo() }),
+  });
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok || d.error) throw new Error(d.error || `HTTP ${r.status}`);
+  return d;
+}
+
+function VentanaPelicula({ alCerrar }) {
+  const caja = useRef(null);
+  useDialogo(caja, alCerrar);
+  const [p, setP] = useState({ titulo: '', genero: '', clas: 'B', min: '', idioma: 'Subtitulada', año: String(new Date().getFullYear()), director: '', sinopsis: '', avance: '' });
+  const [poster, setPoster] = useState(null);
+  // TMDB: se escribe el título, se elige la película y se llena todo solo
+  const [busca, setBusca] = useState('');
+  const [resultados, setResultados] = useState([]);
+  const [buscando, setBuscando] = useState(false);
+  const [cargandoId, setCargandoId] = useState(null);
+  const [deTmdb, setDeTmdb] = useState(null);
+  const [errorTmdb, setErrorTmdb] = useState('');
+  useEffect(() => {
+    const q = busca.trim();
+    if (q.length < 2 || deTmdb?.titulo === q) { setResultados([]); return undefined; }
+    setBuscando(true);
+    const t = setTimeout(() => {
+      tmdb({ q }).then((d) => { setResultados(d.resultados || []); setErrorTmdb(''); })
+        .catch(() => { setResultados([]); setErrorTmdb('La búsqueda en TMDB no está disponible ahora. Puedes llenar los datos a mano.'); })
+        .finally(() => setBuscando(false));
+    }, 380);
+    return () => clearTimeout(t);
+  }, [busca]); // eslint-disable-line react-hooks/exhaustive-deps
+  const elegir = async (r) => {
+    setCargandoId(r.id);
+    try {
+      const f = await tmdb({ id: r.id });
+      setP((x) => ({
+        ...x, titulo: f.titulo || x.titulo, genero: f.genero || x.genero, min: f.min ? String(f.min) : x.min, año: f.año || x.año,
+        director: f.director || '', sinopsis: f.sinopsis || x.sinopsis, clas: CLASIFICACIONES.includes(f.clas) ? f.clas : x.clas,
+        avance: f.avance ? `https://www.youtube.com/watch?v=${f.avance}` : x.avance,
+      }));
+      if (f.poster) setPoster(f.poster);
+      setDeTmdb({ id: f.tmdb, titulo: f.titulo });
+      setBusca(f.titulo); setResultados([]); setErrorTmdb('');
+    } catch {
+      setErrorTmdb('No se pudo traer la ficha de esa película. Prueba otra vez o llénala a mano.');
+    } finally { setCargandoId(null); }
+  };
+  const [errorPoster, setErrorPoster] = useState('');
+  const [conFuncion, setConFuncion] = useState(true);
+  const [dia, setDia] = useState(1);
+  const [hh, setHh] = useState('20:00');
+  const campo = (k) => ({ value: p[k], onChange: (ev) => setP({ ...p, [k]: ev.target.value }) });
+  const yt = claveYoutube(p.avance);
+  const faltan = [!p.titulo.trim() && 'título', !poster && 'póster', !p.sinopsis.trim() && 'sinopsis', !Number(p.min) && 'duración'].filter(Boolean);
+
+  const subir = async (ev) => {
+    const f = ev.target.files?.[0];
+    if (!f) return;
+    try { setPoster(await leerPoster(f)); setErrorPoster(''); } catch { setErrorPoster('No se pudo leer esa imagen. Prueba con un JPG o PNG.'); }
+  };
+  const guardar = () => {
+    const [h, m] = hh.split(':').map(Number);
+    crearPelicula({ ...p, poster, tmdb: deTmdb?.id, funciones: conFuncion ? [inicioDia(dia) + h * 3600000 + m * 60000] : [] });
+    avisarListo(conFuncion ? 'Película agregada con su primera función' : 'Película agregada: ya puedes darle funciones');
+    alCerrar();
+  };
+
+  return (
+    <div className="ac-velo" onClick={alCerrar}>
+      <div className="ac-ventana ac-ventana-peli" ref={caja} onClick={(ev) => ev.stopPropagation()} role="dialog" aria-modal="true" aria-label="Nueva película">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
+          <h2>Nueva película</h2>
+          <button type="button" className="ac-redondo chico" onClick={alCerrar} aria-label="Cerrar"><X size={17} /></button>
+        </div>
+        <div className="ac-peli-busca">
+          <label className="ac-campo"><span>Busca la película</span>
+            <div className="ac-peli-busca-caja">
+              <Search size={17} />
+              <input value={busca} onChange={(ev) => { setBusca(ev.target.value); setDeTmdb(null); }} placeholder="Escribe el título: Coco, El Conjuro…" autoFocus />
+              {buscando && <Loader2 size={17} className="ac-gira" />}
+            </div>
+          </label>
+          {resultados.length > 0 && (
+            <ul className="ac-peli-resultados" role="listbox" aria-label="Resultados de TMDB">
+              {resultados.map((r) => (
+                <li key={r.id}>
+                  <button type="button" onClick={() => elegir(r)} disabled={!!cargandoId}>
+                    {r.miniatura ? <img src={r.miniatura} alt="" referrerPolicy="no-referrer" /> : <span className="ac-peli-sin" />}
+                    <span><b>{r.titulo}</b><small>{[r.año, r.original !== r.titulo && r.original].filter(Boolean).join(' · ')}</small></span>
+                    {cargandoId === r.id && <Loader2 size={17} className="ac-gira" />}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+          {deTmdb && <p className="ac-chip verde" style={{ justifySelf: 'start' }}>Datos y póster oficiales de TMDB · revisa y ajusta lo que quieras</p>}
+          {errorTmdb && <p className="ac-chip rosa" style={{ whiteSpace: 'normal', justifySelf: 'start' }}>{errorTmdb}</p>}
+        </div>
+        <div className="ac-peli-form">
+          <label className={`ac-peli-poster ${poster ? 'con' : ''}`}>
+            {poster ? <><Foto nombre={poster} texto="Póster" /><span className="ac-peli-cambiar">Cambiar</span></> : <span><ImagePlus size={26} /><b>Subir póster</b><small>O búscala arriba y sale el oficial</small></span>}
+            <input type="file" accept="image/*" onChange={subir} />
+          </label>
+          <div style={{ display: 'grid', gap: 12, alignContent: 'start' }}>
+            <label className="ac-campo"><span>Título</span><input {...campo('titulo')} placeholder="Como sale en el póster" /></label>
+            <div className="ac-dos">
+              <label className="ac-campo"><span>Género</span><input {...campo('genero')} placeholder="Terror, Animada…" /></label>
+              <label className="ac-campo"><span>Duración (min)</span><input {...campo('min')} inputMode="numeric" placeholder="105" /></label>
+            </div>
+            <div className="ac-dos">
+              <label className="ac-campo"><span>Clasificación</span><select {...campo('clas')}>{CLASIFICACIONES.map((c) => <option key={c}>{c}</option>)}</select></label>
+              <label className="ac-campo"><span>Idioma</span><select {...campo('idioma')}><option>Subtitulada</option><option>Doblada</option><option>Español</option></select></label>
+            </div>
+            <div className="ac-dos">
+              <label className="ac-campo"><span>Director (opcional)</span><input {...campo('director')} /></label>
+              <label className="ac-campo"><span>Año</span><input {...campo('año')} inputMode="numeric" /></label>
+            </div>
+          </div>
+        </div>
+        {errorPoster && <p className="ac-chip rosa" style={{ whiteSpace: 'normal' }}>{errorPoster}</p>}
+        <label className="ac-campo"><span>Sinopsis</span><textarea rows={3} {...campo('sinopsis')} placeholder="Dos o tres líneas, sin spoilers" /></label>
+        <label className="ac-campo"><span>Tráiler (link de YouTube, opcional)</span><input {...campo('avance')} placeholder="https://www.youtube.com/watch?v=…" inputMode="url" /></label>
+        {p.avance.trim() && (yt
+          ? <div className="ac-peli-yt"><img src={`https://img.youtube.com/vi/${yt}/mqdefault.jpg`} alt="" /><span>Tráiler listo · lo verán con “Ver avance”</span></div>
+          : <p className="ac-chip rosa" style={{ whiteSpace: 'normal', justifySelf: 'start' }}>Ese link no parece de YouTube.</p>)}
+
+        <label className="ac-peli-sw">
+          <input type="checkbox" checked={conFuncion} onChange={(ev) => setConFuncion(ev.target.checked)} />
+          <span>Darle su primera función de una vez</span>
+        </label>
+        {conFuncion && (
+          <div className="ac-dos">
+            <label className="ac-campo"><span>Día</span>
+              <select value={dia} onChange={(ev) => setDia(Number(ev.target.value))}>{Array.from({ length: 14 }, (_, d) => <option key={d} value={d}>{diaCorto(inicioDia(d))}</option>)}</select>
+            </label>
+            <label className="ac-campo"><span>Hora</span><input type="time" value={hh} onChange={(ev) => setHh(ev.target.value)} /></label>
+          </div>
+        )}
+        <p className="ac-suave" style={{ fontSize: 13.5 }}>{faltan.length ? `Falta: ${faltan.join(', ')}.` : 'Sale en la cartelera al instante, con los 6 tipos de boleto, la trivia y las reacciones.'}</p>
+        <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+          <button type="button" className="ac-btn fantasma" onClick={alCerrar}>Cancelar</button>
+          <button type="button" className="ac-btn" disabled={faltan.length > 0} onClick={guardar}>Agregar película</button>
         </div>
       </div>
     </div>

@@ -26,7 +26,8 @@ export const NEGOCIO = {
 };
 
 // `poster` es el nombre de una foto local (public/autocinema) o una URL completa.
-export const IMG = (n) => (String(n).startsWith('http') ? n : `/autocinema/${n}.webp`);
+// http = póster de TMDB · data: = póster que el dueño subió al crear una película
+export const IMG = (n) => (/^(https?:|data:)/.test(String(n)) ? n : `/autocinema/${n}.webp`);
 
 // ── dos carteleras ──────────────────────────────────────────────────────────
 // 'real'    → la de Autocinema Cocodrilo (Noches de Terror 26-oct → 2-nov-2026,
@@ -58,36 +59,39 @@ export function cambiarCartelera(m) {
 // ve nítido en retina. Se cargan de image.tmdb.org, no se guardan en el repo.
 const TMDB = 'https://image.tmdb.org/t/p/w780';
 
+// `avance` = clave de YouTube del tráiler oficial (scripts/tmdb/avances.mjs →
+// avances.json; de México si existe, si no el oficial en inglés). Se ve con el
+// reproductor de youtube-nocookie.com dentro de la demo.
 const REALES = {
-  lightsout: { titulo: 'Lights Out', genero: 'Terror', clas: 'B15', min: 81, idioma: 'Subtitulada', año: 2016, director: 'David F. Sandberg', poster: TMDB + '/AjZXonSbqC3LdSr8xCUzMiQksrM.jpg',
+  lightsout: { avance: 'P3X_x0Xzzxw', titulo: 'Lights Out', genero: 'Terror', clas: 'B15', min: 81, idioma: 'Subtitulada', año: 2016, director: 'David F. Sandberg', poster: TMDB + '/AjZXonSbqC3LdSr8xCUzMiQksrM.jpg',
     sinopsis: 'Cada vez que se apaga la luz, algo aparece en la oscuridad. Una joven descubre que el ente que aterrorizó su infancia ha vuelto por su familia.' },
-  pesadilla: { titulo: 'Pesadilla en la Calle del Infierno', genero: 'Terror', clas: 'C', min: 101, idioma: 'Subtitulada', año: 1984, director: 'Wes Craven', poster: TMDB + '/wGTpGGRMZmyFCcrY2YoxVTIBlli.jpg',
+  pesadilla: { avance: 'CBcVZcornjI', titulo: 'Pesadilla en la Calle del Infierno', genero: 'Terror', clas: 'C', min: 101, idioma: 'Subtitulada', año: 1984, director: 'Wes Craven', poster: TMDB + '/wGTpGGRMZmyFCcrY2YoxVTIBlli.jpg',
     sinopsis: 'Un grupo de adolescentes comparte la misma pesadilla: un hombre con guante de navajas que los persigue en sueños. Si mueres soñando, mueres de verdad.' },
-  monsterhouse: { titulo: 'Monster House', genero: 'Animada', clas: 'A', min: 87, idioma: 'Doblada', año: 2006, director: 'Gil Kenan', poster: TMDB + '/zCRPr4bkO3ae0U1134vJ39xZnAG.jpg',
+  monsterhouse: { avance: 'kS8eoP8bols', titulo: 'Monster House', genero: 'Animada', clas: 'A', min: 87, idioma: 'Doblada', año: 2006, director: 'Gil Kenan', poster: TMDB + '/zCRPr4bkO3ae0U1134vJ39xZnAG.jpg',
     sinopsis: 'Tres amigos descubren que la casa de enfrente está viva y se traga todo lo que se acerca. La noche de Halloween tienen que detenerla.' },
-  weapons: { titulo: 'La Hora de la Desaparición', genero: 'Terror', clas: 'C', min: 128, idioma: 'Subtitulada', año: 2025, director: 'Zach Cregger', poster: TMDB + '/f1IGYeQLHfKFdlzv448vVIBjwXY.jpg',
+  weapons: { avance: 'qsZ_uTmJ2e0', titulo: 'La Hora de la Desaparición', genero: 'Terror', clas: 'C', min: 128, idioma: 'Subtitulada', año: 2025, director: 'Zach Cregger', poster: TMDB + '/f1IGYeQLHfKFdlzv448vVIBjwXY.jpg',
     sinopsis: 'A las 2:17 de la madrugada, todos los niños de un mismo salón salen de sus casas y desaparecen. Todos menos uno.' },
-  scream6: { titulo: 'Scream VI', genero: 'Terror', clas: 'B15', min: 123, idioma: 'Doblada', año: 2023, director: 'Matt Bettinelli-Olpin', poster: TMDB + '/kKMvCIE91h4aBot6DDO19QTsVbF.jpg',
+  scream6: { avance: 'ZMnvoHULQ3s', titulo: 'Scream VI', genero: 'Terror', clas: 'B15', min: 123, idioma: 'Doblada', año: 2023, director: 'Matt Bettinelli-Olpin', poster: TMDB + '/kKMvCIE91h4aBot6DDO19QTsVbF.jpg',
     sinopsis: 'Los sobrevivientes dejan Woodsboro para empezar de nuevo en Nueva York, pero Ghostface los sigue hasta la gran ciudad.' },
   sorpresa: { titulo: 'Función de Terror Sorpresa', genero: 'Sorpresa', clas: '¿?', min: null, idioma: '¿?', año: '¿?', director: 'El Diablo', poster: 'sorpresa',
     sinopsis: 'No te diremos nada… muajajaja. Llega, sintoniza y prepárate: la película se revela cuando se apagan las luces.' },
-  beetlejuice: { titulo: 'Beetlejuice', genero: 'Comedia de terror', clas: 'B', min: 93, idioma: 'Doblada', año: 1988, director: 'Tim Burton', poster: TMDB + '/z8ykp9HugsetInG2zTbZT6spamT.jpg',
+  beetlejuice: { avance: 'po1HJbmow0g', titulo: 'Beetlejuice', genero: 'Comedia de terror', clas: 'B', min: 93, idioma: 'Doblada', año: 1988, director: 'Tim Burton', poster: TMDB + '/z8ykp9HugsetInG2zTbZT6spamT.jpg',
     sinopsis: 'Una pareja de fantasmas quiere sacar de su casa a la familia que se mudó. Para lograrlo contratan al bioexorcista más impredecible del más allá.' },
-  sinners: { titulo: 'Sinners', genero: 'Terror', clas: 'B15', min: 137, idioma: 'Subtitulada', año: 2025, director: 'Ryan Coogler', poster: TMDB + '/e4irZZ34S6DcwDhkSyWSi6Xr5LQ.jpg',
+  sinners: { avance: '0AAlmyFFpgc', titulo: 'Sinners', genero: 'Terror', clas: 'B15', min: 137, idioma: 'Subtitulada', año: 2025, director: 'Ryan Coogler', poster: TMDB + '/e4irZZ34S6DcwDhkSyWSi6Xr5LQ.jpg',
     sinopsis: 'Dos gemelos vuelven a su pueblo en el Mississippi de 1932 para empezar de cero, y descubren que un mal mucho peor los espera.' },
-  halloween: { titulo: 'Halloween (1978)', genero: 'Terror', clas: 'B', min: 93, idioma: 'Subtitulada', año: 1978, director: 'John Carpenter', poster: TMDB + '/cYKvU3RhWJIYteJU5PxJWZY4twt.jpg',
+  halloween: { avance: 'NT0loXUv-ks', titulo: 'Halloween (1978)', genero: 'Terror', clas: 'B', min: 93, idioma: 'Subtitulada', año: 1978, director: 'John Carpenter', poster: TMDB + '/cYKvU3RhWJIYteJU5PxJWZY4twt.jpg',
     sinopsis: 'Quince años después de su primer crimen, Michael Myers escapa y regresa a Haddonfield la noche de Halloween. El clásico que lo empezó todo.' },
-  siniestro: { titulo: 'Siniestro', genero: 'Terror', clas: 'B', min: 110, idioma: 'Subtitulada', año: 2012, director: 'Scott Derrickson', poster: TMDB + '/t4GPxaNABn8ANt3kug6B0w8NA3A.jpg',
+  siniestro: { avance: 'apghx7q9oeY', titulo: 'Siniestro', genero: 'Terror', clas: 'B', min: 110, idioma: 'Subtitulada', año: 2012, director: 'Scott Derrickson', poster: TMDB + '/t4GPxaNABn8ANt3kug6B0w8NA3A.jpg',
     sinopsis: 'Un escritor encuentra en el ático de su nueva casa unas cintas caseras que muestran crímenes. Mientras más las ve, más cerca está de lo que las grabó.' },
-  coraline: { titulo: 'Coraline', genero: 'Animada', clas: 'A', min: 97, idioma: 'Doblada', año: 2009, director: 'Henry Selick', poster: TMDB + '/4jeFXQYytChdZYE9JYO7Un87IlW.jpg',
+  coraline: { avance: 'T6iQnnHNF50', titulo: 'Coraline', genero: 'Animada', clas: 'A', min: 97, idioma: 'Doblada', año: 2009, director: 'Henry Selick', poster: TMDB + '/4jeFXQYytChdZYE9JYO7Un87IlW.jpg',
     sinopsis: 'Detrás de una puerta secreta, Coraline encuentra una casa igual a la suya con una familia perfecta… y botones en lugar de ojos.' },
-  conjuro: { titulo: 'El Conjuro', genero: 'Terror', clas: 'B15', min: 112, idioma: 'Subtitulada', año: 2013, director: 'James Wan', poster: TMDB + '/tdSZGTBTm4EFNCMz3laZ96Ht8ao.jpg',
+  conjuro: { avance: 'k10ETZ41q5o', titulo: 'El Conjuro', genero: 'Terror', clas: 'B15', min: 112, idioma: 'Subtitulada', año: 2013, director: 'James Wan', poster: TMDB + '/tdSZGTBTm4EFNCMz3laZ96Ht8ao.jpg',
     sinopsis: 'Los investigadores Ed y Lorraine Warren ayudan a una familia aterrorizada por una presencia oscura en su granja. Basada en un caso real.' },
-  cadaver: { titulo: 'El Cadáver de la Novia', genero: 'Animada', clas: 'A', min: 75, idioma: 'Doblada', año: 2005, director: 'Tim Burton', poster: TMDB + '/isb2Qow76GpqYmsSyfdMfsYAjts.jpg',
+  cadaver: { avance: 'BgwJEpmPKk8', titulo: 'El Cadáver de la Novia', genero: 'Animada', clas: 'A', min: 75, idioma: 'Doblada', año: 2005, director: 'Tim Burton', poster: TMDB + '/isb2Qow76GpqYmsSyfdMfsYAjts.jpg',
     sinopsis: 'Ensayando sus votos en el bosque, Víctor se casa por accidente con una novia que ya estaba muerta y termina en el mundo de los difuntos.' },
-  hereditary: { titulo: 'Hereditary', genero: 'Terror', clas: 'B15', min: 126, idioma: 'Subtitulada', año: 2018, director: 'Ari Aster', poster: TMDB + '/4GFPuL14eXi66V96xBWY73Y9PfR.jpg',
+  hereditary: { avance: 'MJNR58zaStE', titulo: 'Hereditary', genero: 'Terror', clas: 'B15', min: 126, idioma: 'Subtitulada', año: 2018, director: 'Ari Aster', poster: TMDB + '/4GFPuL14eXi66V96xBWY73Y9PfR.jpg',
     sinopsis: 'Tras la muerte de la abuela, una familia empieza a descubrir secretos cada vez más oscuros sobre su herencia.' },
-  coco: { titulo: 'Coco', genero: 'Animada', clas: 'A', min: 109, idioma: 'Doblada', año: 2017, director: 'Lee Unkrich', poster: TMDB + '/6Ryitt95xrO8KXuqRGm1fUuNwqF.jpg',
+  coco: { avance: 'dFy0wYW3LBo', titulo: 'Coco', genero: 'Animada', clas: 'A', min: 109, idioma: 'Doblada', año: 2017, director: 'Lee Unkrich', poster: TMDB + '/6Ryitt95xrO8KXuqRGm1fUuNwqF.jpg',
     sinopsis: 'Miguel sueña con ser músico a pesar de la prohibición de su familia. En Día de Muertos cruza a la Tierra de los Muertos y descubre su verdadero legado.' },
 };
 // [día desde el 26-oct, película, hora]
@@ -125,6 +129,15 @@ const EJEMPLO = {
 // Boletos de temporada: los mismos seis del sitio actual, explicados lado a lado.
 // `zona` decide en qué parte del mapa se elige el lugar.
 export const PELICULAS = MODO === 'real' ? REALES : EJEMPLO;
+// Películas que el dueño agrega desde cero (Dueño → Nueva película). Viven en el
+// estado (`e.peliculasNuevas`) y se suman a PELICULAS cada vez que se lee o
+// cambia el estado, así todo el sitio (cartelera, compra, boletos, trivia) las
+// trata igual que a las de siempre.
+const BASE_PELIS = new Set(Object.keys(PELICULAS));
+function registrarPeliculas(e) {
+  Object.keys(PELICULAS).forEach((k) => { if (!BASE_PELIS.has(k) && !e?.peliculasNuevas?.[k]) delete PELICULAS[k]; });
+  Object.assign(PELICULAS, e?.peliculasNuevas || {});
+}
 export const duracion = (p) => (p.min ? `${Math.floor(p.min / 60)} h ${p.min % 60} min` : '¿?');
 
 export const BOLETOS = [
@@ -222,7 +235,8 @@ export const siguienteNivel = (pts) => NIVELES.find((n) => n.desde > pts) || nul
 // el nivel se mide con los puntos ganados en total (canjear no te baja de nivel)
 export function progresoReto(e, r) {
   const mias = e.ventas.filter((v) => v.mio);
-  if (r.id === 'maraton') return (e.puntos?.previas || 0) + mias.length;
+  // funciones distintas, no boletos: 3 boletos de la misma noche no son un maratón
+  if (r.id === 'maraton') return (e.puntos?.previas || 0) + new Set(mias.map((v) => v.funcion)).size;
   if (r.id === 'sodas') return e.ordenes.filter((o) => o.mio && !o.programada && !o.recompensa).length;
   if (r.id === 'grupo') return mias.filter((v) => v.tipo.startsWith('grupal')).length;
   return 0;
@@ -510,20 +524,39 @@ function obtener() {
     estado = leerFresco();
     // la cartelera es de 7 noches desde el día en que se sembró: si ya pasó la
     // primera noche, se vuelve a sembrar para que "hoy" siempre tenga funciones
-    if (!estado || estado.dia !== inicioDia(0)) estado = sembrar();
+    if (!estado || estado.dia !== inicioDia(0)) {
+      const viejo = estado;
+      if (viejo) registrarPeliculas(viejo);
+      estado = sembrar();
+      // lo que creó el dueño no se pierde al resembrar: sus películas y sus
+      // funciones que todavía no pasan
+      if (viejo?.peliculasNuevas) {
+        estado.peliculasNuevas = viejo.peliculasNuevas;
+        Object.keys(viejo.peliculasNuevas).forEach((k) => { estado.reacciones[k] = viejo.reacciones?.[k] || { encanta: 0, bien: 0, no: 0 }; });
+      }
+      const propias = (viejo?.funciones || []).filter((f) => f.propia && f.t > Date.now());
+      if (propias.length) {
+        estado.funciones.push(...propias); estado.funciones.sort((a, b) => a.t - b.t);
+        // con sus boletos y pedidos: si no, el lugar vendido volvía a quedar libre
+        const ids = new Set(propias.map((f) => f.id));
+        estado.ventas.push(...viejo.ventas.filter((v) => ids.has(v.funcion)));
+        estado.ordenes.push(...viejo.ordenes.filter((o) => ids.has(o.funcion)));
+      }
+    }
+    registrarPeliculas(estado);
     guardar();
   }
   return estado;
 }
 if (typeof window !== 'undefined') {
-  window.addEventListener('storage', (ev) => { if (ev.key === LLAVE && ev.newValue) { try { estado = JSON.parse(ev.newValue); avisar(); } catch { /* */ } } });
+  window.addEventListener('storage', (ev) => { if (ev.key === LLAVE && ev.newValue) { try { estado = JSON.parse(ev.newValue); registrarPeliculas(estado); avisar(); } catch { /* */ } } });
 }
 // cada cambio parte de lo que hay en localStorage AHORA, para no pisar a otra pestaña;
 // se guarda la COPIA (lección de KADE: con `|| e` los cambios se perdían).
-function cambiar(fn) { const e = leerFresco() || obtener(); const copia = structuredClone(e); const r = fn(copia); estado = copia; guardar(); avisar(); return r; }
+function cambiar(fn) { const e = leerFresco() || obtener(); const copia = structuredClone(e); const r = fn(copia); estado = copia; registrarPeliculas(estado); guardar(); avisar(); return r; }
 
 export const useCine = () => useSyncExternalStore((f) => { oyentes.add(f); return () => oyentes.delete(f); }, obtener);
-export function reiniciarDemo() { estado = sembrar(); guardar(); avisar(); }
+export function reiniciarDemo() { registrarPeliculas(null); estado = sembrar(); guardar(); avisar(); }
 
 const YO = Math.random().toString(36).slice(2);
 export function soyLider() {
@@ -554,22 +587,101 @@ export const funcionesDelDia = (e, d) => e.funciones.filter((f) => f.t >= inicio
 export const avisosDe = (e, fid) => e.avisos.filter((a) => a.funcion === fid);
 export { inicioDia };
 
+// ── Cupones de la semana ──────────────────────────────────────────────────
+// Los que el autocinema lanza en redes (se escriben al pagar o se tocan en la
+// lista). Uno por compra; cada código se usa una vez por cliente. El boleto de
+// auto gratis que se canjea con Cocopuntos también es un cupón (va aparte).
+export const PROMOS = [
+  { codigo: 'NOCHE20', titulo: '20% en boletos', detalle: 'En todos los boletos de la compra', tipo: 'pct', sobre: 'boletos', valor: 20 },
+  { codigo: 'AMIGOS3', titulo: '15% llevando 3 boletos o más', detalle: 'Para venir con más familias o amigos', tipo: 'pct', sobre: 'todo', valor: 15, minBoletos: 3 },
+  { codigo: 'DULCE50', titulo: '$50 menos en dulcería', detalle: 'Agregando $250 o más de la fuente de sodas', tipo: 'monto', sobre: 'dulceria', valor: 50, minDulce: 250 },
+];
+// Cocopuntos como dinero al pagar: 10 puntos = $1 (canjear recompensas rinde más)
+export const PUNTOS_POR_PESO = 10;
+
+const promoPorCodigo = (c) => PROMOS.find((x) => x.codigo === String(c || '').trim().toUpperCase());
+
+/**
+ * Cuenta de una compra (la usan la pantalla y `comprarVarios`, así nunca se
+ * despegan). boletos = [{ tipo, lugar? }], dulce = { platillo: cantidad },
+ * cupon = código de promo o id de cupón de Cocopuntos, puntos = a usar.
+ */
+export function cuentaCompra(e, { boletos = [], dulce = {}, cupon = null, puntos = 0 }) {
+  const subBoletos = boletos.reduce((n, b) => n + boleto(b.tipo).precio, 0);
+  const items = Object.entries(dulce).filter(([, q]) => q > 0);
+  const subDulce = items.reduce((n, [pid, q]) => n + platillo(pid).precio * q, 0);
+  let descuento = 0, cuponTexto = '', cuponError = '', cuponOk = null;
+  if (cupon) {
+    const mio = e.puntos.cupones.find((c) => c.id === cupon && !c.usado);
+    const promo = promoPorCodigo(cupon);
+    if (mio) {
+      const auto = boletos.find((b) => b.tipo === 'auto');
+      if (!auto) cuponError = 'Tu boleto gratis es para un boleto Auto.';
+      else { descuento = boleto('auto').precio; cuponTexto = mio.nombre; cuponOk = { mio: mio.id }; }
+    } else if (!promo) cuponError = 'Ese código no existe o ya venció.';
+    else if ((e.puntos.promos || []).includes(promo.codigo)) cuponError = 'Ya usaste este cupón.';
+    else if (promo.minBoletos && boletos.length < promo.minBoletos) cuponError = `Necesitas ${promo.minBoletos} boletos o más.`;
+    else if (promo.minDulce && subDulce < promo.minDulce) cuponError = `Agrega ${dinero(promo.minDulce - subDulce)} más de dulcería.`;
+    else {
+      const base = promo.sobre === 'boletos' ? subBoletos : promo.sobre === 'dulceria' ? subDulce : subBoletos + subDulce;
+      descuento = promo.tipo === 'pct' ? Math.round((base * promo.valor) / 100) : Math.min(promo.valor, base);
+      cuponTexto = `${promo.codigo} · ${promo.titulo}`; cuponOk = { promo: promo.codigo };
+    }
+  }
+  const despues = subBoletos + subDulce - descuento;
+  const maxPuntos = Math.min(e.puntos.saldo, despues * PUNTOS_POR_PESO);
+  const pts = Math.max(0, Math.min(Math.floor(puntos / PUNTOS_POR_PESO) * PUNTOS_POR_PESO, Math.floor(maxPuntos / PUNTOS_POR_PESO) * PUNTOS_POR_PESO));
+  const pesosPuntos = pts / PUNTOS_POR_PESO;
+  const total = Math.max(0, despues - pesosPuntos);
+  return { subBoletos, subDulce, items, descuento, cuponTexto, cuponError, cuponOk, maxPuntos: Math.floor(maxPuntos / PUNTOS_POR_PESO) * PUNTOS_POR_PESO, puntos: pts, pesosPuntos, total,
+    ganas: Math.floor((total / 10) * (1 + nivelDe(e.puntos.ganados).extra)) };
+}
+
 // ── acciones ────────────────────────────────────────────────────────────────
-export function comprar({ funcion, tipo, lugar, nombre, telefono, combo, cupon }) {
+// Varios boletos en una sola compra (todo o nada): si alguien ganó uno de los
+// lugares mientras pagabas, no se cobra ninguno. La dulcería se prepara cuando
+// la entrada lee el boleto `dulceEn` y se entrega en ese lugar.
+// `total` = lo que la persona vio en pantalla: si cambió mientras se procesaba
+// (p. ej. otra pestaña gastó los puntos), no se cobra otra cantidad en silencio.
+export function comprarVarios({ funcion, boletos, dulce = {}, dulceEn, cupon, puntos = 0, nombre, telefono, total }) {
   return cambiar((e) => {
-    if (ocupados(e, funcion).has(lugar)) return { ok: false, motivo: 'ocupado' };
     if (funcionPorId(e, funcion)?.cancelada) return { ok: false, motivo: 'cancelada' };
-    const c = cupon && e.puntos.cupones.find((x) => x.id === cupon && !x.usado);
-    const gratis = c && tipo === 'auto';
-    const total = (gratis ? 0 : boleto(tipo).precio) + (combo ? platillo('combo').precio : 0);
-    const v = { codigo: codigo(), funcion, tipo, lugar, nombre, telefono, total, t: Date.now(), mio: true, entro: null, cupon: gratis ? c.id : null };
-    e.ventas.push(v);
-    if (gratis) c.usado = Date.now();
-    // el combo pagado por adelantado entra a cocina como orden programada
-    if (combo) { e.ordenes.push({ ...orden(v, [['combo', 1]], 'programado', Date.now(), true), programada: true, para: 'llegada', enBoleto: true }); descontar(e, [['combo', 1]]); }
-    const pts = sumarPuntos(e, total, `Boleto ${boleto(tipo).nombre}`);
+    const oc = ocupados(e, funcion);
+    const perdidos = boletos.filter((b) => !b.lugar || oc.has(b.lugar)).map((b) => b.lugar);
+    if (perdidos.length || new Set(boletos.map((b) => b.lugar)).size !== boletos.length) return { ok: false, motivo: 'ocupado', lugares: perdidos };
+    const c = cuentaCompra(e, { boletos, dulce, cupon, puntos });
+    if (cupon && !c.cuponOk) return { ok: false, motivo: 'cupon', texto: c.cuponError };
+    if (c.items.length && !alcanza(e, c.items)) return { ok: false, motivo: 'agotado' };
+    if (total !== undefined && c.total !== total) return { ok: false, motivo: 'cambio', total: c.total };
+    const bruto = c.subBoletos + c.subDulce;
+    const grupo = id();
+    const iDulce = Math.max(0, boletos.findIndex((b) => b.lugar === dulceEn));
+    // lo pagado se reparte entre los boletos en proporción a su precio (así un
+    // reembolso por lluvia devuelve lo que de verdad se pagó por cada uno); la
+    // dulcería va en el boleto donde se entrega, como el combo de antes
+    const ventas = boletos.map((b, i) => {
+      const precio = boleto(b.tipo).precio + (i === iDulce ? c.subDulce : 0);
+      const pagado = bruto ? Math.round((precio / bruto) * c.total) : 0;
+      // los Cocopuntos usados también se reparten: un reembolso los regresa
+      const pts = bruto ? Math.round((precio / bruto) * c.puntos) : 0;
+      return { codigo: codigo(), funcion, tipo: b.tipo, lugar: b.lugar, nombre, telefono, total: pagado, puntosUsados: pts, t: Date.now(), mio: true, entro: null, grupo, cupon: c.cuponOk?.mio && i === boletos.findIndex((x) => x.tipo === 'auto') ? c.cuponOk.mio : null };
+    });
+    // que la suma cuadre al peso con el total cobrado
+    const dif = c.total - ventas.reduce((n, v) => n + v.total, 0);
+    ventas[iDulce].total += dif;
+    ventas[iDulce].puntosUsados += c.puntos - ventas.reduce((n, v) => n + v.puntosUsados, 0);
+    e.ventas.push(...ventas);
+    if (c.items.length) {
+      const v = ventas[iDulce];
+      e.ordenes.push({ ...orden(v, c.items, 'programado', Date.now(), true), programada: true, para: 'llegada', enBoleto: true });
+      descontar(e, c.items);
+    }
+    if (c.cuponOk?.mio) e.puntos.cupones.find((x) => x.id === c.cuponOk.mio).usado = Date.now();
+    if (c.cuponOk?.promo) e.puntos.promos = [...(e.puntos.promos || []), c.cuponOk.promo];
+    if (c.puntos) movimiento(e, -c.puntos, `Pagaste ${dinero(c.pesosPuntos)} con Cocopuntos`);
+    const pts = sumarPuntos(e, c.total, boletos.length > 1 ? `${boletos.length} boletos` : `Boleto ${boleto(boletos[0].tipo).nombre}`);
     revisarRetos(e);
-    return { ok: true, codigo: v.codigo, puntos: pts };
+    return { ok: true, codigo: ventas[0].codigo, codigos: ventas.map((v) => v.codigo), puntos: pts };
   });
 }
 
@@ -777,7 +889,12 @@ export function pedirReembolso(codigoPase) {
     let comida = 0;
     // el combo comprado con el boleto ya viene en v.total; lo pedido aparte se suma
     e.ordenes.forEach((o) => { if (o.codigo === v.codigo && o.estado === 'programado') { o.estado = 'cancelado'; o.cambio = Date.now(); reponer(e, o.items); if (!o.enBoleto) comida += o.total; } });
-    v.pendiente = null; v.reembolso = { t: Date.now(), total: v.total + comida };
+    v.pendiente = null; v.reembolso = { t: Date.now(), total: v.total + comida, puntos: v.puntosUsados || 0 };
+    // lo pagado con Cocopuntos regresa como puntos (sin contar como "ganados": no sube de nivel)
+    if (v.mio && v.puntosUsados) {
+      e.puntos.saldo += v.puntosUsados;
+      e.puntos.movs.unshift({ id: id(), t: Date.now(), pts: v.puntosUsados, texto: 'Te regresamos tus Cocopuntos (función cancelada)' });
+    }
   });
 }
 
@@ -785,8 +902,32 @@ export function mandarAviso(funcion, texto) {
   cambiar((e) => { e.avisos.unshift({ id: id(), funcion, texto, t: Date.now() }); });
 }
 
+// `propia` = la creó el dueño: sobrevive cuando la cartelera se vuelve a sembrar
 export function crearFuncion(peli, t) {
-  cambiar((e) => { e.funciones.push({ id: id(), peli, t }); e.funciones.sort((a, b) => a.t - b.t); });
+  cambiar((e) => { e.funciones.push({ id: id(), peli, t, propia: true }); e.funciones.sort((a, b) => a.t - b.t); });
+}
+
+/** YouTube: acepta el link como venga (watch?v=, youtu.be/, shorts/, embed/) o la clave sola */
+export function claveYoutube(texto) {
+  const t = String(texto || '').trim();
+  if (/^[\w-]{11}$/.test(t)) return t;
+  return t.match(/(?:v=|youtu\.be\/|shorts\/|embed\/|live\/)([\w-]{11})/)?.[1] || null;
+}
+
+// Película nueva desde cero (Dueño). El póster llega ya reducido a 480×720 en
+// JPEG (data:) para que quepa en el almacenamiento de la demo.
+export function crearPelicula({ titulo, genero, clas, min, idioma, año, director, sinopsis, poster, avance, tmdb, funciones = [] }) {
+  return cambiar((e) => {
+    const k = `nueva-${id()}`;
+    e.peliculasNuevas = { ...(e.peliculasNuevas || {}), [k]: {
+      titulo: titulo.trim(), genero: genero.trim() || 'Estreno', clas, min: Number(min) || null, idioma, año: Number(año) || '¿?',
+      director: director?.trim() || '', sinopsis: sinopsis.trim(), poster, avance: claveYoutube(avance), tmdb: tmdb || null, nueva: true,
+    } };
+    e.reacciones[k] = { encanta: 0, bien: 0, no: 0 };
+    funciones.forEach((t) => e.funciones.push({ id: id(), peli: k, t, propia: true }));
+    e.funciones.sort((a, b) => a.t - b.t);
+    return k;
+  });
 }
 
 // Pases fijos para los botones de "pases de prueba" de la taquilla: se arman

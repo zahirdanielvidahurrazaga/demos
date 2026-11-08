@@ -80,11 +80,15 @@
 /* modo app (pantalla completa): sin barra de KaiZen ni guía, con aire arriba
    y abajo para que nada quede pegado ni cortado */
 .ac.ac-app .ac-barra-demo, .ac.ac-app .ac-guia { display: none; }
-.ac.ac-app { --ac-cab-total: 84px; }
-.ac.ac-app .ac-cab { padding-top: max(16px, env(safe-area-inset-top, 0px)); }
+/* --ac-arriba = lo que ocupa la barra de estado / Dynamic Island cuando se abre
+   como app (PWA desde la pantalla de inicio). El alto del encabezado la suma:
+   antes era fijo (78 px) y en iPhone el encabezado real medía ~121 px, así que
+   las portadas y el detalle quedaban metidos debajo de la isla. */
+.ac.ac-app { --ac-arriba: max(16px, calc(env(safe-area-inset-top, 0px) + 4px)); --ac-cab-total: calc(68px + var(--ac-arriba)); }
+.ac.ac-app .ac-cab { padding-top: var(--ac-arriba); }
 .ac.ac-app .ac-sitio, .ac.ac-app .ac-panel { padding-bottom: calc(48px + env(safe-area-inset-bottom, 0px)); }
-.ac.ac-app .ac-panel { padding-top: max(28px, env(safe-area-inset-top, 0px)); }
-@media (max-width: 760px) { .ac.ac-app { --ac-cab-total: 78px; } .ac.ac-app .ac-sitio { padding-bottom: calc(110px + env(safe-area-inset-bottom, 0px)); } }
+.ac.ac-app .ac-panel { padding-top: max(28px, calc(env(safe-area-inset-top, 0px) + 12px)); }
+@media (max-width: 760px) { .ac.ac-app { --ac-cab-total: calc(62px + var(--ac-arriba)); } .ac.ac-app .ac-sitio { padding-bottom: calc(110px + env(safe-area-inset-bottom, 0px)); } }
 
 .ac-serif { font-weight: 600; letter-spacing: -0.02em; }
 .ac-cejilla { font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--ac-suave); font-weight: 500; }
@@ -521,7 +525,7 @@ button.ac-chip.activo { background: var(--ac-pri); color: var(--ac-pri-texto); }
 .ac-pasos-compra span.hecho { background: var(--ac-acento); }
 .ac-compra { display: grid; grid-template-columns: 1fr 340px; gap: 22px; align-items: start; padding-bottom: 30px; }
 .ac-compra h2 { font-size: clamp(26px, 3vw, 34px); line-height: 1.1; margin-bottom: 8px; }
-.ac-resumen { position: sticky; top: calc(var(--ac-barra, 70px) + 84px); padding: 22px; display: grid; gap: 12px; }
+.ac-resumen { position: sticky; top: calc(var(--ac-barra, 70px) + var(--ac-cab-total) + 16px); padding: 22px; display: grid; gap: 12px; }
 .ac-resumen-fila { display: flex; justify-content: space-between; gap: 10px; font-size: 15px; }
 .ac-resumen-total { font-size: 28px; font-weight: 600; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
 @media (max-width: 900px) { .ac-compra { grid-template-columns: 1fr; } .ac-resumen { position: static; } }
@@ -532,6 +536,13 @@ button.ac-chip.activo { background: var(--ac-pri); color: var(--ac-pri-texto); }
   width: 100%; padding: 14px 16px; border-radius: 16px; border: 1px solid var(--ac-linea); background: var(--ac-sup2); color: var(--ac-texto); font: inherit; font-size: 16px; outline: none; transition: border-color .2s;
 }
 .ac-campo input:focus, .ac-campo select:focus, .ac-campo textarea:focus { border-color: var(--ac-acento); }
+/* flecha propia en los desplegables: la nativa quedaba pegada a la orilla
+   redondeada y con otro aire que el texto */
+.ac-campo select {
+  appearance: none; -webkit-appearance: none; padding-right: 46px; cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%238A93A6' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 18px center; background-size: 14px;
+}
 .ac-dos { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 @media (max-width: 520px) { .ac-dos { grid-template-columns: 1fr; } }
 .ac-extra { display: flex; gap: 14px; align-items: center; padding: 12px; border-radius: 24px; background: var(--ac-sup); border: 1px solid var(--ac-linea); cursor: pointer; transition: box-shadow .2s; }
@@ -738,7 +749,7 @@ button.ac-chip.activo { background: var(--ac-pri); color: var(--ac-pri-texto); }
 @keyframes ac-gira { to { transform: rotate(360deg); } }
 
 .ac-aviso-flotante {
-  position: fixed; z-index: 90; left: 50%; top: calc(var(--ac-barra, 70px) + 14px); transform: translateX(-50%);
+  position: fixed; z-index: 90; left: 50%; top: calc(var(--ac-barra, 70px) + var(--ac-arriba, 0px) + 14px); transform: translateX(-50%);
   padding: 12px 18px; border-radius: 999px; background: var(--ac-pri); color: var(--ac-pri-texto); font-weight: 600; font-size: 14px;
   box-shadow: var(--ac-sombra); animation: ac-baja .35s ease-out; display: flex; gap: 8px; align-items: center; max-width: calc(100% - 32px);
 }
@@ -835,3 +846,107 @@ button.ac-chip.activo { background: var(--ac-pri); color: var(--ac-pri-texto); }
 @media (prefers-reduced-motion: reduce) {
   .ac-carrusel-item, .ac-ambiente img, .ac-lugar.recien, .ac-orden.nueva, .ac-ticket { transition: none; animation: none; }
 }
+
+/* ── compra paso a paso (8-nov) ───────────────────────────────────────── */
+.ac-boleto-pie { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: auto; padding-top: 12px; }
+.ac-boleto.agotado { opacity: .45; }
+.ac-pasos-compra { list-style: none; padding: 0; counter-reset: paso; }
+.ac-pasos-compra li { flex: 1; display: grid; gap: 8px; font-size: 12.5px; font-weight: 500; color: var(--ac-suave); }
+.ac-pasos-compra li span { height: 4px; border-radius: 4px; background: var(--ac-sup3); transition: background-color .3s; }
+.ac-pasos-compra li.hecho span { background: var(--ac-acento); }
+.ac-pasos-compra li.actual { color: var(--ac-texto); font-weight: 600; }
+.ac-pasos-compra li.actual span { background: linear-gradient(90deg, var(--ac-acento) 50%, var(--ac-sup3) 50%); }
+
+.ac-lista-lugares { display: grid; gap: 8px; margin-bottom: 14px; }
+.ac-lugar-fila { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 18px; background: var(--ac-sup); border: 1px solid var(--ac-linea); transition: box-shadow .2s; }
+.ac-lugar-fila b { display: block; font-weight: 600; font-size: 15px; }
+.ac-lugar-fila small { display: block; font-size: 13px; color: var(--ac-suave); margin-top: 2px; }
+.ac-lugar-fila.siguiente { box-shadow: inset 0 0 0 2px var(--ac-acento); }
+.ac-lugar-fila.listo small { color: var(--ac-acento); font-weight: 600; }
+.ac-lugar-num { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: var(--ac-sup3); font-size: 13px; font-weight: 600; flex-shrink: 0; }
+.ac-lugar-fila.listo .ac-lugar-num { background: var(--ac-acento); color: var(--ac-acento-texto); }
+
+.ac-pago-bloque { padding: 18px; display: grid; gap: 12px; }
+.ac-cupon-entrada { display: flex; gap: 8px; }
+.ac-cupon-entrada input { flex: 1; min-width: 0; padding: 12px 16px; border-radius: 999px; border: 1px solid var(--ac-linea); background: var(--ac-sup2); color: var(--ac-texto); font: inherit; font-size: 16px; letter-spacing: .06em; outline: none; }
+.ac-cupon-entrada input:focus { border-color: var(--ac-acento); }
+.ac-cupones { display: grid; gap: 8px; }
+.ac-cupon-op { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 16px; text-align: left; background: transparent; border: 1.5px dashed var(--ac-linea2); width: 100%; }
+.ac-cupon-op svg { color: var(--ac-acento); flex-shrink: 0; }
+.ac-cupon-op b { display: block; font-weight: 600; font-size: 14.5px; }
+.ac-cupon-op small { display: block; font-size: 12.5px; color: var(--ac-suave); margin-top: 2px; }
+button.ac-cupon-op:hover { border-color: var(--ac-acento); }
+.ac-cupon-op.aplicado { border-style: solid; border-color: var(--ac-acento); background: color-mix(in srgb, var(--ac-acento) 10%, transparent); }
+
+.ac-puntos-sw { display: flex; align-items: center; gap: 12px; cursor: pointer; }
+.ac-puntos-sw small { display: block; margin-top: 4px; font-size: 13px; }
+.ac-puntos-sw input[type='checkbox'] { appearance: none; -webkit-appearance: none; width: 50px; height: 30px; border-radius: 999px; background: var(--ac-sup3); position: relative; flex-shrink: 0; cursor: pointer; transition: background-color .2s; margin: 0; }
+.ac-puntos-sw input[type='checkbox']::after { content: ''; position: absolute; top: 3px; left: 3px; width: 24px; height: 24px; border-radius: 50%; background: #fff; box-shadow: 0 2px 6px rgba(0, 0, 0, .25); transition: transform .2s; }
+.ac-puntos-sw input[type='checkbox']:checked { background: var(--ac-acento); }
+.ac-puntos-sw input[type='checkbox']:checked::after { transform: translateX(20px); }
+.ac-puntos-sw input[type='checkbox']:disabled { opacity: .4; cursor: not-allowed; }
+.ac-rango { width: 100%; accent-color: var(--ac-acento); }
+
+.ac-resumen-boton { margin-top: 4px; }
+.ac-compra-pie { display: none; }
+@media (max-width: 900px) {
+  /* el resumen baja al final; el botón del paso va pegado abajo */
+  .ac-resumen-boton { display: none; }
+  .ac-compra-pie {
+    display: flex; position: sticky; bottom: 16px; z-index: 30; margin: 0 0 24px; align-items: center; gap: 12px; justify-content: space-between;
+    padding: 10px 10px 10px 20px; border-radius: 28px; background: var(--ac-vidrio); border: 1px solid var(--ac-linea);
+    backdrop-filter: blur(22px) saturate(160%); -webkit-backdrop-filter: blur(22px) saturate(160%); color: var(--ac-suave); font-size: 13px; box-shadow: var(--ac-sombra);
+  }
+  .ac-compra-pie b { display: block; color: var(--ac-texto); font-weight: 600; font-size: 19px; }
+  .ac-compra-pie .ac-btn { width: auto; flex-shrink: 0; }
+}
+@media (max-width: 760px) { .ac-compra-pie { bottom: calc(92px + env(safe-area-inset-bottom, 0px)); } }
+
+/* ── avance (tráiler) ─────────────────────────────────────────────────── */
+.ac-velo-avance { background: rgba(0, 0, 0, .88); align-items: center; justify-content: center; }
+.ac-avance { width: min(1100px, 100%); margin: auto; display: grid; gap: 14px; color: #fff; }
+.ac-avance-cab { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.ac-avance-cab b { display: block; font-size: 20px; font-weight: 600; letter-spacing: -0.02em; }
+.ac-avance-cab .ac-cejilla { color: rgba(255, 255, 255, .6); }
+.ac-avance-video { position: relative; aspect-ratio: 16 / 9; border-radius: 18px; overflow: hidden; background: #000; box-shadow: 0 30px 80px -20px rgba(0, 0, 0, .8); }
+.ac-avance-video iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.ac-avance-ken { position: absolute; inset: 0; animation: ac-ken 14s ease-in-out infinite alternate; }
+@keyframes ac-ken { from { transform: scale(1.05); } to { transform: scale(1.25) translateY(-6%); } }
+.ac-avance-nota { position: absolute; left: 16px; right: 16px; bottom: 16px; padding: 10px 14px; border-radius: 12px; background: rgba(0, 0, 0, .6); font-size: 13.5px; }
+.ac-avance .ac-leer { color: rgba(255, 255, 255, .75); display: inline-flex; align-items: center; gap: 4px; }
+.ac-ver-avance { display: inline-flex; align-items: center; gap: 8px; }
+.ac-promos { display: grid; gap: 8px; width: 100%; }
+.ac-promos-tit { font-size: 13px; color: var(--ac-suave); margin-top: 6px; }
+.ac-promo-codigo { font-weight: 700; letter-spacing: .08em; padding: 6px 10px; border-radius: 10px; background: var(--ac-sup2); font-size: 13px; flex-shrink: 0; }
+
+/* ── Dueño: película nueva ────────────────────────────────────────────── */
+.ac-ventana-peli { width: min(680px, 100%); }
+.ac-peli-form { display: grid; grid-template-columns: 170px 1fr; gap: 16px; }
+@media (max-width: 560px) { .ac-peli-form { grid-template-columns: 1fr; } .ac-peli-poster { width: 150px; justify-self: center; } }
+.ac-peli-poster { position: relative; aspect-ratio: 2 / 3; border-radius: 16px; border: 1.5px dashed var(--ac-linea2); background: var(--ac-sup2); display: grid; place-items: center; text-align: center; cursor: pointer; overflow: hidden; color: var(--ac-suave); }
+.ac-peli-poster:hover { border-color: var(--ac-acento); }
+.ac-peli-poster.con { border-style: solid; }
+.ac-peli-poster > span { display: grid; gap: 6px; justify-items: center; padding: 12px; font-size: 13px; }
+.ac-peli-poster b { color: var(--ac-texto); font-weight: 600; }
+.ac-peli-poster .ac-foto { position: absolute; inset: 0; }
+.ac-peli-poster input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.ac-peli-yt { display: flex; align-items: center; gap: 12px; font-size: 13.5px; color: var(--ac-suave); }
+.ac-peli-yt img { width: 112px; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 10px; }
+.ac-peli-sw { display: flex; align-items: center; gap: 10px; font-size: 15px; cursor: pointer; }
+.ac-peli-sw input { width: 20px; height: 20px; accent-color: var(--ac-acento); }
+
+.ac-peli-busca { display: grid; gap: 10px; position: relative; }
+.ac-peli-busca-caja { display: flex; align-items: center; gap: 10px; padding: 0 16px; border-radius: 16px; border: 1px solid var(--ac-linea); background: var(--ac-sup2); color: var(--ac-suave); transition: border-color .2s; }
+.ac-peli-busca-caja:focus-within { border-color: var(--ac-acento); }
+.ac-campo .ac-peli-busca-caja input { border: 0; background: transparent; padding: 14px 0; flex: 1; min-width: 0; }
+.ac-peli-resultados { list-style: none; margin: 0; padding: 6px; display: grid; gap: 2px; border-radius: 18px; background: var(--ac-sup); border: 1px solid var(--ac-linea); max-height: 300px; overflow-y: auto; }
+.ac-peli-resultados button { width: 100%; display: flex; align-items: center; gap: 12px; padding: 8px; border: 0; border-radius: 12px; background: transparent; text-align: left; }
+.ac-peli-resultados button:hover:not(:disabled) { background: var(--ac-sup2); }
+.ac-peli-resultados img, .ac-peli-sin { width: 38px; aspect-ratio: 2 / 3; border-radius: 6px; object-fit: cover; background: var(--ac-sup3); flex-shrink: 0; }
+.ac-peli-resultados span { flex: 1; min-width: 0; }
+.ac-peli-resultados b { display: block; font-weight: 600; font-size: 15px; }
+.ac-peli-resultados small { display: block; font-size: 12.5px; color: var(--ac-suave); }
+.ac-gira { animation: ac-gira .9s linear infinite; flex-shrink: 0; }
+.ac-peli-poster > .ac-peli-cambiar { position: absolute; display: block; left: 50%; bottom: 10px; transform: translateX(-50%); padding: 5px 12px; border-radius: 999px; background: rgba(0, 0, 0, .6); color: #fff; font-size: 12.5px; font-weight: 600; pointer-events: none; }
+.ac-peli-busca-caja input:focus-visible { outline: none; }
+.ac-peli-resultados .ac-peli-sin { flex: 0 0 38px; display: block; }
