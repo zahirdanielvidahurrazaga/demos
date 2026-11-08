@@ -1115,7 +1115,7 @@ function Compra({ e, peli, funcion, cant, alVolver, alListo }) {
                   </div>
                   <p className="ac-suave" style={{ fontSize: 12.5 }}>Es una demostración: no se cobra nada. 4000 0000 0000 0002 simula una tarjeta rechazada.</p>
                 </div>
-              ) : <p className="ac-chip verde" style={{ justifySelf: 'start' }}><Check size={14} /> Tu compra queda cubierta: no hace falta tarjeta.</p>}
+              ) : <p className="ac-chip verde" style={{ justifySelf: 'start', whiteSpace: 'normal' }}><Check size={14} /> Tu compra queda cubierta: no hace falta tarjeta.</p>}
             </div>
           )}
         </div>

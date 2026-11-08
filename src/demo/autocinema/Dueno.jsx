@@ -421,7 +421,7 @@ function VentanaPelicula({ alCerrar }) {
               ))}
             </ul>
           )}
-          {deTmdb && <p className="ac-chip verde" style={{ justifySelf: 'start' }}>Datos y póster oficiales de TMDB · revisa y ajusta lo que quieras</p>}
+          {deTmdb && <p className="ac-chip verde" style={{ justifySelf: 'start', whiteSpace: 'normal' }}>Datos y póster oficiales de TMDB · revisa y ajusta lo que quieras</p>}
           {errorTmdb && <p className="ac-chip rosa" style={{ whiteSpace: 'normal', justifySelf: 'start' }}>{errorTmdb}</p>}
         </div>
         <div className="ac-peli-form">

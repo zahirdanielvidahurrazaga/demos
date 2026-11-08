@@ -922,7 +922,10 @@ button.ac-cupon-op:hover { border-color: var(--ac-acento); }
 /* ── Dueño: película nueva ────────────────────────────────────────────── */
 .ac-ventana-peli { width: min(680px, 100%); }
 .ac-peli-form { display: grid; grid-template-columns: 170px 1fr; gap: 16px; }
-@media (max-width: 560px) { .ac-peli-form { grid-template-columns: 1fr; } .ac-peli-poster { width: 150px; justify-self: center; } }
+/* nada de esta ventana puede empujarla más ancha que la pantalla (en celular
+   una etiqueta sin cortes sacaba los campos y la ✕ por la derecha) */
+.ac-ventana-peli > *, .ac-peli-busca > *, .ac-peli-form > *, .ac-peli-form .ac-campo { min-width: 0; }
+@media (max-width: 560px) { .ac-peli-form { grid-template-columns: 1fr; } .ac-peli-poster { width: 128px; justify-self: center; } }
 .ac-peli-poster { position: relative; aspect-ratio: 2 / 3; border-radius: 16px; border: 1.5px dashed var(--ac-linea2); background: var(--ac-sup2); display: grid; place-items: center; text-align: center; cursor: pointer; overflow: hidden; color: var(--ac-suave); }
 .ac-peli-poster:hover { border-color: var(--ac-acento); }
 .ac-peli-poster.con { border-style: solid; }
