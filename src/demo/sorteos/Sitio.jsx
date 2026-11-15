@@ -291,7 +291,7 @@ function Sorteo({ id, ir }) {
 
 // ── Apartar ─────────────────────────────────────────────────────────────────
 function Apartar({ s, numeros, total, alCerrar, alListo }) {
-  const [d, setD] = useState({ tel: '', nombre: '', apellidos: '', lugar: 'Puebla' });
+  const [d, setD] = useState({ tel: '', nombre: '', apellidos: '', lugar: 'Puebla', promos: false });
   const [error, setError] = useState('');
   const caja = useRef(null);
   useDialogo(caja, alCerrar);
@@ -318,6 +318,12 @@ function Apartar({ s, numeros, total, alCerrar, alListo }) {
           <label>Apellidos<input autoComplete="family-name" value={d.apellidos} onChange={poner('apellidos')} /></label>
         </div>
         <label>Estado<select value={d.lugar} onChange={poner('lugar')}>{ESTADOS.map((x) => <option key={x}>{x}</option>)}</select></label>
+        {/* opcional y SIN palomear: el permiso para publicidad tiene que darlo la persona */}
+        <label className="so-acepto">
+          <input type="checkbox" checked={d.promos} onChange={(ev) => setD((x) => ({ ...x, promos: ev.target.checked }))} />
+          <span>Avísenme por WhatsApp de nuevos sorteos y promociones
+            <small>Opcional. Te das de baja cuando quieras respondiendo BAJA.</small></span>
+        </label>
         {error && <p className="so-error">{error}</p>}
         <button className="so-boton so-boton-oro so-boton-ancho">Apartar mis boletos</button>
         <p className="so-modal-nota">Te los guardamos {HORAS_APARTADO} horas. Después de apartar subes aquí tu comprobante de pago.</p>

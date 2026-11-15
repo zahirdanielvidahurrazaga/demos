@@ -43,6 +43,8 @@ const GUIA = {
     'Lo que sí revisas lo apruebas o rechazas en un toque y le avisas al cliente por WhatsApp con el mensaje ya escrito. Apaga la comprobación automática para verlo todo a mano.',
     'Los apartados que no pagan se liberan solos al vencer; también puedes liberarlos a mano.',
     '"Resumen" se mueve solo: hay compradores simulados apartando y pagando mientras lo ves.',
+    '"Dinero" te dice cuánto llevas cobrado, si ya cubriste cada premio y cuánto ganas si vendes todo.',
+    'En "Boletos" descargas los contactos que aceptaron recibir promociones por WhatsApp (casilla opcional al apartar).',
     '"Ganador" arma el número con los resultados de Lotería Nacional y te dice de quién es el boleto.',
   ],
 };

@@ -245,6 +245,15 @@
 .so select option { background: #15161e; }
 .so-dos { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .so-modal-nota { font-size: .8rem; color: var(--so-tenue); text-align: center; line-height: 1.5; }
+/* los campos llenan su columna y no empujan la ventana: antes, con su ancho natural, se salían y al enfocar
+   el WhatsApp la ventana se recorría de lado (se veía cortada) */
+.so-modal { overflow-x: hidden; }
+.so-modal > *, .so-dos > * { min-width: 0; }
+.so-modal input, .so-modal select { width: 100%; min-width: 0; }
+.so-acepto { display: flex !important; align-items: flex-start; gap: 10px; padding: 12px 14px; border-radius: 14px; background: rgba(46, 212, 122, .06); border: 1px solid rgba(46, 212, 122, .22); cursor: pointer; }
+.so-acepto input { width: 18px !important; height: 18px; flex: none; margin: 1px 0 0; padding: 0; accent-color: var(--so-verde); }
+.so-acepto span { display: grid; gap: 3px; color: var(--so-texto); font-size: .86rem; font-weight: 600; line-height: 1.35; }
+.so-acepto small { color: var(--so-tenue); font-weight: 500; font-size: .74rem; }
 
 /* pago */
 .so-linea { list-style: none; margin: 0 0 30px; padding: 0; display: flex; gap: 8px; flex-wrap: wrap; }
@@ -323,10 +332,52 @@
 .so-panel-h1 { font-family: var(--so-titulo); font-weight: 400; font-size: clamp(2rem, 4vw, 2.8rem); letter-spacing: .01em; margin-bottom: 16px; }
 .so-panel-h2 { font-family: var(--so-titulo); font-weight: 400; font-size: 1.7rem; margin: 30px 0 12px; }
 .so-kpis { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: 18px; }
-.so-kpis div { padding: 18px; border-radius: 18px; background: var(--so-panel); border: 1px solid var(--so-linea); display: grid; gap: 4px; }
+.so-kpis > .so-kpi { padding: 18px; border-radius: 18px; background: var(--so-panel); border: 1px solid var(--so-linea); display: grid; gap: 4px; }
 .so-kpis span { font-size: .8rem; color: var(--so-tenue); font-weight: 600; }
 .so-kpis b { font-family: var(--so-titulo); font-weight: 400; font-size: 2.2rem; line-height: 1; }
 .so-kpis .so-kpi-alerta { border-color: rgba(255, 200, 61, .5); }
+.so-kpis > .so-kpi { font: inherit; color: inherit; text-align: left; }
+.so-kpis small { font-size: .76rem; color: var(--so-tenue); line-height: 1.4; margin-top: 4px; }
+.so-kpis button.so-kpi { cursor: pointer; transition: border-color .2s, background .2s; }
+.so-kpis button.so-kpi:hover { border-color: rgba(255, 255, 255, .22); background: var(--so-panel2); }
+.so-panel-sorteo dl small, .so-dinero-dl small { display: block; font-size: .7rem; color: var(--so-tenue); }
+/* ── Dinero ── */
+.so-dinero-sorteos { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
+.so-dinero-sorteo { display: grid; gap: 14px; align-content: start; padding: 18px; border-radius: 24px; background: var(--so-panel); border: 1px solid var(--so-linea); }
+.so-dinero-sorteo header { display: flex; gap: 12px; align-items: center; }
+.so-dinero-sorteo header img { width: 56px; height: 56px; border-radius: 14px; object-fit: cover; }
+.so-dinero-sorteo h3 { font-family: var(--so-titulo); font-weight: 400; font-size: 1.45rem; line-height: 1; }
+.so-dinero-sorteo .so-dato-chico { margin-top: 4px; }
+.so-cubre { display: grid; gap: 8px; }
+.so-cubre-barra { height: 10px; border-radius: 99px; background: rgba(255, 255, 255, .08); overflow: hidden; }
+.so-cubre-barra i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--so-oro2), var(--so-oro)); transition: width .8s; }
+.so-cubre.si .so-cubre-barra i { background: var(--so-verde); }
+.so-cubre p { font-size: .9rem; line-height: 1.45; }
+.so-cubre.si p { color: var(--so-verde); }
+.so-cubre svg { vertical-align: -3px; }
+.so-dinero-dl { margin: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 14px 0; border-top: 1px solid var(--so-linea); border-bottom: 1px solid var(--so-linea); }
+.so-dinero-dl dt { font-size: .7rem; color: var(--so-tenue); text-transform: uppercase; letter-spacing: .08em; }
+.so-dinero-dl dd { margin: 2px 0 0; font-weight: 800; font-size: 1.05rem; }
+.so-final { font-size: .88rem; line-height: 1.5; }
+.so-final.si b { color: var(--so-verde); }
+.so-final.no b { color: var(--so-coral); }
+.so-final small { display: block; color: var(--so-tenue); font-size: .76rem; margin-top: 4px; }
+.so-dinero-dos { display: grid; gap: 0 24px; }
+@media (min-width: 900px) { .so-dinero-dos { grid-template-columns: 1.3fr 1fr; } }
+.so-dias { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; height: 220px; padding: 16px; border-radius: 22px; background: var(--so-panel); border: 1px solid var(--so-linea); }
+.so-dias > div { display: grid; grid-template-rows: auto 1fr auto; gap: 6px; text-align: center; min-width: 0; }
+.so-dias > div > i { align-self: end; justify-self: center; width: min(34px, 100%); min-height: 3px; border-radius: 8px 8px 3px 3px; background: rgba(255, 200, 61, .45); }
+.so-dias > div.hoy > i { background: var(--so-oro); }
+.so-dias small { font-size: .66rem; color: var(--so-tenue); white-space: nowrap; overflow: hidden; }
+.so-dias span { font-size: .74rem; color: var(--so-tenue); text-transform: capitalize; }
+.so-dias .hoy span { color: var(--so-texto); font-weight: 700; }
+.so-cuentas-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.so-cuentas-lista li { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 14px 16px; border-radius: 16px; background: var(--so-panel); border: 1px solid var(--so-linea); }
+.so-cuentas-lista span { display: grid; gap: 2px; }
+.so-cuentas-lista small { color: var(--so-tenue); font-size: .76rem; }
+.so-promos p:first-child { display: flex; align-items: center; gap: 10px; line-height: 1.45; }
+.so-promos svg { color: var(--so-verde); flex: none; }
+.so-promos .so-boton { justify-self: start; }
 .so-kpis .so-kpi-alerta b { color: var(--so-oro); }
 .so-panel-sorteos { display: grid; gap: 12px; }
 .so-panel-sorteo { display: grid; grid-template-columns: 120px 1fr; gap: 16px; padding: 12px; border-radius: 20px; background: var(--so-panel); border: 1px solid var(--so-linea); align-items: center; }
@@ -410,13 +461,13 @@
 .so-motivo { color: var(--so-oro) !important; font-weight: 700; font-size: .85rem !important; }
 
 /* el panel también en vidrio */
-.so-panel-menu, .so-kpis div, .so-panel-sorteo, .so-comp, .so-feed li, .so-tabla-envoltura, .so-interruptor {
+.so-panel-menu, .so-kpis > .so-kpi, .so-panel-sorteo, .so-comp, .so-feed li, .so-tabla-envoltura, .so-interruptor {
   backdrop-filter: var(--so-vidrio); -webkit-backdrop-filter: var(--so-vidrio); box-shadow: var(--so-brillo);
 }
-.so-panel-menu, .so-kpis div, .so-panel-sorteo, .so-comp { border-radius: 24px; }
+.so-panel-menu, .so-kpis > .so-kpi, .so-panel-sorteo, .so-comp { border-radius: 24px; }
 .so-panel { gap: 24px; }
 .so-kpis { gap: 14px; }
-.so-kpis div { padding: 22px; }
+.so-kpis > .so-kpi { padding: 22px; }
 
 /* ── rodillos de tragamonedas ───────────────────────────────────────────── */
 .ro { --ro-alto: 84px; display: flex; gap: 10px; justify-content: center; }

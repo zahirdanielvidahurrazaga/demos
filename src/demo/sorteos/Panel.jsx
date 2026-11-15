@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { Check, Clock, Download, LayoutDashboard, MessageCircle, Receipt, Search, ShieldCheck, Ticket, Trophy, Unlock, X } from 'lucide-react';
+import { Banknote, Check, Clock, Download, LayoutDashboard, Megaphone, MessageCircle, Receipt, Search, ShieldCheck, Ticket, Trophy, Unlock, X } from 'lucide-react';
 import {
-  NEGOCIO, SORTEOS, aprobar, armarNumero, duenoDe, fmtJuego, fmtNum, liberar, oportunidadesDe, partirCifras, pesos, rechazar, resumen, setAuto, useSorteos,
+  NEGOCIO, SORTEOS, aprobar, armarNumero, cobrosPorDia, contactosPromos, dineroDe, dineroGeneral, duenoDe, fmtJuego, fmtNum, liberar, oportunidadesDe, partirCifras, pesos, rechazar, resumen, setAuto, useSorteos,
 } from './datos';
 import { ESTADO_TXT, Progreso, Restante, fechaLarga, hora, wa } from './comun';
 
@@ -12,6 +12,7 @@ import { ESTADO_TXT, Progreso, Restante, fechaLarga, hora, wa } from './comun';
 
 const SECCIONES = [
   { id: 'resumen', t: 'Resumen', Icon: LayoutDashboard },
+  { id: 'dinero', t: 'Dinero', Icon: Banknote },
   { id: 'comprobantes', t: 'Comprobantes', Icon: Receipt },
   { id: 'apartados', t: 'Apartados', Icon: Clock },
   { id: 'boletos', t: 'Boletos', Icon: Ticket },
@@ -35,7 +36,8 @@ export default function Panel() {
         ))}
       </nav>
       <main className="so-panel-cuerpo">
-        {sec === 'resumen' && <Resumen />}
+        {sec === 'resumen' && <Resumen ir={setSec} />}
+        {sec === 'dinero' && <Dinero />}
         {sec === 'comprobantes' && <Comprobantes />}
         {sec === 'apartados' && <Apartados />}
         {sec === 'boletos' && <Boletos />}
@@ -45,20 +47,32 @@ export default function Panel() {
   );
 }
 
-function Resumen() {
+// Cada número lleva una línea que dice QUÉ es y qué hacer con él: el dueño no
+// tiene por qué saber qué es un "apartado" o qué hace Banxico aquí.
+function Kpi({ t, v, nota, alerta, onClick }) {
+  const C = onClick ? 'button' : 'div';
+  return (
+    <C className={`so-kpi ${alerta ? 'so-kpi-alerta' : ''}`} onClick={onClick}>
+      <span>{t}</span><b>{v}</b>{nota && <small>{nota}</small>}
+    </C>
+  );
+}
+
+function Resumen({ ir }) {
   const e = useSorteos();
   const totales = SORTEOS.map((s) => resumen(e, s));
-  const dinero = totales.reduce((t, r) => t + r.dinero, 0);
-  const porCobrar = Object.values(e.pedidos).filter((p) => p.estado === 'apartado' || p.estado === 'revision').reduce((t, p) => t + p.total, 0);
+  const g = dineroGeneral(e);
+  const porCobrar = Object.values(e.pedidos).filter((p) => p.estado === 'apartado').reduce((t, p) => t + p.total, 0);
   const revisar = Object.values(e.pedidos).filter((p) => p.estado === 'revision').length;
   return (
     <>
       <h1 className="so-panel-h1">Hoy en {NEGOCIO.nombre}</h1>
       <div className="so-kpis">
-        <div><span>Cobrado</span><b>{pesos(dinero)}</b></div>
-        <div><span>Por cobrar (apartados)</span><b>{pesos(porCobrar)}</b></div>
-        <div className={revisar ? 'so-kpi-alerta' : ''}><span>Comprobantes por revisar</span><b>{revisar}</b></div>
-        <div><span>Aprobados solos (Banxico)</span><b>{e.autoHoy || 0}</b></div>
+        <Kpi t="Cobrado hoy" v={pesos(g.hoy)} nota={`Pagos confirmados hoy. En total llevas ${pesos(g.cobrado)} → ver Dinero`} onClick={() => ir('dinero')} />
+        <Kpi t="Apartado sin pagar" v={pesos(porCobrar)} nota="Gente que eligió números pero no ha pagado. Si vence, los números se liberan." onClick={() => ir('apartados')} />
+        <Kpi t="Comprobantes por revisar" v={revisar} alerta={revisar > 0}
+          nota={revisar ? 'Pagos que el sistema no pudo confirmar solo. Necesitan tus ojos.' : 'Nada pendiente.'} onClick={() => ir('comprobantes')} />
+        <Kpi t="Pagos que se confirmaron solos" v={e.autoHoy || 0} nota="Hoy. El sistema revisó la transferencia con Banxico y la aprobó sin que nadie la viera." />
       </div>
       <div className="so-panel-sorteos">
         {SORTEOS.map((s, i) => {
@@ -68,13 +82,13 @@ function Resumen() {
               <img src={s.foto} alt="" />
               <div>
                 <h2>{s.titulo}</h2>
-                <p className="so-dato-chico">Se juega {fechaLarga(s.fecha)}</p>
+                <p className="so-dato-chico">Se juega {fechaLarga(s.fecha)} · {s.total.toLocaleString('es-MX')} boletos en total</p>
                 <Progreso pct={r.pct} />
                 <dl>
-                  <div><dt>Pagados</dt><dd>{r.pagados.toLocaleString('es-MX')}</dd></div>
-                  <div><dt>Apartados</dt><dd>{r.apartados.toLocaleString('es-MX')}</dd></div>
-                  <div><dt>Libres</dt><dd>{r.libres.toLocaleString('es-MX')}</dd></div>
-                  <div><dt>Cobrado</dt><dd>{pesos(r.dinero)}</dd></div>
+                  <div><dt>Pagados</dt><dd>{r.pagados.toLocaleString('es-MX')}</dd><small>ya juegan</small></div>
+                  <div><dt>Apartados</dt><dd>{r.apartados.toLocaleString('es-MX')}</dd><small>esperan pago</small></div>
+                  <div><dt>Libres</dt><dd>{r.libres.toLocaleString('es-MX')}</dd><small>se pueden vender</small></div>
+                  <div><dt>Cobrado</dt><dd>{pesos(r.dinero)}</dd><small>ya en tu cuenta</small></div>
                 </dl>
               </div>
             </article>
@@ -88,6 +102,93 @@ function Resumen() {
         ))}
         {e.eventos.length === 0 && <li>Esperando movimientos… (los compradores simulados aparecen en unos segundos)</li>}
       </ul>
+    </>
+  );
+}
+
+// ── DINERO ──────────────────────────────────────────────────────────────────
+// Lo que un dueño de rifas pregunta: ¿cuánto llevo?, ¿ya cubrí el premio?,
+// ¿cuánto me queda si vendo todo?, ¿a qué cuenta entró?
+function Dinero() {
+  const e = useSorteos();
+  const g = dineroGeneral(e);
+  const dias = cobrosPorDia(e, 7);
+  const tope = Math.max(...dias.map((d) => d.total), 1);
+  const porConfirmar = Object.values(e.pedidos).filter((p) => p.estado === 'revision').reduce((t, p) => t + p.total, 0);
+  const nombreDia = (t) => new Date(t).toLocaleDateString('es-MX', { weekday: 'short' }).replace('.', '');
+  return (
+    <>
+      <h1 className="so-panel-h1">Dinero</h1>
+      <p className="so-entrada">Lo cobrado es dinero que ya llegó a tus cuentas. Lo demás todavía puede cambiar.</p>
+      <div className="so-kpis">
+        <Kpi t="Cobrado en total" v={pesos(g.cobrado)} nota={`De ${g.compras.toLocaleString('es-MX')} compras · ${pesos(g.hoy)} hoy`} />
+        <Kpi t="Por confirmar" v={pesos(porConfirmar)} nota="Ya mandaron comprobante; falta revisarlo. Casi seguro entra." />
+        <Kpi t="Compra promedio" v={pesos(g.promedio)} nota="Lo que gasta una persona cada vez que compra. Los paquetes lo suben." />
+      </div>
+
+      <h2 className="so-panel-h2">¿Ya cubriste cada premio?</h2>
+      <div className="so-dinero-sorteos">
+        {SORTEOS.map((s) => {
+          const d = dineroDe(e, s);
+          const cubierto = d.cobrado >= s.costo;
+          const pct = Math.min(1, d.cobrado / s.costo);
+          return (
+            <article key={s.id} className="so-dinero-sorteo">
+              <header>
+                <img src={s.foto} alt="" />
+                <div><h3>{s.titulo}</h3><p className="so-dato-chico">El premio te cuesta {pesos(s.costo)}</p></div>
+              </header>
+              <div className={`so-cubre ${cubierto ? 'si' : ''}`}>
+                <div className="so-cubre-barra"><i style={{ width: `${pct * 100}%` }} /></div>
+                <p>{cubierto
+                  ? <><Check size={16} /> Premio cubierto. Ya llevas <b>{pesos(d.ganancia)}</b> de ganancia.</>
+                  : <>Te faltan <b>{pesos(d.faltaCubrir)}</b> para pagar el premio ({Math.round(pct * 100)}% cubierto).</>}</p>
+              </div>
+              <dl className="so-dinero-dl">
+                <div><dt>Cobrado</dt><dd>{pesos(d.cobrado)}</dd><small>ya en tu cuenta</small></div>
+                <div><dt>Por confirmar</dt><dd>{pesos(d.porConfirmar)}</dd><small>comprobante subido</small></div>
+                <div><dt>Apartado</dt><dd>{pesos(d.apartado)}</dd><small>aún no pagan</small></div>
+                <div><dt>Falta vender</dt><dd>{pesos(d.porVender)}</dd><small>boletos libres, aprox.</small></div>
+              </dl>
+              <p className={`so-final ${d.gananciaFinal >= 0 ? 'si' : 'no'}`}>
+                Si vendes todos los boletos: entran <b>{pesos(d.siSeVendeTodo)}</b> → {d.gananciaFinal >= 0
+                  ? <>ganancia aprox. de <b>{pesos(d.gananciaFinal)}</b></>
+                  : <>te faltarían <b>{pesos(-d.gananciaFinal)}</b>: sube el precio o baja el premio</>}.
+                <small>Cada boleto vendido te deja {pesos(d.porBoleto)} en promedio (con descuentos de paquete).</small>
+              </p>
+            </article>
+          );
+        })}
+      </div>
+
+      <div className="so-dinero-dos">
+        <section>
+          <h2 className="so-panel-h2">Cobrado por día</h2>
+          <div className="so-dias" role="img" aria-label="Cobrado en los últimos 7 días">
+            {dias.map((d, i) => (
+              <div key={d.dia} className={i === dias.length - 1 ? 'hoy' : ''}>
+                <small>{d.total ? pesos(d.total / 1000) + 'k' : '—'}</small>
+                <i style={{ height: `${(d.total / tope) * 100}%` }} />
+                <span>{i === dias.length - 1 ? 'hoy' : nombreDia(d.dia)}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+        <section>
+          <h2 className="so-panel-h2">¿A dónde entró?</h2>
+          <ul className="so-cuentas-lista">
+            {NEGOCIO.cuentas.map((c, i) => (
+              <li key={c.banco}><span><b>{c.banco}</b><small>CLABE …{c.clabe.replace(/\s/g, '').slice(-4)}</small></span><b>{pesos(g.porCuenta[i])}</b></li>
+            ))}
+          </ul>
+          <h2 className="so-panel-h2">¿Cómo se confirmó?</h2>
+          <ul className="so-cuentas-lista">
+            <li><span><b>Solo, con Banxico</b><small>nadie tuvo que revisarlo</small></span><b>{pesos(g.solo)}</b></li>
+            <li><span><b>A mano</b><small>lo aprobó alguien del equipo</small></span><b>{pesos(g.aMano)}</b></li>
+          </ul>
+        </section>
+      </div>
+      <p className="so-dato-chico">Costos de los premios de ejemplo. En el sistema real tú los capturas al crear el sorteo.</p>
     </>
   );
 }
@@ -195,6 +296,16 @@ function Apartados() {
   );
 }
 
+// Excel ejecuta como fórmula lo que empieza con = + - @: se antepone ' (revisión de Codex)
+function descargar(nombre, filas) {
+  const celda = (c) => { const t = String(c); return /^[=+\-@\t\r]/.test(t) ? `'${t}` : t; };
+  const csv = filas.map((r) => r.map((c) => `"${celda(c).replace(/"/g, '""')}"`).join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob(['\ufeff' + csv], { type: 'text/csv' }));
+  a.download = nombre;
+  a.click();
+}
+
 function Boletos() {
   const e = useSorteos();
   const [sorteo, setSorteo] = useState(SORTEOS[0].id);
@@ -205,19 +316,17 @@ function Boletos() {
   const p = folio ? e.pedidos[folio] : null;
 
   const exportar = () => {
-    const filas = [['folio', 'numero', 'oportunidades', 'nombre', 'apellidos', 'whatsapp', 'estado']];
+    const filas = [['folio', 'numero', 'oportunidades', 'nombre', 'apellidos', 'whatsapp', 'estado', 'acepta promociones']];
     Object.entries(e.boletos[sorteo]).forEach(([num, f]) => {
       const x = e.pedidos[f];
-      if (x.estado === 'pagado') filas.push([f, fmtNum(s, num), oportunidadesDe(s, Number(num)).join(' '), x.nombre, x.apellidos, x.tel, x.lugar]);
+      if (x.estado === 'pagado') filas.push([f, fmtNum(s, num), oportunidadesDe(s, Number(num)).join(' '), x.nombre, x.apellidos, x.tel, x.lugar, x.promos ? 'sí' : 'no']);
     });
-    // Excel ejecuta como fórmula lo que empieza con = + - @: se antepone ' (revisión de Codex)
-    const celda = (c) => { const t = String(c); return /^[=+\-@\t\r]/.test(t) ? `'${t}` : t; };
-    const csv = filas.map((r) => r.map((c) => `"${celda(c).replace(/"/g, '""')}"`).join(',')).join('\n');
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(new Blob(['﻿' + csv], { type: 'text/csv' }));
-    a.download = `boletos-pagados-${s.id}.csv`;
-    a.click();
+    descargar(`boletos-pagados-${s.id}.csv`, filas);
   };
+
+  const promos = contactosPromos(e);
+  const exportarPromos = () => descargar(`contactos-promociones.csv`,
+    [['nombre', 'apellidos', 'whatsapp', 'estado'], ...promos.map((x) => [x.nombre, x.apellidos, x.tel, x.lugar])]);
 
   return (
     <>
@@ -239,6 +348,13 @@ function Boletos() {
       )}
       <button className="so-boton so-boton-claro" onClick={exportar}><Download size={17} /> Descargar lista de pagados (Excel)</button>
       <p className="so-dato-chico">La lista con números, oportunidades y nombres para la transmisión en vivo.</p>
+
+      <h2 className="so-panel-h2">Contactos para promociones</h2>
+      <div className="so-caja so-promos">
+        <p><Megaphone size={20} /> <b>{promos.length.toLocaleString('es-MX')}</b> personas aceptaron que les mandes nuevos sorteos y promociones por WhatsApp.</p>
+        <button className="so-boton so-boton-claro" onClick={exportarPromos}><Download size={17} /> Descargar contactos (Excel)</button>
+        <p className="so-dato-chico">Solo salen quienes palomearon la casilla al apartar. A los demás no se les manda publicidad.</p>
+      </div>
     </>
   );
 }

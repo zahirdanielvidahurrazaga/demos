@@ -38,6 +38,7 @@ export const SORTEOS = [
     precio: 99,
     paquetes: [[1, 99], [3, 270], [5, 430], [10, 800], [20, 1500], [50, 3500]],
     oportunidades: 2,
+    costo: 620000, // lo que le cuesta el premio al dueño (de ejemplo): con esto se sabe cuándo ya está cubierto
     bonos: [
       { titulo: 'Bono pronto pago', detalle: '$5,000 extra si pagas en los primeros 15 minutos' },
       { titulo: 'Bono 10+', detalle: '$10,000 extra comprando 10 boletos o más' },
@@ -54,6 +55,7 @@ export const SORTEOS = [
     precio: 60,
     paquetes: [[1, 60], [5, 280], [10, 520], [25, 1200]],
     oportunidades: 1,
+    costo: 100000,
     bonos: [{ titulo: 'Bono pronto pago', detalle: '$2,000 extra si pagas en los primeros 15 minutos' }],
     vendido: 0.71,
   },
@@ -67,6 +69,7 @@ export const SORTEOS = [
     precio: 50,
     paquetes: [[1, 50], [5, 230], [10, 450]],
     oportunidades: 0,
+    costo: 92000,
     bonos: [],
     vendido: 0.16,
   },
@@ -116,7 +119,8 @@ const ESTADOS_CERCA = ['Puebla', 'Puebla', 'Puebla', 'Tlaxcala', 'Veracruz', 'Es
 
 function persona(r) {
   const tel = '22' + String(Math.floor(r() * 1e8)).padStart(8, '0');
-  return { nombre: NOMBRES[Math.floor(r() * NOMBRES.length)], apellidos: APELLIDOS[Math.floor(r() * APELLIDOS.length)], lugar: ESTADOS_CERCA[Math.floor(r() * ESTADOS_CERCA.length)], tel };
+  // promos = aceptó que le manden publicidad por WhatsApp (casilla opcional al apartar)
+  return { nombre: NOMBRES[Math.floor(r() * NOMBRES.length)], apellidos: APELLIDOS[Math.floor(r() * APELLIDOS.length)], lugar: ESTADOS_CERCA[Math.floor(r() * ESTADOS_CERCA.length)], tel, promos: r() < 0.6 };
 }
 
 // ── estado inicial ──────────────────────────────────────────────────────────
@@ -145,9 +149,15 @@ function sembrar() {
         folio, sorteo: s.id, numeros: nums, ...p, estado,
         creado: ahora - Math.floor(r() * 5 * DIA),
         vence: ahora + Math.floor((0.1 + r() * 0.9) * HORAS_APARTADO * 3600000),
-        total: precioDe(s, nums.length), simulado: true,
+        total: precioDe(s, nums.length), simulado: true, cuenta: f % 3 === 0 ? 1 : 0,
         ...(estado === 'revision' ? { motivo: MOTIVOS_REVISION[Math.floor(r() * MOTIVOS_REVISION.length)] } : {}),
       };
+      // los pagados de la semilla: cuándo se confirmaron y si fue solo (Banxico) o a mano
+      if (estado === 'pagado') {
+        const q = pedidos[folio];
+        q.aprobado = Math.min(ahora, q.creado + Math.floor(r() * 3 * 3600000));
+        if (r() < 0.7) q.auto = { clave: claveRastreo(q) };
+      }
       nums.forEach((n) => { boletos[s.id][n] = folio; });
       puestos += nums.length;
     }
@@ -156,11 +166,11 @@ function sembrar() {
 }
 
 // ── almacén (localStorage + evento storage entre pestañas) ─────────────────
-const LLAVE = 'demo_sorteos_v3';
+const LLAVE = 'demo_sorteos_v5'; // v4: permiso de promociones, cuenta destino y costo del premio
 let estado = null;
 const oyentes = new Set();
 function leer() {
-  try { const t = localStorage.getItem(LLAVE); if (t) { const e = JSON.parse(t); if (e.v === 1) return e; } localStorage.removeItem('demo_sorteos_v1'); localStorage.removeItem('demo_sorteos_v2'); } catch { /* sin almacenamiento */ }
+  try { const t = localStorage.getItem(LLAVE); if (t) { const e = JSON.parse(t); if (e.v === 1) return e; } ['v1', 'v2', 'v3', 'v4'].forEach((v) => localStorage.removeItem(`demo_sorteos_${v}`)); } catch { /* sin almacenamiento */ }
   return sembrar();
 }
 function guardar() { try { localStorage.setItem(LLAVE, JSON.stringify(estado)); } catch { /* lleno o bloqueado */ } }
@@ -208,6 +218,7 @@ export function apartar(sorteoId, numeros, datos, { mio = true } = {}) {
     e.pedidos[folio] = {
       folio, sorteo: sorteoId, numeros: libres, ...datos, estado: 'apartado',
       creado: ahora, vence: ahora + HORAS_APARTADO * 3600000, total: precioDe(s, libres.length), simulado: !mio,
+      cuenta: e.sig % 3 === 0 ? 1 : 0, // a qué cuenta de NEGOCIO.cuentas transfirió (en el real lo lee del comprobante)
     };
     libres.forEach((n) => { e.boletos[sorteoId][n] = folio; });
     if (mio) e.misFolios = [folio, ...e.misFolios];
@@ -345,6 +356,65 @@ export function resumen(e, s) {
     if (p.estado === 'pagado' && !vistos.has(folio)) { vistos.add(folio); dinero += p.total; }
   }
   return { pagados, apartados, libres: s.total - pagados - apartados, dinero, pct: (pagados + apartados) / s.total };
+}
+
+// ── dinero ──────────────────────────────────────────────────────────────────
+// UNA sola cuenta para la sección Dinero. Todo en pesos.
+//  cobrado     = pagos ya confirmados (dinero que YA está en tus cuentas)
+//  porConfirmar= subieron comprobante y falta revisarlo
+//  apartado    = apartaron y todavía no pagan (puede caerse si vence)
+//  porVender   = boletos libres × lo que en promedio deja cada boleto vendido
+export function dineroDe(e, s) {
+  const r = { cobrado: 0, porConfirmar: 0, apartado: 0, boletosPagados: 0, compras: 0 };
+  for (const p of Object.values(e.pedidos)) {
+    if (p.sorteo !== s.id) continue;
+    if (p.estado === 'pagado') { r.cobrado += p.total; r.boletosPagados += p.numeros.length; r.compras++; }
+    else if (p.estado === 'revision') r.porConfirmar += p.total;
+    else if (p.estado === 'apartado') r.apartado += p.total;
+  }
+  const ocupados = Object.keys(e.boletos[s.id]).length;
+  const porBoleto = r.boletosPagados ? r.cobrado / r.boletosPagados : s.precio;
+  r.porBoleto = porBoleto;
+  r.porVender = (s.total - ocupados) * porBoleto;
+  r.siSeVendeTodo = r.cobrado + r.porConfirmar + r.apartado + r.porVender;
+  r.faltaCubrir = Math.max(0, s.costo - r.cobrado);
+  r.ganancia = r.cobrado - s.costo; // negativa = todavía no se cubre el premio
+  r.gananciaFinal = r.siSeVendeTodo - s.costo;
+  return r;
+}
+
+const DIA_MS = 86400000;
+const inicioDia = (t) => { const d = new Date(t); d.setHours(0, 0, 0, 0); return d.getTime(); };
+export function cobrosPorDia(e, dias = 7) {
+  const hoy0 = inicioDia(Date.now());
+  const out = Array.from({ length: dias }, (_, i) => ({ dia: hoy0 - (dias - 1 - i) * DIA_MS, total: 0 }));
+  for (const p of Object.values(e.pedidos)) {
+    if (p.estado !== 'pagado') continue;
+    const k = Math.round((inicioDia(p.aprobado || p.creado) - out[0].dia) / DIA_MS);
+    if (k >= 0 && k < dias) out[k].total += p.total;
+  }
+  return out;
+}
+
+export function dineroGeneral(e) {
+  const porCuenta = NEGOCIO.cuentas.map(() => 0);
+  let solo = 0, aMano = 0, hoy = 0, compras = 0, cobrado = 0;
+  const hoy0 = inicioDia(Date.now());
+  for (const p of Object.values(e.pedidos)) {
+    if (p.estado !== 'pagado') continue;
+    cobrado += p.total; compras++;
+    porCuenta[p.cuenta || 0] += p.total;
+    if (p.auto) solo += p.total; else if (p.aprobado) aMano += p.total;
+    if ((p.aprobado || p.creado) >= hoy0) hoy += p.total;
+  }
+  return { cobrado, hoy, porCuenta, solo, aMano, promedio: compras ? cobrado / compras : 0, compras };
+}
+
+// Personas que ACEPTARON publicidad por WhatsApp (una por teléfono)
+export function contactosPromos(e) {
+  const m = new Map();
+  for (const p of Object.values(e.pedidos)) if (p.promos && !m.has(p.tel)) m.set(p.tel, p);
+  return [...m.values()];
 }
 
 export function buscarPorTelefono(e, tel) {
