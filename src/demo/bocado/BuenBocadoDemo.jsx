@@ -1,6 +1,5 @@
 import { useEffect } from 'react';
 import App from './App';
-import Espejo from './Espejo';
 import Expo from './Expo';
 import Iphone from './Iphone';
 import Sitio from './Sitio';
@@ -43,7 +42,7 @@ export default function BuenBocadoDemo() {
     if (enCompu) {
       return (
         <div className="bb bb-escenario">
-          <Espejo selector=".bb-escenario > .ip .ip-escala" />
+          <div className="bb-fondo-fijo" aria-hidden="true"><i /><i /><i /></div>
           <Iphone inclina logico={393}><App marco /></Iphone>
           <p className="pie">el buen bocado · prototipo de la app</p>
         </div>

@@ -547,7 +547,7 @@
   --v-sombra: inset 0 1px 0 rgba(255, 255, 255, .95), inset 0 -1px 1px rgba(255, 255, 255, .3), inset 1px 0 0 rgba(255, 255, 255, .35), inset 0 0 22px rgba(255, 255, 255, .18), 0 14px 34px -18px rgba(52, 60, 30, .38);
   --v-blur: blur(22px) saturate(175%);
   isolation: isolate;
-  /* fondo LISO olivo pastel: el difuminado va atrás del mockup (Espejo.jsx), no aquí */
+  /* fondo LISO olivo pastel; el difuminado va en el escenario de atrás (.bb-fondo-fijo) */
   background: linear-gradient(180deg, #E1E4CD 0%, #D3D8B8 100%);
 }
 

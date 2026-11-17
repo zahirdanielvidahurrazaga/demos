@@ -401,12 +401,12 @@
 .bb-solo .ba { width: 100%; max-width: 440px; height: 100svh; }
 @media (min-width: 600px) { .bb-solo .ba { height: min(100svh, 900px); } }
 
-/* fondo del escenario (17-nov): la pantalla de la app en grande y difuminada (Espejo.jsx) */
-.bb-escenario { isolation: isolate; }
-.bb-espejo { position: absolute; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; background: #C4CAA3; }
-.bb-espejo .lienzo { position: absolute; left: 50%; top: 50%; transform-origin: center; filter: blur(38px) saturate(1.7) contrast(1.05); opacity: 1; }
-.bb-espejo .capa { position: absolute; inset: 0; opacity: 0; transition: opacity 1.6s ease; }
-.bb-espejo .capa.on { opacity: 1; }
-.bb-espejo .capa > * { position: absolute !important; inset: 0; }
-.bb-espejo .capa *, .bb-espejo .capa *::before, .bb-espejo .capa *::after { animation: none !important; transition: none !important; }
-.bb-espejo .velo { position: absolute; inset: 0; background: radial-gradient(70% 70% at 50% 50%, rgba(46, 51, 32, .04), rgba(46, 51, 32, .32)); }
+/* fondo del escenario (17-nov): FIJO, el mismo olivo difuminado de la exposición
+   (Zahir: "un color fijo, igual que el de la web"; la copia difuminada de la pantalla se quitó) */
+.bb-escenario { isolation: isolate; background: #C4CAA3; }
+.bb-fondo-fijo { position: absolute; inset: 0; z-index: -1; overflow: hidden; pointer-events: none;
+  background: radial-gradient(80% 60% at 15% 0%, rgba(255, 255, 255, .55), transparent 70%), radial-gradient(70% 60% at 100% 100%, #A7B07F, transparent 70%), #C4CAA3; }
+.bb-fondo-fijo i { position: absolute; border-radius: 50%; filter: blur(70px); opacity: .85; }
+.bb-fondo-fijo i:nth-child(1) { width: 46vmax; height: 46vmax; left: -10vmax; top: 10vh; background: #DCE1BE; }
+.bb-fondo-fijo i:nth-child(2) { width: 38vmax; height: 38vmax; right: -8vmax; top: -6vmax; background: #9FAA74; }
+.bb-fondo-fijo i:nth-child(3) { width: 30vmax; height: 30vmax; left: 40vw; bottom: -10vmax; background: #EEF0DD; }
