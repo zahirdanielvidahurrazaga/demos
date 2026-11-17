@@ -58,6 +58,13 @@ export const SECTORES = [
         detalle: 'Cafetería saludable · Puebla',
         nota: 'negocio de ejemplo',
       },
+      {
+        tipo: 'comida',
+        clave: 'buenbocado',
+        nombre: 'el buen bocado',
+        detalle: 'Proyecto de la uni · app, local 3D y marca',
+        nota: 'proyecto de Emprendimiento',
+      },
     ],
   },
 

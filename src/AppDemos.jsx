@@ -32,6 +32,7 @@ const AutocinemaDemo = lazy(() => import('./demo/autocinema/AutocinemaDemo'));
 const FloreriasDemo = lazy(() => import('./demo/florerias/FloreriasDemo'));
 const ClinicaDemo = lazy(() => import('./demo/clinica/ClinicaDemo'));
 const RealEstateDemo = lazy(() => import('./demo/realestate/RealEstateDemo'));
+const BuenBocadoDemo = lazy(() => import('./demo/bocado/BuenBocadoDemo'));
 
 // Regreso de la pasarela de prueba (src/demo/PasarelaPrueba.jsx): el pago se
 // "cobra" dentro de la maqueta de la que salió la compra.
@@ -82,6 +83,8 @@ export default function AppDemos() {
                 <Route path="/clinica/:negocio" element={<ClinicaDemo />} />
                 {/* Real estate (EE.UU., en inglés y sin marca KaiZen): solo scroll, sin base de datos. */}
                 <Route path="/realestate/:negocio" element={<RealEstateDemo />} />
+                {/* El Buen Bocado (proyecto de la uni): exposición con app, local 3D y marca, sin base de datos. */}
+                <Route path="/comida/:negocio" element={<BuenBocadoDemo />} />
                 {/* Cualquier otra dirección regresa al índice: si una prospecta borra
                     el path del link, aterriza en algo tuyo y no en otra marca. */}
                 <Route path="*" element={<Navigate to="/" replace />} />
