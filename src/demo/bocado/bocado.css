@@ -17,9 +17,13 @@
 .bb *, .bb *::before, .bb *::after { box-sizing: border-box; }
 
 /* marca */
-.bb-logo { display: inline-flex; align-items: center; gap: .45em; }
-.bb-wm { font-family: var(--bb-d); font-weight: 800; letter-spacing: -.045em; line-height: .82; display: inline-block; }
-.bb-wm .el { display: block; font-weight: 600; letter-spacing: -.02em; font-size: .42em; line-height: 1; margin-bottom: .06em; }
+/* Logo "bolsita" (19-nov): Outfit 900, la última o sonríe (OSonrisa). */
+.bb-logo { display: inline-flex; align-items: center; gap: .5em; line-height: 1; }
+.bb-wm { font-family: 'Outfit', var(--bb-d); font-weight: 900; letter-spacing: -.045em; line-height: .9; display: inline-flex; flex-direction: column; align-items: flex-start; white-space: nowrap; }
+.bb-wm .el { display: block; font-weight: 600; letter-spacing: .01em; font-size: .24em; line-height: 1; margin: 0 0 .1em .14em; }
+.bb-wm .lema { align-self: center; margin-top: .75em; font: 700 .125em var(--bb-t); letter-spacing: .32em; text-transform: uppercase; }
+.bb-o { display: inline-block; width: .56em; height: .56em; vertical-align: -.012em; margin: 0 .01em; }
+.bb-isotipo, .bb-bolsita { flex: none; overflow: visible; }
 
 /* botones */
 .bb-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; background: var(--bb-tomate); color: #fff !important; font: 700 15px var(--bb-t); padding: 15px 22px; border-radius: 999px; text-decoration: none; transition: transform .15s, background .2s, opacity .2s; white-space: nowrap; }
@@ -404,9 +408,9 @@
 /* fondo del escenario (17-nov): FIJO, el mismo olivo difuminado de la exposición
    (Zahir: "un color fijo, igual que el de la web"; la copia difuminada de la pantalla se quitó) */
 .bb-escenario { isolation: isolate; background: #C4CAA3; }
-.bb-fondo-fijo { position: absolute; inset: 0; z-index: -1; overflow: hidden; pointer-events: none;
-  background: radial-gradient(80% 60% at 15% 0%, rgba(255, 255, 255, .55), transparent 70%), radial-gradient(70% 60% at 100% 100%, #A7B07F, transparent 70%), #C4CAA3; }
-.bb-fondo-fijo i { position: absolute; border-radius: 50%; filter: blur(70px); opacity: .85; }
-.bb-fondo-fijo i:nth-child(1) { width: 46vmax; height: 46vmax; left: -10vmax; top: 10vh; background: #DCE1BE; }
-.bb-fondo-fijo i:nth-child(2) { width: 38vmax; height: 38vmax; right: -8vmax; top: -6vmax; background: #9FAA74; }
-.bb-fondo-fijo i:nth-child(3) { width: 30vmax; height: 30vmax; left: 40vw; bottom: -10vmax; background: #EEF0DD; }
+/* 19-nov: papel con dos círculos de la paleta helecho (sin difuminado) */
+.bb-fondo-fijo { position: absolute; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; background: #F4F4E6; }
+.bb-fondo-fijo i { position: absolute; border-radius: 50%; }
+.bb-fondo-fijo i:nth-child(1) { width: 46vmax; height: 46vmax; left: -14vmax; top: 18vh; background: #DCE7BE; }
+.bb-fondo-fijo i:nth-child(2) { width: 34vmax; height: 34vmax; right: -10vmax; top: -10vmax; background: #526531; }
+.bb-fondo-fijo i:nth-child(3) { display: none; }

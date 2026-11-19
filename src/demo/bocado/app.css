@@ -322,23 +322,20 @@
 /* ── v3 (14-nov) ───────────────────────────────────────────────────────── */
 /* carga: el aro se dibuja, el centro aparece, la mordida cae con migas y la marca entra letra por letra */
 .ba-carga { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; background: var(--verde); color: var(--f); }
-.ba-carga .plato { overflow: visible; }
-.ba-carga .aro { stroke-dasharray: 1.08; stroke-dashoffset: 1.08; transform: rotate(-90deg); transform-origin: 50px 50px; animation: ba-aro 1s cubic-bezier(.6, 0, .2, 1) .15s forwards; }
-@keyframes ba-aro { to { stroke-dashoffset: 0; } }
-.ba-carga .centro { transform-origin: 50px 50px; transform: scale(0); animation: ba-centro .5s cubic-bezier(.3, 1.5, .5, 1) .95s forwards; }
-@keyframes ba-centro { to { transform: scale(1); } }
-.ba-carga .dientes { transform: translate(30px, -30px); animation: ba-muerde .32s cubic-bezier(.7, 0, .3, 1.4) 1.45s forwards; }
-@keyframes ba-muerde { to { transform: none; } }
-.ba-carga .migas circle { opacity: 0; transform-box: fill-box; transform-origin: center; animation: ba-miga .8s cubic-bezier(.2, .8, .3, 1) 1.65s forwards; }
-.ba-carga .migas circle:nth-child(2) { animation-delay: 1.7s; --mx: 16px; --my: 6px; }
-.ba-carga .migas circle:nth-child(3) { animation-delay: 1.68s; --mx: 4px; --my: -18px; }
-@keyframes ba-miga { 0% { opacity: 1; transform: translate(0, 0); } 100% { opacity: 0; transform: translate(var(--mx, 12px), var(--my, -12px)) scale(.4); } }
-.ba-carga .plato { animation: ba-latido .5s ease 1.5s; }
-@keyframes ba-latido { 40% { transform: scale(.94); } }
-.ba-carga .ba-wm { font: 800 40px/.82 var(--d); letter-spacing: -.045em; text-align: center; animation: none; }
-.ba-carga .ba-wm span { display: block; font-weight: 600; font-size: .42em; letter-spacing: -.02em; line-height: 1; margin-bottom: .1em; opacity: 0; animation: ba-sube-l .5s ease 1.6s forwards; }
+/* carga con la bolsita (19-nov; antes el plato con mordida) */
+.ba-carga .mono { overflow: visible; filter: drop-shadow(0 18px 22px rgba(30, 36, 18, .35)); animation: ba-cae .75s cubic-bezier(.3, 1.45, .5, 1) .1s both; }
+@keyframes ba-cae { from { opacity: 0; transform: translateY(-70px) scale(.6); } }
+.ba-carga .mono :is(.tallo, .hoja) { transform-box: fill-box; transform-origin: 30% 100%; animation: ba-brota .55s cubic-bezier(.3, 1.6, .5, 1) .75s both; }
+@keyframes ba-brota { from { transform: scale(0); } }
+.ba-carga .mono :is(.brazo, .mano) { transform-box: view-box; transform-origin: 104px 96px; animation: ba-saluda .8s ease-in-out 1.05s 2; }
+@keyframes ba-saluda { 25% { transform: rotate(-16deg); } 75% { transform: rotate(10deg); } }
+.ba-carga .mono .corazones { transform-box: fill-box; transform-origin: 20% 100%; animation: ba-corazon .55s cubic-bezier(.3, 1.6, .5, 1) 1.35s both; }
+@keyframes ba-corazon { from { opacity: 0; transform: scale(0) translateY(10px); } }
+.ba-carga .ba-wm { font: 900 44px/.9 'Outfit', var(--d); letter-spacing: -.045em; text-align: center; animation: none; }
+.ba-carga .ba-wm span { display: block; text-align: left; font-weight: 600; font-size: .26em; letter-spacing: .01em; line-height: 1; margin: 0 0 .12em .14em; opacity: 0; animation: ba-sube-l .5s ease 1.6s forwards; }
 .ba-carga .ba-wm i { display: inline-block; font-style: normal; opacity: 0; transform: translateY(14px); animation: ba-sube-l .55s cubic-bezier(.2, .8, .2, 1) forwards; }
 @keyframes ba-sube-l { to { opacity: 1; transform: none; } }
+.ba-carga .ba-wm .bb-o { display: inline-block; width: .56em; height: .56em; vertical-align: -.012em; margin: 0 .01em; }
 .ba-carga .lema { font: 500 14px var(--x); color: var(--lima); opacity: 0; animation: ba-sube-l .6s ease 2.3s forwards; }
 
 /* registro */
@@ -532,94 +529,121 @@
 .ba:has(> .ba-cuerpo)::before { content: ''; position: absolute; z-index: 25; top: 0; left: 0; right: 0; height: calc(var(--arriba) - 8px); pointer-events: none; background: linear-gradient(var(--f) 62%, rgba(244, 245, 234, 0)); }
 .ba-del { aspect-ratio: 1 / .9; }
 
-/* ── v5 (17-nov): OLIVO PASTEL + VIDRIO LÍQUIDO ─────────────────────────────
-   Pedido de Zahir: cambiar el verde por un olivo pastel, fondo difuminado y
-   que los componentes se vean "tal cual liquid glass". El fondo son manchas
-   de color que se mueven despacio; todo lo que antes era blanco es vidrio
-   (translúcido + desenfoque + brillo en el borde). En Chrome la barra, el
-   aviso y la ficha del día además REFRACTAN lo de atrás (filtro SVG
-   #ba-liquido de App.jsx); Safari ignora esa línea y se queda con el blur. */
+/* ── v6 (19-nov): ESTILO "LÍNEA" + PALETA HELECHO ──────────────────────────
+   Referencia de Zahir: video de una app de café (papel crema, UN color fuerte,
+   dibujos de línea del personaje, botones en píldora con contorno). Solo
+   inspiración y DISTINTO a Hoja (Hoja = cobalto + Caveat Brush): aquí verdes
+   helecho, Outfit + Gochi Hand y la bolsita. Sin vidrio, sin sombras: trazo de
+   1.5 px. El rojo SOLO vive dentro de la bolsita (--rojo ya es albahaca).
+   ───────────────────────────────────────────────────────────────────────── */
 .ba {
-  --f: #DCE0C6; --f2: rgba(255, 255, 255, .34); --b: rgba(255, 255, 255, .42);
-  --t: #2E3320; --s: #626A4A; --l: rgba(255, 255, 255, .55);
-  --verde: #5E6B3F; --lima: #DCE3AE; --salvia: #B8BF94;
-  --v-fondo: linear-gradient(155deg, rgba(255, 255, 255, .66) 0%, rgba(255, 255, 255, .34) 48%, rgba(255, 255, 255, .24) 100%);
-  --v-sombra: inset 0 1px 0 rgba(255, 255, 255, .95), inset 0 -1px 1px rgba(255, 255, 255, .3), inset 1px 0 0 rgba(255, 255, 255, .35), inset 0 0 22px rgba(255, 255, 255, .18), 0 14px 34px -18px rgba(52, 60, 30, .38);
-  --v-blur: blur(22px) saturate(175%);
-  isolation: isolate;
-  /* fondo LISO olivo pastel; el difuminado va en el escenario de atrás (.bb-fondo-fijo) */
-  background: linear-gradient(180deg, #E1E4CD 0%, #D3D8B8 100%);
+  --f: #F4F4E6; --f2: #E9ECD6; --b: #FAFAF1; --t: #30401C; --s: #66734D; --l: rgba(48, 64, 28, .16);
+  --noche: #121F0D; --verde: #526531; --gamuza: #758850; --plaza: #98A973; --uva: #B9C798; --lima: #DCE7BE;
+  --rojo: #526531; --raya: inset 0 0 0 1.5px var(--t);
+  --d: 'Outfit', 'Inter', system-ui, sans-serif; --mano: 'Gochi Hand', 'Outfit', cursive;
+  background: var(--f); color: var(--noche);
 }
+.ba-cab h1, .ba-tit-fila h2, .ba-sec, .ba-hoja h2, .ba-intro h1, .ba-paso-cab h1 { font-weight: 800; letter-spacing: -.035em; color: var(--noche); }
 
-/* todo lo que era blanco ahora es vidrio */
+/* contorno: lo que antes era tarjeta blanca o vidrio */
 .ba-btn.claro, .ba-chips button, .ba-atras, .ba-campo, .ba-opciones button, .ba-modos button, .ba-direccion, .ba-pedido, .ba-filas,
 .ba-cant, .ba-entrega, .ba-horas button, .ba-semana .dia, .ba-ajustes, .ba-tel, .ba-codigo span, .ba-regalo .sello, .ba-regalo .dones div,
-.ba-bocados-chip, .ba-pago, .ba-vacio-caja, .ba-seg .activo, .ba-avisos-demo .n {
-  background: var(--v-fondo) !important; -webkit-backdrop-filter: var(--v-blur); backdrop-filter: var(--v-blur);
-  box-shadow: var(--v-sombra); border: 0; }
-.ba-seg, .ba-modos .ic, .ba-pedido .estado, .ba-fila .estado, .ba-item .tags i, .ba-lineas .quitar, .ba-cant button {
-  background: rgba(255, 255, 255, .3) !important; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .7), inset 0 0 0 1px rgba(255, 255, 255, .35); }
-.ba-seg { -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
-/* lo activo/seleccionado: vidrio teñido de olivo, con el borde de luz */
+.ba-bocados-chip, .ba-pago, .ba-vacio-caja, .ba-avisos-demo .n, .ba-seg, .ba-dias button, .ba-cuentas, .ba-recompensas > * {
+  background: transparent !important; box-shadow: var(--raya) !important; border: 0 !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+.ba-pedido::before, .ba-bocados-chip::before, .ba-barra::before, .ba-aviso::before, .ba-del .info::before { content: none !important; }
+.ba-modos .ic, .ba-pedido .estado, .ba-fila .estado, .ba-item .tags i, .ba-lineas .quitar, .ba-cant button {
+  background: var(--lima) !important; box-shadow: none !important; color: var(--t); }
+/* lo elegido: relleno de tinta, letra papel */
 .ba-chips button.on, .ba-horas button.on, .ba-dias button.on, .ba-opciones button.on, .ba-modos button.on {
-  background: linear-gradient(160deg, rgba(94, 107, 63, .92), rgba(46, 51, 32, .9)) !important; color: #F4F5EA;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .35), inset 0 -1px 0 rgba(0, 0, 0, .15), 0 10px 22px -12px rgba(46, 51, 32, .55) !important; }
-.ba-opciones button.on .ba-palomita, .ba-modos button.on .ic { background: rgba(255, 255, 255, .18) !important; color: var(--lima); }
-.ba-modos button.on div span { color: rgba(244, 245, 234, .7); }
-.ba-codigo span.actual { box-shadow: var(--v-sombra), inset 0 0 0 2px var(--verde) !important; }
-.ba-pedido.est-listo, .ba-semana .dia.est-listo, .ba-semana .dia.est-camino { background: linear-gradient(155deg, rgba(236, 241, 196, .85), rgba(216, 223, 168, .6)) !important; }
+  background: var(--t) !important; color: var(--f) !important; box-shadow: none !important; }
+.ba-dias button.on small, .ba-modos button.on div span { color: var(--lima) !important; }
+.ba-opciones button.on .ba-palomita, .ba-modos button.on .ic { background: rgba(220, 231, 190, .2) !important; color: var(--lima); }
+.ba-codigo span.actual { box-shadow: inset 0 0 0 2.5px var(--t) !important; }
+.ba-pedido.est-listo, .ba-semana .dia.est-listo, .ba-semana .dia.est-camino { background: var(--lima) !important; }
+.ba-seg .activo { background: var(--t) !important; box-shadow: none !important; top: 5px; bottom: 5px; }
+.ba-seg button.on { color: var(--f); }
 
-/* botón principal: vidrio oscuro con brillo */
+/* botones: píldora de tinta */
 .ba-btn, .ba-mas, .ba-repetir, .ba-item .mas, .ba-pago .ic, .ba-cuentas .tarjeta {
-  background: linear-gradient(165deg, rgba(86, 98, 58, .95), rgba(46, 51, 32, .95)) !important;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .3), inset 0 -1px 0 rgba(0, 0, 0, .2), 0 12px 26px -14px rgba(46, 51, 32, .7); }
+  background: var(--t) !important; color: var(--f) !important; box-shadow: none !important; }
 .ba-btn.claro { color: var(--t) !important; }
-.ba-mas.ok, .ba-mas.rojo.ok { background: linear-gradient(165deg, #8C9A5E, #5E6B3F) !important; }
-.ba-mas.rojo, .ba-carrito-barra { background: linear-gradient(165deg, rgba(240, 108, 82, .96), rgba(214, 74, 48, .96)) !important;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .4), 0 14px 28px -12px rgba(226, 85, 59, .7); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
-.ba-mas.vidrio { background: var(--v-fondo) !important; color: var(--t); box-shadow: var(--v-sombra); }
+.ba-btn.chico { height: 44px; padding: 0 22px; }
+.ba-mas.ok, .ba-mas.rojo.ok { background: var(--gamuza) !important; }
+.ba-mas.rojo, .ba-carrito-barra { background: var(--verde) !important; color: var(--f) !important; box-shadow: none !important; -webkit-backdrop-filter: none; backdrop-filter: none; }
+.ba-mas.vidrio { background: var(--f) !important; color: var(--t) !important; box-shadow: var(--raya) !important; border: 0; -webkit-backdrop-filter: none; backdrop-filter: none; }
+.ba-link { color: var(--t); font-weight: 600; }
 
-/* bloques de marca (membresía, promo, resumen, encabezados): olivo translúcido */
+/* bloques de marca: albahaca lisa con letra kiwi */
 .ba-membresia, .ba-plan-promo, .ba-resumen, .ba-bocados, .ba-memb-cab, .ba-pedido-cab {
-  background: linear-gradient(150deg, rgba(122, 136, 84, .9), rgba(78, 89, 52, .94)) !important;
-  -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .35), inset 0 0 30px rgba(255, 255, 255, .06), 0 18px 36px -20px rgba(46, 51, 32, .6); }
-.ba-memb-cab, .ba-pedido-cab { box-shadow: inset 0 -1px 0 rgba(255, 255, 255, .2); }
-.ba-carga { background: radial-gradient(80% 60% at 50% 40%, #8C9A62, #5E6B3F 70%, #4E5934); }
+  background: var(--verde) !important; color: var(--lima) !important; box-shadow: none !important; -webkit-backdrop-filter: none; backdrop-filter: none; }
+.ba-carga { background: var(--verde); }
 
-/* fotos con vidrio encima */
-.ba-del { box-shadow: 0 22px 44px -26px rgba(46, 51, 32, .55); }
-.ba-del .info, .ba-del .etq, .ba-cerrar, .ba-pedido-mapa .sobre { background: var(--v-fondo) !important; box-shadow: var(--v-sombra); border: 0 !important; -webkit-backdrop-filter: blur(16px) saturate(180%); backdrop-filter: blur(16px) saturate(180%); }
-.ba-mini img, .ba-item img, .ba-fila img, .ba-semana img, .ba-lineas img { box-shadow: 0 10px 22px -14px rgba(46, 51, 32, .5); }
+/* fotos: limpias, sin sombra; la tarjeta del día con contorno */
+.ba-del { box-shadow: var(--raya); border-radius: 26px; }
+.ba-del img { border-radius: inherit; }
+.ba-del .info, .ba-del .etq, .ba-cerrar, .ba-pedido-mapa .sobre { background: var(--f) !important; box-shadow: var(--raya) !important; border: 0 !important; -webkit-backdrop-filter: none; backdrop-filter: none; }
+.ba-mini img, .ba-item img, .ba-fila img, .ba-semana img, .ba-lineas img { box-shadow: none; }
+.ba-item { border-color: var(--l) !important; }
+.ba-item .tags .dia { background: var(--verde) !important; color: var(--lima) !important; }
+.ba-item .tags .ojo { background: transparent !important; box-shadow: inset 0 0 0 1px var(--t) !important; color: var(--t) !important; }
 
-/* hojas: vidrio esmerilado grueso */
-.ba-hoja-fondo { background: rgba(58, 66, 36, .22); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
-.ba-hoja { background: linear-gradient(170deg, rgba(240, 242, 228, .86), rgba(222, 226, 202, .82)); -webkit-backdrop-filter: blur(34px) saturate(170%); backdrop-filter: blur(34px) saturate(170%);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .95), 0 -20px 50px -20px rgba(46, 51, 32, .35); }
-.ba-hoja-pie { background: rgba(236, 239, 222, .7); -webkit-backdrop-filter: blur(24px); backdrop-filter: blur(24px); border-top: 1px solid rgba(255, 255, 255, .6); }
-.ba-macros, .ba-macros div + div, .ba-item, .ba-fila, .ba-filas button + button, .ba-ajustes .fila + .fila, .ba-cuentas .total, .ba-tel .lada { border-color: rgba(46, 51, 32, .09) !important; }
+/* hojas: papel liso con raya arriba */
+.ba-hoja-fondo { background: rgba(18, 31, 13, .28); -webkit-backdrop-filter: none; backdrop-filter: none; }
+.ba-hoja { background: var(--f); box-shadow: 0 -1.5px 0 var(--t); -webkit-backdrop-filter: none; backdrop-filter: none; }
+.ba-hoja-pie { background: var(--f); border-top: 1.5px solid var(--t); -webkit-backdrop-filter: none; backdrop-filter: none; }
+.ba-hoja .etqs span { background: var(--lima); color: var(--t); }
+.ba-macros, .ba-macros div + div, .ba-filas button + button, .ba-ajustes .fila + .fila, .ba-cuentas .total, .ba-tel .lada { border-color: var(--l) !important; }
 
-/* barra de abajo y avisos: VIDRIO LÍQUIDO de verdad */
-.ba-barra, .ba-aviso {
-  background: linear-gradient(150deg, rgba(255, 255, 255, .5), rgba(255, 255, 255, .16)) !important;
-  -webkit-backdrop-filter: blur(4px) saturate(190%) brightness(1.06); backdrop-filter: blur(4px) saturate(190%) brightness(1.06);
-  backdrop-filter: url(#ba-liquido) blur(3px) saturate(190%) brightness(1.06);
-  border: 0 !important;
-  box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, .95), inset 0 -1px 1px rgba(255, 255, 255, .5), inset 2px 0 3px -1px rgba(255, 255, 255, .6),
-    inset -2px 0 3px -1px rgba(255, 255, 255, .4), inset 0 0 18px rgba(255, 255, 255, .25), 0 18px 40px -14px rgba(46, 51, 32, .4) !important; }
-.ba-barra::before, .ba-aviso::before, .ba-del .info::before, .ba-pedido::before, .ba-bocados-chip::before {
-  content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none;
-  background: linear-gradient(135deg, rgba(255, 255, 255, .95), rgba(255, 255, 255, .15) 35%, rgba(255, 255, 255, 0) 55%, rgba(255, 255, 255, .7));
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; }
-.ba-pedido, .ba-bocados-chip { position: relative; }
-.ba-barra .activo { background: linear-gradient(160deg, rgba(94, 107, 63, .95), rgba(46, 51, 32, .92));
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .4), inset 0 -2px 4px rgba(0, 0, 0, .15), 0 8px 18px rgba(46, 51, 32, .35); }
-.ba-aviso .ic, .ba-avisos-demo .ic { background: linear-gradient(160deg, #7A8854, #5E6B3F); }
+/* barra de abajo y avisos: píldora de papel con contorno */
+.ba-barra, .ba-aviso { background: var(--f) !important; box-shadow: var(--raya), 0 10px 24px -14px rgba(18, 31, 13, .35) !important; border: 0 !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+.ba-barra .activo { background: var(--t); box-shadow: none; }
+.ba-barra button { color: var(--t); }
+.ba-barra button.on { color: var(--lima); }
+.ba-aviso .ic, .ba-avisos-demo .ic { background: var(--verde); }
+.ba:has(> .ba-cuerpo)::before { background: linear-gradient(var(--f) 40%, rgba(244, 244, 230, 0)); -webkit-backdrop-filter: none; backdrop-filter: none; -webkit-mask-image: none; mask-image: none; }
+.ba-switch { background: var(--uva); box-shadow: none; }
+.ba-switch.on { background: var(--t); }
+.ba-avance, .ba-pasos i, .ba-paso-cab .barrita i { background: var(--l); }
+.ba-pasos .on i, .ba-paso-cab .barrita i.on { background: var(--t); }
 
-/* lo que sube no se mete bajo la hora: ahora es vidrio que se desvanece */
-.ba:has(> .ba-cuerpo)::before { background: linear-gradient(rgba(214, 219, 190, .55), rgba(214, 219, 190, 0));
-  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
-  -webkit-mask-image: linear-gradient(#000 55%, transparent); mask-image: linear-gradient(#000 55%, transparent); }
-.ba-switch { background: rgba(46, 51, 32, .14); box-shadow: inset 0 1px 2px rgba(46, 51, 32, .15); }
-.ba-switch.on { background: linear-gradient(160deg, #7A8854, #5E6B3F); }
-.ba-avance, .ba-pasos i, .ba-paso-cab .barrita i { background: rgba(255, 255, 255, .4); }
+/* sello redondo del menú */
+.ba-sello { flex: none; color: var(--t); }
+.ba-sello .giro { transform-box: view-box; transform-origin: 60px 60px; animation: ba-sello 24s linear infinite; }
+@keyframes ba-sello { to { transform: rotate(360deg); } }
+
+/* CARGA: albahaca, nombre grande en kiwi, la bolsita en línea y letra a mano */
+.ba-carga { gap: 6px; justify-content: center; color: var(--lima); }
+.ba-carga .ba-wm { font: 900 68px/.88 'Outfit', var(--d) !important; color: var(--lima); margin-bottom: 6px; }
+.ba-carga .ba-wm span { animation-delay: .05s !important; }
+.ba-carga .mono { filter: none; animation: ba-cae .75s cubic-bezier(.3, 1.45, .5, 1) .55s both; }
+.ba-carga .mono :is(.tallo, .hoja) { animation-delay: 1.15s; }
+.ba-carga .mono :is(.brazo, .mano) { animation-delay: 1.4s; }
+.ba-carga .mono .corazones { animation-delay: 1.7s; }
+.ba-carga .lema { font: 400 25px/1 var(--mano) !important; color: var(--lima) !important; margin-top: 8px; animation-delay: 1.9s !important; }
+
+/* BIENVENIDA: dibujo de línea, puntos, título y Saltar / Siguiente */
+.ba-intro { background: var(--f); }
+.ba-intro .dibujo { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; padding: 12px 18px 0; animation: ba-entra .6s cubic-bezier(.2, .8, .2, 1); }
+.ba-intro .dibujo svg { width: 100%; max-height: 100%; height: auto; overflow: visible; }
+.ba-intro .dibujo .bb-bolsita :is(.brazo, .mano) { transform-box: view-box; transform-origin: 104px 96px; animation: ba-saluda 1.4s ease-in-out .4s infinite; }
+.ba-intro > .puntos { flex: none; display: flex; justify-content: center; gap: 6px; margin: 14px 0 4px; }
+.ba-intro > .puntos button { width: 7px; height: 7px; border-radius: 99px; background: var(--uva); transition: width .3s, background .3s; }
+.ba-intro > .puntos button.on { width: 26px; background: var(--t); }
+.ba-intro .txt { text-align: center; padding-top: 14px; }
+.ba-intro h1 { font-size: 32px; }
+.ba-intro h1 em { color: var(--gamuza); }
+.ba-intro .pie.fila { flex-direction: row; justify-content: space-between; align-items: center; padding: 22px 24px 0; }
+.ba-intro .pie.fila .ba-link { padding: 10px 4px; }
+
+/* Explora (inicio): píldoras con contorno, título y una línea; la última con la bolsita asomándose */
+.ba-explora { display: grid; gap: 10px; }
+.ba-explora button { position: relative; display: flex; flex-direction: column; gap: 1px; padding: 13px 22px 14px; border-radius: 999px; box-shadow: var(--raya); min-width: 0; }
+.ba-explora b { font: 800 17px/1.15 var(--d); letter-spacing: -.02em; color: var(--noche); }
+.ba-explora span { font-size: 12.5px; color: var(--s); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ba-explora .lleno { background: var(--t); box-shadow: none; padding: 16px 24px; }
+.ba-explora .lleno b { color: var(--f); } .ba-explora .lleno span { color: var(--lima); }
+.ba-explora .asoma { position: absolute; right: 18px; bottom: -6px; transform: rotate(14deg); animation: ba-asoma 3s ease-in-out infinite; }
+@keyframes ba-asoma { 50% { transform: rotate(4deg) translateY(-3px); } }
+@media (prefers-reduced-motion: reduce) {
+  .ba-sello .giro, .ba-explora .asoma, .ba-intro .dibujo .bb-bolsita * { animation: none !important; }
+}

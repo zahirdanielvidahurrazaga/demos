@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>La bolsita</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;800;900&family=Inter:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --olivo:#5E6B3F; --carbon:#2E3320; --salvia:#D8DFA8; --masa:#EEF0E2; --tomate:#E2553B;
+  }
+  *{box-sizing:border-box;margin:0}
+  body{background:#E4E7D2;color:var(--carbon);font-family:Inter,system-ui,sans-serif;padding:48px 16px 96px}
+  .wrap{max-width:1080px;margin:0 auto}
+  h1{font-family:Outfit;font-weight:900;font-size:clamp(32px,5vw,52px);letter-spacing:-.02em}
+  .sub{margin-top:10px;max-width:660px;line-height:1.5;opacity:.8}
+  h2{font-family:Outfit;font-weight:900;font-size:26px;margin:64px 0 6px}
+  .exp{max-width:700px;line-height:1.5;opacity:.85;margin-bottom:18px}
+
+  /* ---------- 3D ---------- */
+  .escena{position:relative;height:min(78vh,640px);border-radius:22px;overflow:hidden;background:var(--fondo3d,var(--olivo));transition:background .4s}
+  .escena canvas{position:absolute;inset:0;cursor:grab}
+  .escena canvas:active{cursor:grabbing}
+  .ctl{position:absolute;left:16px;right:16px;bottom:16px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .ctl button{font:600 13px Inter;border:0;border-radius:999px;padding:9px 14px;background:#fff9;color:var(--carbon);cursor:pointer;backdrop-filter:blur(8px)}
+  .ctl button.on{background:#fff}
+  .ctl .sep{flex:1}
+  .pista{position:absolute;top:16px;left:18px;font:600 12px Inter;letter-spacing:.12em;text-transform:uppercase;color:#fffc}
+  .escena.claro .pista{color:var(--olivo)}
+
+  /* ---------- 2D ---------- */
+  .banda{position:relative;border-radius:18px;overflow:hidden;display:flex;align-items:center;justify-content:center;gap:clamp(8px,2.4vw,28px);padding:clamp(22px,4vw,44px) 20px}
+  .banda.olivo{background:var(--olivo);color:#fff}
+  .banda.carbon{background:var(--carbon);color:#fff}
+  .banda.masa{background:var(--masa);color:var(--olivo)}
+  .banda.blanco{background:#fff;color:var(--carbon)}
+  .banda::before{content:"";position:absolute;inset:0;opacity:.10;pointer-events:none;
+    background:repeating-linear-gradient(176deg,transparent 0 22px,rgba(255,255,255,.9) 22px 24px,transparent 24px 58px)}
+  .banda.masa::before,.banda.blanco::before{background:repeating-linear-gradient(176deg,transparent 0 22px,rgba(94,107,63,.45) 22px 24px,transparent 24px 58px)}
+  .banda > *{position:relative}
+  .vertical{flex-direction:column;gap:6px}
+
+  .marca{display:flex;flex-direction:column;align-items:center}
+  .el{font-family:Outfit;font-weight:600;align-self:flex-start;margin-left:.16em;font-size:.22em;line-height:1;letter-spacing:.01em}
+  .wm{font-family:Outfit;font-weight:900;letter-spacing:-.045em;line-height:.9;white-space:nowrap}
+  .lema{margin-top:.75em;font-family:Inter;font-weight:700;letter-spacing:.32em;text-transform:uppercase;font-size:.125em;white-space:nowrap}
+  .o-svg{display:inline-block;width:.56em;height:.56em;vertical-align:-.012em;margin:0 .01em}
+  .grande .marca{font-size:clamp(60px,11vw,124px)}
+  .grande svg.mono{width:clamp(110px,18vw,190px)}
+  .rejilla{display:grid;grid-template-columns:1.25fr 1fr;gap:14px;margin-top:14px}
+  .rejilla .marca{font-size:clamp(40px,5vw,60px)}
+  .rejilla svg.mono{width:clamp(70px,8vw,96px)}
+  .vertical svg.mono{width:clamp(110px,13vw,150px)!important}
+  .iconos{display:flex;gap:18px;align-items:flex-end;flex-wrap:wrap;margin-top:14px;padding:22px;border-radius:18px;background:#fff8}
+  .iconos figure{display:flex;flex-direction:column;align-items:center;gap:8px;font-size:12px;font-weight:600;opacity:.85}
+  .ico{border-radius:22.5%;background:var(--olivo);display:grid;place-items:center;overflow:hidden}
+  .ico svg{width:80%;margin-top:4%}
+  @media (max-width:760px){.rejilla{grid-template-columns:1fr}}
+
+  /* variantes de color del personaje */
+  .mono{--l:var(--carbon);--f:#fff;--d:var(--masa);--h:var(--salvia);--a:var(--tomate)}
+  .tinta .mono{--l:#fff;--f:transparent;--d:transparent;--h:transparent;--a:#fff}
+  .tinta-osc .mono{--l:var(--olivo);--f:transparent;--d:transparent;--h:transparent;--a:var(--olivo)}
+  .cambios{margin-top:56px;padding:22px 24px;border-radius:16px;background:#fff8;line-height:1.65}
+  .cambios b{font-family:Outfit;font-size:18px}
+  .cambios ul{margin:8px 0 0 18px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>La bolsita</h1>
+  <p class="sub">La ruta ganadora, pulida, y su versión en 3D. Arrástrala para girarla.</p>
+
+  <h2>En 3D</h2>
+  <div class="escena" id="escena">
+    <span class="pista">Arrastra para girar · tócala</span>
+    <div class="ctl">
+      <button data-bg="var(--olivo)" class="on">Olivo</button>
+      <button data-bg="var(--masa)" data-claro>Masa</button>
+      <button data-bg="var(--carbon)">Carbón</button>
+      <button data-bg="var(--salvia)" data-claro>Salvia</button>
+      <span class="sep"></span>
+      <button id="pausa">Pausar</button>
+      <button id="foto">Guardar imagen (PNG)</button>
+    </div>
+  </div>
+
+  <h2>En 2D</h2>
+  <p class="exp">Logo principal, versión vertical, a una tinta y el ícono de la app en varios tamaños.</p>
+  <div id="planos"></div>
+
+  <div class="cambios">
+    <b>Qué cambió contra la propuesta</b>
+    <ul>
+      <li>La bolsa ya parece bolsa de papel: borde de arriba cortado en picos, doblez y pliegues a los lados.</li>
+      <li>Ojos con brillo, sonrisa más ancha y chapitas: se ve más viva.</li>
+      <li>Mano en guante con pulgar, zapatitos y el sello de hoja (empaque biodegradable).</li>
+      <li>La <b>o</b> que sonríe tiene trazos más gruesos para que aguante en chico.</li>
+      <li>Ícono de la app: solo la bolsa, sin brazos ni piernas, para que se lea a 29 px.</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ================= 2D ================= -->
+<script>
+function picos(x1, x2, yAbajo, yArriba, n) {
+  const paso = (x2 - x1) / n; let d = `M${x1} ${yAbajo}`;
+  for (let i = 0; i < n; i++) d += ` L${(x1 + paso * (i + .5)).toFixed(1)} ${yArriba} L${(x1 + paso * (i + 1)).toFixed(1)} ${yAbajo}`;
+  return d;
+}
+const corazon = (x, y, s = 1) =>
+  `<path transform="translate(${x} ${y}) scale(${s})" d="M0 3C0-1 5-2 6 2C7-2 12-1 12 3C12 7 6 11 6 11S0 7 0 3Z" fill="var(--a)"/>`;
+
+// la bolsa: cuerpo + doblez + brote + cara (sin brazos ni piernas)
+function bolsaBase() {
+  const borde = picos(36, 104, 58, 51, 10);
+  return `
+  <g stroke="var(--l)" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M71 54 C70 44 71 37 74 30" fill="none"/>
+    <path d="M74 32 C82 20 95 20 99 27 C91 37 80 38 74 32Z" fill="var(--h)"/>
+    <path d="M71 43 C64 33 52 32 47 38 C53 47 64 48 71 43Z" fill="var(--h)"/>
+    <path d="M38 70 L102 70 L106 134 Q106 139 101 139 L39 139 Q34 139 34 134 Z" fill="var(--f)"/>
+    <path d="${borde} L103 72 L37 72 Z" fill="var(--d)"/>
+    <path d="M44 80 L42 132 M96 80 L98 132" fill="none" stroke-width="2" opacity=".45"/>
+    <g transform="translate(88 120)">
+      <path d="M0 6 C2 -2 10 -4 13 -1 C11 6 5 9 0 6Z" fill="var(--h)" stroke-width="2.2"/>
+    </g>
+  </g>
+  <g>
+    <ellipse cx="60" cy="100" rx="3.9" ry="4.6" fill="var(--l)"/>
+    <ellipse cx="80" cy="100" rx="3.9" ry="4.6" fill="var(--l)"/>
+    <circle cx="61.3" cy="98.4" r="1.4" fill="var(--f)"/>
+    <circle cx="81.3" cy="98.4" r="1.4" fill="var(--f)"/>
+    <path d="M61 109 Q70 118 79 109" fill="none" stroke="var(--l)" stroke-width="3.4" stroke-linecap="round"/>
+    <ellipse cx="51" cy="109" rx="5" ry="3.4" fill="var(--a)" opacity=".38"/>
+    <ellipse cx="89" cy="109" rx="5" ry="3.4" fill="var(--a)" opacity=".38"/>
+  </g>`;
+}
+function bolsita() {
+  return `
+  <g fill="none" stroke="var(--l)" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M36 96 Q19 104 25 116 Q29 122 36 118"/>
+    <path d="M104 96 Q120 92 121 66"/>
+    <path d="M58 139 L57 156"/><path d="M82 139 L83 156"/>
+  </g>
+  <g stroke="var(--l)" stroke-width="3" stroke-linejoin="round">
+    <path d="M47 156 Q47 151 53 151 L58 151 Q60 151 60 154 L60 158 L49 158 Q47 158 47 156Z" fill="var(--l)"/>
+    <path d="M93 156 Q93 151 87 151 L82 151 Q80 151 80 154 L80 158 L91 158 Q93 158 93 156Z" fill="var(--l)"/>
+    <path d="M115 66 Q113 54 120 53 Q127 53 127 62 Q127 68 121 69 Q116 69 115 66Z" fill="var(--f)"/>
+    <path d="M115 62 Q110 59 112 55" fill="none" stroke-linecap="round"/>
+  </g>
+  ${corazon(126, 34)}
+  ${corazon(137, 46, .55)}
+  ${bolsaBase()}`;
+}
+const mono = () => `<svg class="mono" viewBox="10 14 140 148" aria-hidden="true">${bolsita()}</svg>`;
+const icono = () => `<svg class="mono" viewBox="14 12 112 136" aria-hidden="true">${bolsaBase()}</svg>`;
+
+const oSonrisa = `<svg class="o-svg" viewBox="0 0 60 60"><circle cx="30" cy="30" r="22.5" fill="none" stroke="currentColor" stroke-width="15"/><circle cx="24.6" cy="27" r="3" fill="currentColor"/><circle cx="35.4" cy="27" r="3" fill="currentColor"/><path d="M23.6 33.2 Q30 39.5 36.4 33.2" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"/></svg>`;
+const marca = (lema = 'comida real para llevar') =>
+  `<div class="marca"><span class="el">el buen</span><span class="wm">bocad${oSonrisa}</span><span class="lema">${lema}</span></div>`;
+
+const tamanos = [180, 120, 76, 48, 29];
+document.getElementById('planos').innerHTML = `
+  <div class="banda olivo grande">${marca()}${mono()}</div>
+  <div class="rejilla">
+    <div class="banda masa vertical">${mono()}${marca()}</div>
+    <div style="display:grid;gap:14px">
+      <div class="banda carbon">${marca()}${mono()}</div>
+      <div class="banda olivo tinta">${marca()}${mono()}</div>
+      <div class="banda blanco tinta-osc" style="color:var(--olivo)">${marca()}${mono()}</div>
+    </div>
+  </div>
+  <div class="iconos">
+    ${tamanos.map(t => `<figure><div class="ico" style="width:${t}px;height:${t}px">${icono()}</div>${t} px</figure>`).join('')}
+    <figure><div class="ico" style="width:120px;height:120px;background:var(--masa)">${icono()}</div>claro</figure>
+  </div>`;
+</script>
+
+<!-- ================= 3D ================= -->
+<!-- El 3D es el MISMO módulo de la exposición (src/demo/bocado/montarBolsita.js).
+     Abre esta página con el servidor de Vite: http://localhost:5199/marca/buenbocado/bolsita.html -->
+<script type="module">
+import { montarBolsita } from '/src/demo/bocado/montarBolsita.js';
+const caja = document.getElementById('escena');
+const b = montarBolsita(caja, { girar: true });
+caja.querySelector('.ctl').style.zIndex = 2;
+caja.querySelectorAll('[data-bg]').forEach(x => x.onclick = () => {
+  caja.querySelectorAll('[data-bg]').forEach(y => y.classList.toggle('on', y === x));
+  caja.style.setProperty('--fondo3d', x.dataset.bg);
+  caja.classList.toggle('claro', x.hasAttribute('data-claro'));
+});
+let pausado = false;
+document.getElementById('pausa').onclick = (e) => { pausado = !pausado; b.pausar(pausado); e.target.textContent = pausado ? 'Seguir' : 'Pausar'; };
+document.getElementById('foto').onclick = () => { const a = document.createElement('a'); a.download = 'bolsita-3d.png'; a.href = b.foto(); a.click(); };
+</script>
+</body>
+</html>

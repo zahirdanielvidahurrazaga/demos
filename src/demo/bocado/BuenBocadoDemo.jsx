@@ -2,7 +2,6 @@ import { useEffect } from 'react';
 import App from './App';
 import Expo from './Expo';
 import Iphone from './Iphone';
-import Sitio from './Sitio';
 import './bocado.css';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -15,7 +14,7 @@ import './bocado.css';
 // `?rol=app` = la app sola (en compu dentro del iPhone, en celular a pantalla
 // completa). La presentación vieja por capítulos sigue en `?rol=sitio`.
 // Sin base de datos y sin barra de KaiZen.
-// Marca: `marca/buenbocado/manual.html` (ruta "Mordida").
+// Marca: `marca/buenbocado/manual.html` + `bolsita.html` (la bolsita, 19-nov; antes "Mordida").
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function BuenBocadoDemo() {
@@ -25,12 +24,12 @@ export default function BuenBocadoDemo() {
     if (!document.getElementById('fuentes-bocado')) {
       const link = document.createElement('link');
       link.id = 'fuentes-bocado'; link.rel = 'stylesheet';
-      link.href = 'https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,800&family=Inter:wght@400;500;600;700&display=swap';
+      link.href = 'https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,800&family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800;900&family=Gochi+Hand&display=swap';
       document.head.appendChild(link);
     }
     const antes = document.body.style.background;
     const titulo = document.title;
-    document.body.style.background = rol === 'sitio' ? '#EEF0E2' : '#C4CAA3';
+    document.body.style.background = '#F4F4E6';
     document.title = 'el buen bocado · Comer bien, a tu hora';
     return () => { document.body.style.background = antes; document.title = titulo; };
   }, [rol]);
@@ -50,5 +49,7 @@ export default function BuenBocadoDemo() {
     }
     return <div className="bb bb-solo"><App /></div>;
   }
-  return <div className="bb"><Sitio /></div>;
+  // ?rol=sitio (la presentación vieja del 13-nov, con el logo del plato) se retiró
+  // el 19-nov: cualquier otro rol abre la exposición.
+  return <div className="bb bb-expo"><Expo /></div>;
 }

@@ -1,7 +1,7 @@
 import { Suspense, lazy, useEffect, useRef, useState } from 'react';
 import App from './App';
 import Iphone from './Iphone';
-import { Isotipo, Logo } from './comun';
+import { Bolsita, Dibujo, Isotipo, Logo, Nombre, Sello } from './comun';
 import { ZONAS } from './zonasLocal';
 import './expo.css';
 
@@ -14,6 +14,7 @@ import './expo.css';
 // ─────────────────────────────────────────────────────────────────────────────
 
 const Local3D = lazy(() => import('./Local3D'));
+const Bolsita3D = lazy(() => import('./Bolsita3D'));
 
 const GUIA = [
   { tipo: 'bienvenida', t: 'La primera vez', d: 'Registro con tu celular, qué buscas, qué evitas y cómo lo quieres.' },
@@ -44,14 +45,13 @@ function useAparece() {
 export default function Expo() {
   return (
     <div className="bx">
-      <div className="bx-fondo" aria-hidden="true"><i /><i /><i /><i /></div>
       <Cabeza />
       <Portada />
       <LaApp />
       <ElLocal />
       <LaMarca />
       <footer className="bx-pie">
-        <Logo size={30} aro="#E2553B" centro="#DCE0C6" />
+        <Logo size={30} />
         <span>Proyecto de Emprendimiento · 2026 · prototipo</span>
       </footer>
     </div>
@@ -62,7 +62,7 @@ function Cabeza() {
   return (
     <header className="bx-cab vidrio">
       <button className="marca" onClick={() => window.scrollTo({ top: 0, behavior: quieto() ? 'auto' : 'smooth' })} aria-label="Inicio">
-        <Isotipo size={26} aro="#E2553B" centro="#E9ECD6" />
+        <Isotipo size={30} />
         <span>el buen bocado</span>
       </button>
       <nav>
@@ -86,9 +86,12 @@ function Portada() {
           <button className="bx-btn vidrio" onClick={() => ir('local')}>Recorrer el local</button>
         </div>
       </div>
-      <div className="plato" aria-hidden="true">
-        <div className="aro vidrio" />
-        <Isotipo size={260} aro="#E2553B" centro="#D3D8B6" />
+      <div className="plato">
+        <div className="aro vidrio" aria-hidden="true" />
+        <Suspense fallback={<Bolsita size={260} className="respaldo" />}>
+          <Bolsita3D className="bx-bolsita3d" />
+        </Suspense>
+        <span className="bx-toca">Gírala o tócala</span>
       </div>
     </section>
   );
@@ -175,16 +178,25 @@ function ElLocal() {
 }
 
 // ── 03 LA MARCA ─────────────────────────────────────────────────────────────
-// Cómo se creó el logo (plato + mordida = bocado), sus cuatro formas, los
+// Cómo se creó el logo (bolsa + brote + sonrisa = la bolsita, 19-nov; antes
+// plato + mordida), sus cuatro formas, los
 // colores escogidos, la letra, la voz y la marca aplicada (fotos `b-*` de
 // Codex, 17-nov; las `m-*` viejas no le gustaron a Zahir).
+// Paleta "helecho" (19-nov): siete verdes de lo más oscuro a lo más claro + el papel.
 const COLORES = [
-  { n: 'Olivo', h: '#5E6B3F', u: 'La marca: fachada, app, empaque', claro: false },
-  { n: 'Salvia', h: '#B8BF94', u: 'Fondos y ambiente', claro: true },
-  { n: 'Salvia clara', h: '#D8DFA8', u: 'Etiquetas y detalles', claro: true },
-  { n: 'Masa', h: '#EEF0E2', u: 'El fondo limpio', claro: true },
-  { n: 'Tomate', h: '#E2553B', u: 'Lo importante: botones y tu hora', claro: false },
-  { n: 'Carbón', h: '#2E3320', u: 'Texto. Nunca negro puro', claro: false },
+  { n: 'Noche', h: '#121F0D', u: 'Títulos. Nunca negro puro', claro: false },
+  { n: 'Ceylanita', h: '#30401C', u: 'Trazo, texto y botones', claro: false },
+  { n: 'Albahaca', h: '#526531', u: 'La marca: fachada, carga, empaque', claro: false },
+  { n: 'Gamuza', h: '#758850', u: 'Segundo tono y detalles', claro: false },
+  { n: 'Plaza', h: '#98A973', u: 'Las hojas de la bolsita', claro: true },
+  { n: 'Uva blanca', h: '#B9C798', u: 'Rayas y apagados', claro: true },
+  { n: 'Kiwi', h: '#DCE7BE', u: 'Etiquetas y fondos de color', claro: true },
+  { n: 'Papel', h: '#F4F4E6', u: 'El fondo de todo', claro: true },
+];
+const IDEA = [
+  ['La bolsa', 'Es para llevar: la pides, la recoges y te vas.'],
+  ['El brote', 'Empaque biodegradable: lo que sobra vuelve a la tierra.'],
+  ['La sonrisa', 'Comer bien se siente bien. Y te saluda.'],
 ];
 const APLICADA = [
   ['b-bolsa', 'Bolsa kraft con tu nombre, hora y casilla'],
@@ -193,32 +205,6 @@ const APLICADA = [
   ['b-casillas', 'La pared de casillas'],
   ['b-bebida', 'Botella retornable'],
 ];
-
-function Plato({ paso }) {
-  // paso 0 = el plato · 1 = la mordida · 2 = el bocado
-  const id = `bx-m${paso}`;
-  return (
-    <svg viewBox="0 0 100 100" className={`bx-plato p${paso}`} aria-hidden="true">
-      <defs>
-        <mask id={id} maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100">
-          <rect width="100" height="100" fill="#fff" />
-          {paso === 2 && <><circle cx="88" cy="22" r="13" fill="#000" /><circle cx="96" cy="38" r="11" fill="#000" /><circle cx="76" cy="10" r="11" fill="#000" /></>}
-        </mask>
-      </defs>
-      {paso === 1 ? (
-        <g fill="none" stroke="#E2553B" strokeWidth="1.6" strokeDasharray="3 3">
-          <circle cx="50" cy="50" r="44" stroke="rgba(46,51,32,.25)" />
-          <circle cx="88" cy="22" r="13" /><circle cx="96" cy="38" r="11" /><circle cx="76" cy="10" r="11" />
-        </g>
-      ) : (
-        <g mask={`url(#${id})`}>
-          <circle cx="50" cy="50" r="44" fill="#E2553B" />
-          <circle cx="50" cy="50" r="22" fill="#5E6B3F" />
-        </g>
-      )}
-    </svg>
-  );
-}
 
 function Bloque({ className = '', children }) {
   const ref = useAparece();
@@ -232,25 +218,36 @@ function LaMarca() {
 
       <Bloque className="bx-idea">
         <div className="pasos">
-          {['El plato', 'La mordida', 'El bocado'].map((t, i) => (
+          {IDEA.map(([t, d], i) => (
             <div key={t} className="paso vidrio">
-              <Plato paso={i} />
+              <div className="dibujo">{i < 2 ? <Isotipo size={130} className={i === 0 ? 'sin-brote sin-cara' : 'sin-cara'} /> : <Bolsita size={140} />}</div>
               <b>{t}</b>
-              <span>{['Visto desde arriba: es comida.', 'Tres curvas arriba a la derecha.', 'Se antoja y alguien ya lo disfruta.'][i]}</span>
+              <span>{d}</span>
             </div>
           ))}
         </div>
-        <p className="nota">El símbolo es un plato al que ya le dieron el primer bocado. Dice tres cosas a la vez: <b>es comida, se antoja y alguien ya la está disfrutando.</b></p>
+        <p className="nota">El personaje es la bolsa en la que te llevas tu comida. Dice tres cosas a la vez: <b>es para llevar, cuida el planeta y comer bien se siente bien.</b> En el nombre, la última <b>o</b> también sonríe.</p>
       </Bloque>
 
       <Bloque className="bx-formas">
-        <h3>Cuatro formas, una sola marca</h3>
+        <h3>Cinco formas, una sola marca</h3>
         <div className="rejilla">
-          <div className="vidrio ancha"><Logo size={64} aro="#E2553B" centro="#5E6B3F" /><small>Principal · horizontal</small></div>
-          <div className="vidrio"><div className="vert"><Isotipo size={70} aro="#E2553B" centro="#5E6B3F" /><span className="bb-wm" style={{ fontSize: 34 }}><span className="el">el buen</span>bocado</span></div><small>Vertical</small></div>
-          <div className="vidrio oscura"><Isotipo size={80} aro="#E2553B" centro="#2E3320" /><small>Símbolo · app y sellos</small></div>
-          <div className="vidrio olivo"><span className="bb-wm" style={{ fontSize: 46 }}><span className="el">el buen</span>bocado</span><small>Solo nombre</small></div>
+          <div className="vidrio ancha"><Logo size={50} lema /><small>Principal · horizontal</small></div>
+          <div className="vidrio"><div className="vert"><Bolsita size={96} /><Nombre size={38} /></div><small>Vertical</small></div>
+          <div className="vidrio oscura"><span className="ico"><Isotipo size={70} /></span><small>Ícono de la app</small></div>
+          <div className="vidrio"><Sello size={130} className="bx-sello" /><small>Sello</small></div>
+          <div className="vidrio olivo"><Logo size={34} tinta="blanca" /><small>Una tinta</small></div>
         </div>
+      </Bloque>
+
+      <Bloque className="bx-accion">
+        <h3>La bolsita en acción</h3>
+        <div className="dibujos">
+          {[['oficina', 'Comer bien, a tu hora.'], ['casilla', 'Recógelo sin fila.'], ['bowl', 'Junta bocados.']].map(([e, t]) => (
+            <figure key={e} className="vidrio"><Dibujo escena={e} /><figcaption>{t}</figcaption></figure>
+          ))}
+        </div>
+        <p className="nota">Los dibujos de la app van en línea, con el mismo trazo del logo: así la marca se siente hecha a mano y no de catálogo.</p>
       </Bloque>
 
       <Bloque className="bx-colores">
@@ -263,21 +260,24 @@ function LaMarca() {
           ))}
         </div>
         <div className="proporcion" aria-label="Proporción sugerida">
-          <i style={{ flex: 45, background: '#EEF0E2' }}>Masa 45%</i>
-          <i style={{ flex: 30, background: '#5E6B3F', color: '#EEF0E2' }}>Olivo 30%</i>
-          <i style={{ flex: 15, background: '#B8BF94' }}>Salvia</i>
-          <i style={{ flex: 6, background: '#2E3320' }} />
-          <i style={{ flex: 4, background: '#E2553B' }} />
+          <i style={{ flex: 45, background: '#F4F4E6' }}>Papel 45%</i>
+          <i style={{ flex: 20, background: '#526531', color: '#DCE7BE' }}>Albahaca 20%</i>
+          <i style={{ flex: 15, background: '#DCE7BE' }}>Kiwi</i>
+          <i style={{ flex: 10, background: '#30401C' }} />
+          <i style={{ flex: 6, background: '#98A973' }} />
+          <i style={{ flex: 4, background: '#121F0D' }} />
         </div>
-        <p className="nota">Un olivo pastel, tranquilo y fresco, con poquito tomate: <b>si algo es tomate, es importante</b> (el botón, la hora de tu pedido).</p>
+        <p className="nota">Siete verdes de helecho sobre papel: fresco, natural y tranquilo. El trazo siempre es ceylanita. <b>El rojo solo vive en la bolsita</b> (sus chapitas y corazones).</p>
       </Bloque>
 
       <Bloque className="bx-letra">
         <div className="vidrio tipo">
-          <small>Títulos · Bricolage Grotesque 800</small>
+          <small>Logo y títulos · Outfit 900 / 800</small>
           <div className="grande">Ya está listo.</div>
           <small>Texto y app · Inter</small>
           <p>Bowl mediterráneo con quinoa, garbanzo rostizado y aderezo de yogur con limón. 520 kcal · 28 g proteína.</p>
+          <small>A mano, solo para guiños · Gochi Hand</small>
+          <div className="mano">come rico, a tu hora</div>
         </div>
         <div className="vidrio voz">
           <small>Así hablamos</small>

@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Logo nuevo — propuestas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;800;900&family=Inter:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --olivo:#5E6B3F; --carbon:#2E3320; --salvia:#D8DFA8; --masa:#EEF0E2;
+    --tomate:#E2553B; --fondo:#C4CAA3; --linea:#2E3320;
+  }
+  *{box-sizing:border-box;margin:0}
+  body{background:#E4E7D2;color:var(--carbon);font-family:Inter,system-ui,sans-serif;padding:48px 16px 96px}
+  .wrap{max-width:1080px;margin:0 auto}
+  header h1{font-family:Outfit;font-weight:900;font-size:clamp(32px,5vw,52px);letter-spacing:-.02em}
+  header p{margin-top:10px;max-width:640px;line-height:1.5;opacity:.8}
+  section{margin-top:64px}
+  .tit{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+  .tit b{font-family:Outfit;font-weight:900;font-size:28px}
+  .tit span{font-size:13px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--olivo)}
+  .idea{margin:8px 0 18px;max-width:700px;line-height:1.5;opacity:.85}
+
+  .banda{position:relative;border-radius:18px;overflow:hidden;display:flex;align-items:center;justify-content:center;gap:clamp(8px,2vw,24px);padding:clamp(20px,4vw,40px) 20px}
+  .banda.olivo{background:var(--olivo);color:#fff}
+  .banda.carbon{background:var(--carbon);color:#fff}
+  .banda.salvia{background:var(--salvia);color:var(--olivo)}
+  .banda.masa{background:var(--masa);color:var(--olivo)}
+  /* textura de pincel suave, propia */
+  .banda::before{content:"";position:absolute;inset:0;opacity:.10;pointer-events:none;
+    background:repeating-linear-gradient(176deg,transparent 0 22px,rgba(255,255,255,.9) 22px 24px,transparent 24px 58px)}
+  .banda.masa::before,.banda.salvia::before{background:repeating-linear-gradient(176deg,transparent 0 22px,rgba(94,107,63,.5) 22px 24px,transparent 24px 58px)}
+  .banda > *{position:relative}
+
+  .marca{display:flex;flex-direction:column;align-items:center}
+  .el{font-family:Outfit;font-weight:600;letter-spacing:.02em;align-self:flex-start;margin-left:.2em;line-height:1}
+  .wm{font-family:Outfit;font-weight:900;letter-spacing:-.045em;line-height:.9;white-space:nowrap}
+  .lema{margin-top:.7em;font-family:Inter;font-weight:700;letter-spacing:.32em;text-transform:uppercase;font-size:.13em;white-space:nowrap}
+  .grande .marca{font-size:clamp(64px,11vw,120px)}
+  .grande .el{font-size:.22em}
+  .grande svg.mono{width:clamp(110px,17vw,180px)}
+  .chicas{display:grid;grid-template-columns:1fr 1fr 150px;gap:14px;margin-top:14px}
+  .chicas .marca{font-size:clamp(40px,5.4vw,58px)}
+  .chicas .el{font-size:.22em}
+  .chicas svg.mono{width:clamp(70px,8vw,92px)}
+  .icono{border-radius:34px;background:var(--olivo);display:grid;place-items:center;aspect-ratio:1}
+  .icono svg{width:78%}
+  @media (max-width:720px){.chicas{grid-template-columns:1fr}.icono{width:150px}}
+
+  /* detalles de letra */
+  .o-svg{display:inline-block;width:.56em;height:.56em;vertical-align:-.012em;margin:0 .01em}
+  .o-tomate{color:var(--tomate)}
+  .d-brote{position:relative;display:inline-block}
+  .d-brote svg{position:absolute;width:.42em;left:.36em;top:-.3em}
+
+  .nota{margin-top:56px;padding:22px;border-radius:16px;background:#fff8;line-height:1.6}
+  .nota b{font-family:Outfit;font-size:18px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>El buen bocado · logo nuevo</h1>
+    <p>Cuatro rutas en el estilo de la referencia (letra gruesa y redonda, un detalle juguetón en una letra y un personaje de línea que saluda), pero con personajes y detalles propios. El plato ya no aparece. Mismos colores de la marca: olivo, salvia, masa y tomate.</p>
+  </header>
+  <div id="rutas"></div>
+  <div class="nota">
+    <b>Se pueden combinar.</b> El personaje y el detalle de la letra son independientes: por ejemplo, la bolsa de la ruta A con las o de tomate de la ruta D. Dime cuál te late (o cuál mezcla) y lo afino y lo llevo a la app, la exposición y el manual.
+  </div>
+</div>
+
+<script>
+const L = 'var(--linea)';
+const corazon = (x,y,c='var(--tomate)') =>
+  `<path transform="translate(${x} ${y})" d="M0 3C0-1 5-2 6 2C7-2 12-1 12 3C12 7 6 11 6 11S0 7 0 3Z" fill="${c}" stroke="none"/>`;
+
+// brazos (uno en la cintura, otro saludando) y piernas con pie
+function cuerpo({al, ar, pl, pr}) {
+  return `
+  <g fill="none" stroke="${L}" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M${al[0]} ${al[1]} Q${al[0]-17} ${al[1]+9} ${al[0]-1} ${al[1]+22}"/>
+    <path d="M${ar[0]} ${ar[1]} Q${ar[0]+17} ${ar[1]-4} ${ar[0]+15} ${ar[1]-27}"/>
+    <path d="M${pl[0]} ${pl[1]} L${pl[0]-3} 156 L${pl[0]-13} 156"/>
+    <path d="M${pr[0]} ${pr[1]} L${pr[0]+3} 156 L${pr[0]+13} 156"/>
+  </g>
+  <g stroke="${L}" stroke-width="3" fill="#fff" stroke-linecap="round">
+    <ellipse cx="${ar[0]+15}" cy="${ar[1]-33}" rx="6.5" ry="7.5"/>
+    <path d="M${ar[0]+9} ${ar[1]-31} l-4 -3" fill="none"/>
+  </g>
+  ${corazon(ar[0]+22, ar[1]-58)}`;
+}
+const cara = (x,y,{guino=false,boca='sonrisa'}={}) => `
+  <g fill="${L}" stroke="${L}" stroke-width="3" stroke-linecap="round">
+    <circle cx="${x-9}" cy="${y}" r="3.2" stroke="none"/>
+    ${guino ? `<path d="M${x+5} ${y+1} Q${x+9} ${y-4} ${x+13} ${y+1}" fill="none"/>`
+            : `<circle cx="${x+9}" cy="${y}" r="3.2" stroke="none"/>`}
+    ${boca==='abierta'
+      ? `<path d="M${x-7} ${y+8} Q${x} ${y+20} ${x+7} ${y+8} Z" fill="var(--tomate)" stroke-linejoin="round"/>`
+      : `<path d="M${x-7} ${y+9} Q${x} ${y+16} ${x+7} ${y+9}" fill="none"/>`}
+  </g>
+  <circle cx="${x-16}" cy="${y+9}" r="4.5" fill="var(--tomate)" opacity=".35"/>
+  <circle cx="${x+16}" cy="${y+9}" r="4.5" fill="var(--tomate)" opacity=".35"/>`;
+
+const MONOS = {
+  bolsa: `
+    ${cuerpo({al:[38,94], ar:[102,92], pl:[58,134], pr:[82,134]})}
+    <g stroke="${L}" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round">
+      <path d="M70 58 Q69 44 72 34" fill="none"/>
+      <path d="M72 36 Q85 22 95 30 Q85 43 72 36Z" fill="var(--salvia)"/>
+      <path d="M70 44 Q57 33 49 40 Q58 51 70 44Z" fill="var(--salvia)"/>
+      <path d="M40 62 L100 62 L104 130 Q104 135 99 135 L41 135 Q36 135 36 130 Z" fill="#fff"/>
+      <path d="M38 62 L102 62 L101 74 L39 74 Z" fill="var(--masa)"/>
+      <path d="M86 118 q6 -8 12 -2 q-6 7 -12 2z" fill="var(--salvia)" stroke-width="2.4"/>
+    </g>
+    ${cara(70,96)}`,
+  aguacate: `
+    ${cuerpo({al:[44,92], ar:[97,90], pl:[60,134], pr:[80,134]})}
+    <g stroke="${L}" stroke-width="3.2" stroke-linejoin="round">
+      <path d="M70 26C50 26 44 56 42 80C38 114 50 138 70 138C90 138 102 114 98 80C96 56 90 26 70 26Z" fill="var(--salvia)"/>
+      <path d="M70 37C57 37 53 60 52 82C49 108 57 127 70 127C83 127 91 108 88 82C87 60 83 37 70 37Z" fill="#fff"/>
+      <circle cx="70" cy="106" r="13" fill="#C9935F"/>
+      <path d="M64 100 q3 -3 7 -2" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/>
+    </g>
+    ${cara(70,72,{guino:true})}`,
+  bowl: `
+    ${cuerpo({al:[36,82], ar:[104,82], pl:[60,118], pr:[80,118]})}
+    <g stroke="${L}" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round">
+      <path d="M50 64 Q44 40 58 34 Q64 50 60 64Z" fill="var(--salvia)"/>
+      <path d="M66 64 Q66 30 82 24 Q86 46 76 64Z" fill="var(--olivo)"/>
+      <path d="M80 64 Q92 42 104 46 Q100 60 90 64Z" fill="var(--salvia)"/>
+      <circle cx="44" cy="58" r="7" fill="var(--tomate)"/>
+      <path d="M32 66 L108 66 Q108 114 70 118 Q32 114 32 66 Z" fill="#fff"/>
+      <path d="M28 66 L112 66" fill="none" stroke-width="4"/>
+      <path d="M56 118 L84 118" fill="none"/>
+    </g>
+    ${cara(70,84,{boca:'abierta'})}`,
+  tomate: `
+    ${cuerpo({al:[34,94], ar:[106,92], pl:[60,130], pr:[80,130]})}
+    <g stroke="${L}" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round">
+      <circle cx="70" cy="96" r="38" fill="var(--tomate)"/>
+      <path d="M52 76 q4 -8 12 -10" fill="none" stroke="#fff" stroke-width="3" opacity=".8"/>
+      <path d="M70 60 L58 52 L66 62 L52 64 L68 66 L64 74 L72 66 L82 72 L76 63 L90 60 L74 60 L76 50 Z" fill="var(--olivo)" stroke-width="2.6"/>
+      <path d="M71 52 Q72 44 78 40" fill="none"/>
+    </g>
+    <g fill="#fff"><circle cx="61" cy="96" r="3.4"/><circle cx="79" cy="96" r="3.4"/></g>
+    <path d="M63 105 Q70 112 77 105" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/>`
+};
+const mono = (k) => `<svg class="mono" viewBox="0 0 140 162" aria-hidden="true">${MONOS[k]}</svg>`;
+const icono = (k) => `<div class="icono"><svg viewBox="0 0 140 162">${MONOS[k]}</svg></div>`;
+
+const brote = `<svg viewBox="0 0 40 40"><path d="M20 38 Q20 22 22 14" fill="none" stroke="var(--tomate)" stroke-width="5" stroke-linecap="round"/><path d="M22 16 Q30 2 39 8 Q32 20 22 16Z" fill="var(--tomate)"/><path d="M20 22 Q10 10 2 16 Q10 28 20 22Z" fill="var(--tomate)"/></svg>`;
+
+// la o final sonríe (ruta A) · la o con hueso de aguacate (ruta B)
+const oSonrisa = `<svg class="o-svg" viewBox="0 0 60 60"><circle cx="30" cy="30" r="22.5" fill="none" stroke="currentColor" stroke-width="15"/><circle cx="25" cy="27" r="2.6" fill="currentColor"/><circle cx="35" cy="27" r="2.6" fill="currentColor"/><path d="M24.5 33 Q30 38 35.5 33" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>`;
+const oHueso = `<svg class="o-svg" viewBox="0 0 60 60"><circle cx="30" cy="30" r="22.5" fill="none" stroke="currentColor" stroke-width="15"/><circle cx="30" cy="31" r="8.5" fill="#C9935F"/></svg>`;
+const WM = {
+  sonrisa: `bocad${oSonrisa}`,
+  cara:    `b${oHueso}cado`,
+  brote:   `boca<span class="d-brote">d${brote}</span>o`,
+  tomates: `b<span class="o-tomate">o</span>cad<span class="o-tomate">o</span>`,
+};
+const marca = (wm, lema) =>
+  `<div class="marca"><span class="el">el buen</span><span class="wm">${WM[wm]}</span><span class="lema">${lema}</span></div>`;
+
+const RUTAS = [
+  {l:'A', n:'La bolsita', m:'bolsa', w:'sonrisa', lema:'comida real para llevar',
+   idea:'El personaje es la bolsa de papel en la que te llevas tu comida, con un brote encima (empaque biodegradable). En la palabra, la última <b>o</b> sonríe. Es la que más cuenta el negocio: comida sana <i>para recoger</i>. <b>Mi recomendada.</b>'},
+  {l:'B', n:'El aguacate', m:'aguacate', w:'cara', lema:'comida real para llevar',
+   idea:'Medio aguacate que guiña el ojo: el símbolo más reconocible de “comida sana”. La primera <b>o</b> de bocado lleva el hueso del aguacate. Muy amigable, aunque el aguacate lo usan muchas marcas fit.'},
+  {l:'C', n:'El bowl', m:'bowl', w:'brote', lema:'come rico, come bien',
+   idea:'Un bowl con hojas por peinado y la boca abierta, listo para comer. A la <b>d</b> le sale un brote color tomate. Habla del platillo estrella sin ser un plato visto desde arriba.'},
+  {l:'D', n:'El tomatito', m:'tomate', w:'tomates', lema:'come rico, come bien',
+   idea:'Un tomate saludando: aprovecha el rojo que ya es de la marca y destaca mucho en el olivo. Las dos <b>o</b> de bocado son tomatitos. La más simple y la más fácil de ver en chico.'},
+];
+
+document.getElementById('rutas').innerHTML = RUTAS.map(r => `
+  <section>
+    <div class="tit"><span>Ruta ${r.l}</span><b>${r.n}</b></div>
+    <p class="idea">${r.idea}</p>
+    <div class="banda olivo grande">${marca(r.w, r.lema)}${mono(r.m)}</div>
+    <div class="chicas">
+      <div class="banda masa">${marca(r.w, r.lema)}${mono(r.m)}</div>
+      <div class="banda carbon">${marca(r.w, r.lema)}${mono(r.m)}</div>
+      ${icono(r.m)}
+    </div>
+  </section>`).join('');
+</script>
+</body>
+</html>

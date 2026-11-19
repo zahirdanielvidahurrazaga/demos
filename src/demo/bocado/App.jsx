@@ -9,7 +9,7 @@ import {
   delDia, diaCorto, diaLargo, diasHabiles, dinero, foto, guardar, guardarPerfil, hhmm, horarios, hoyISO,
   leer, leerPerfil, nuevoPedido, numDia, platillo, sembrar, terminado, totalLinea, totalPedido,
 } from './datos';
-import { Isotipo } from './comun';
+import { Bolsita, Dibujo, Isotipo, OSonrisa, Sello } from './comun';
 import './app.css';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -92,6 +92,7 @@ export default function App({ marco = false, comando = null }) {
   const [perfil, cambiarPerfil] = usePerfil();
   const [carga, setCarga] = useState(true);
   const [tab, setTab] = useState('inicio');
+  const [menuCat, setMenuCat] = useState('todo');
   const [ver, setVer] = useState(null);
   const [carrito, setCarrito] = useState(null);       // null | { modo }
   const [pedidoAbierto, setPedidoAbierto] = useState(null);
@@ -214,8 +215,8 @@ export default function App({ marco = false, comando = null }) {
   return (
     <div className={raiz}>
       <div className="ba-cuerpo" ref={cuerpo}>
-        {tab === 'inicio' && <Inicio perfil={perfil} puntos={e.puntos} cambiarPerfil={cambiarPerfil} vivos={vivos} abrir={setVer} abrirPedido={setPedidoAbierto} irA={setTab} agregar={agregarRapido} />}
-        {tab === 'menu' && <Menu abrir={setVer} agregar={agregarRapido} perfil={perfil} />}
+        {tab === 'inicio' && <Inicio perfil={perfil} puntos={e.puntos} cambiarPerfil={cambiarPerfil} vivos={vivos} abrir={setVer} abrirPedido={setPedidoAbierto} irA={setTab} agregar={agregarRapido} verCat={(c) => { setMenuCat(c); setTab('menu'); }} />}
+        {tab === 'menu' && <Menu key={menuCat} catInicial={menuCat} abrir={setVer} agregar={agregarRapido} perfil={perfil} />}
         {tab === 'semana' && <Semana e={e} perfil={perfil} cambiar={cambiar} avisar={avisar} abrirPedido={setPedidoAbierto} />}
         {tab === 'pedidos' && <Pedidos e={e} vivos={vivos} abrirPedido={setPedidoAbierto} irA={setTab} repetir={repetir} />}
         {tab === 'yo' && <Yo e={e} perfil={perfil} cambiar={cambiar} cambiarPerfil={cambiarPerfil} avisar={avisar} abrirMembresia={() => setMembresia(true)} />}
@@ -236,7 +237,7 @@ export default function App({ marco = false, comando = null }) {
 
       {aviso && (
         <div key={aviso.k} className="ba-aviso">
-          <span className="ic">{aviso.icono === 'bici' ? <Bike size={16} /> : <Isotipo size={18} centro="#5E6B3F" />}</span>
+          <span className="ic">{aviso.icono === 'bici' ? <Bike size={16} /> : <Isotipo size={24} />}</span>
           <div><small>el buen bocado · ahora</small><span>{aviso.txt}</span></div>
         </div>
       )}
@@ -263,34 +264,26 @@ function Barra({ tab, irA }) {
   );
 }
 
-// ── CARGA: el plato se dibuja, recibe la mordida (con migas) y entra la marca ─
+// ── CARGA: la bolsita cae, le brota la hoja, saluda y entra el nombre ──────
 function Carga() {
   return (
     <div className="ba-carga">
-      <svg className="plato" viewBox="0 0 100 100" width="104" height="104" aria-hidden="true">
-        <defs>
-          <mask id="ba-carga-m" maskUnits="userSpaceOnUse" x="-20" y="-20" width="140" height="140">
-            <rect x="-20" y="-20" width="140" height="140" fill="#fff" />
-            <g className="dientes"><circle cx="88" cy="22" r="13" fill="#000" /><circle cx="96" cy="38" r="11" fill="#000" /><circle cx="76" cy="10" r="11" fill="#000" /></g>
-          </mask>
-        </defs>
-        <g mask="url(#ba-carga-m)">
-          <circle className="aro" cx="50" cy="50" r="33" fill="none" stroke="#E2553B" strokeWidth="22" pathLength="1" />
-          <circle className="centro" cx="50" cy="50" r="22" fill="#F4F5EA" />
-        </g>
-        <g className="migas" fill="#E2553B"><circle cx="92" cy="24" r="2.6" /><circle cx="98" cy="36" r="2" /><circle cx="84" cy="12" r="2.2" /></g>
-      </svg>
-      <div className="ba-wm"><span>el buen</span>{'bocado'.split('').map((l, i) => <i key={i} style={{ animationDelay: `${1.7 + i * 0.06}s` }}>{l}</i>)}</div>
-      <p className="lema">Comer bien, a tu hora.</p>
+      <div className="ba-wm">
+        <span>el buen</span>
+        {'bocad'.split('').map((l, i) => <i key={i} style={{ animationDelay: `${0.15 + i * 0.06}s` }}>{l}</i>)}
+        <i style={{ animationDelay: '.45s' }}><OSonrisa /></i>
+      </div>
+      <Bolsita size={176} tinta="kiwi" className="mono" />
+      <p className="lema">come rico, a tu hora</p>
     </div>
   );
 }
 
 // ── REGISTRO (la primera vez) ───────────────────────────────────────────────
 const INTRO = [
-  { img: 'mediterraneo', t: 'Comer bien,', e: 'a tu hora.', d: 'Comida saludable de verdad, lista justo cuando la necesitas.' },
-  { img: 'pollo-limon', t: 'Recógelo sin fila', e: 'o te lo llevamos.', d: 'Pasa por tu casilla en 2 minutos o recíbelo en tu oficina.' },
-  { img: 'poke-atun', t: 'Junta bocados', e: 'y come gratis.', d: 'Cada pedido suma para recompensas y comidas gratis.' },
+  { escena: 'oficina', t: 'Comer bien,', e: 'a tu hora.', d: 'Comida saludable de verdad, lista justo cuando la necesitas.' },
+  { escena: 'casilla', t: 'Recógelo sin fila', e: 'o te lo llevamos.', d: 'Pasa por tu casilla en 2 minutos o recíbelo en tu oficina.' },
+  { escena: 'bowl', t: 'Junta bocados', e: 'y come gratis.', d: 'Cada pedido suma para recompensas y comidas gratis.' },
 ];
 const CODIGO = '482913';
 
@@ -318,13 +311,20 @@ function Registro({ perfil, terminar }) {
     const s = INTRO[slide];
     return (
       <div className="ba-intro">
-        <div className="foto" key={s.img}><Img id={s.img} /></div>
+        <div className="dibujo" key={s.escena}><Dibujo escena={s.escena} /></div>
+        <div className="puntos">{INTRO.map((_, i) => <button key={i} className={i === slide ? 'on' : ''} onClick={() => setSlide(i)} aria-label={`Tarjeta ${i + 1}`} />)}</div>
         <div className="txt" key={slide}><h1>{s.t}<br /><em>{s.e}</em></h1><p>{s.d}</p></div>
-        <div className="pie">
-          <div className="puntos">{INTRO.map((_, i) => <button key={i} className={i === slide ? 'on' : ''} onClick={() => setSlide(i)} aria-label={`Tarjeta ${i + 1}`} />)}</div>
-          <button className="ba-btn ancho" onClick={() => (slide < INTRO.length - 1 ? setSlide(slide + 1) : setPaso(1))}>{slide < INTRO.length - 1 ? 'Siguiente' : 'Crear mi cuenta'}</button>
-          <button className="ba-link" onClick={() => setPaso(1)}>{slide < INTRO.length - 1 ? 'Saltar' : 'Ya tengo cuenta'}</button>
-        </div>
+        {slide < INTRO.length - 1 ? (
+          <div className="pie fila">
+            <button className="ba-link" onClick={() => setPaso(1)}>Saltar</button>
+            <button className="ba-btn chico" onClick={() => setSlide(slide + 1)}>Siguiente</button>
+          </div>
+        ) : (
+          <div className="pie">
+            <button className="ba-btn ancho" onClick={() => setPaso(1)}>Crear mi cuenta</button>
+            <button className="ba-link" onClick={() => setPaso(1)}>Ya tengo cuenta</button>
+          </div>
+        )}
       </div>
     );
   }
@@ -343,7 +343,7 @@ function Registro({ perfil, terminar }) {
     return (
       <div className="ba-paso ba-regalo">
         <div className="centro">
-          <div className="sello"><Isotipo size={74} centro="#5E6B3F" /></div>
+          <div className="sello"><Bolsita size={96} /></div>
           <h1>Listo, {p.nombre.split(' ')[0]}.</h1>
           <p>Tu cuenta está creada. Para empezar, te regalamos:</p>
           <div className="dones">
@@ -440,7 +440,7 @@ function Registro({ perfil, terminar }) {
           {cab('Te avisamos cuando esté.', 'Con tu número de casilla o tu repartidor en camino. Nada más.')}
           <div className="ba-paso-cuerpo">
             <div className="ba-avisos-demo">
-              <div className="n"><span className="ic"><Isotipo size={20} centro="#5E6B3F" /></span><div><small>el buen bocado · ahora</small><b>Tu bowl ya está en la casilla 04</b></div></div>
+              <div className="n"><span className="ic"><Isotipo size={24} /></span><div><small>el buen bocado · ahora</small><b>Tu bowl ya está en la casilla 04</b></div></div>
               <div className="n atras"><span className="ic bici"><Bike size={15} /></span><div><small>el buen bocado · 13:02</small><b>Tu pedido va en camino</b></div></div>
             </div>
           </div>
@@ -510,7 +510,7 @@ function Modo({ modo, cambiar }) {
   );
 }
 
-function Inicio({ perfil, puntos, cambiarPerfil, vivos, abrir, abrirPedido, irA, agregar }) {
+function Inicio({ perfil, puntos, cambiarPerfil, vivos, abrir, abrirPedido, irA, agregar, verCat }) {
   const del = platillo(delDia(diasHabiles(1)[0]));
   const proximo = vivos[0];
   const nombre = perfil.nombre.split(' ')[0] || 'tú';
@@ -520,7 +520,7 @@ function Inicio({ perfil, puntos, cambiarPerfil, vivos, abrir, abrirPedido, irA,
     <div className="ba-pantalla">
       <header className="ba-cab inicio">
         <div><small>Hola, {nombre}</small><h1>¿Qué se te antoja?</h1></div>
-        <button className="ba-bocados-chip" onClick={() => irA('yo')} aria-label={`${puntos} bocados`}><Isotipo size={17} centro="#FFFFFF" /><b>{puntos}</b></button>
+        <button className="ba-bocados-chip" onClick={() => irA('yo')} aria-label={`${puntos} bocados`}><Isotipo size={22} /><b>{puntos}</b></button>
       </header>
       <Modo modo={perfil.modo} cambiar={(m) => cambiarPerfil({ modo: m })} />
 
@@ -544,9 +544,25 @@ function Inicio({ perfil, puntos, cambiarPerfil, vivos, abrir, abrirPedido, irA,
           </button>
         ))}
       </div>
+
+      <div className="ba-tit-fila"><h2>Explora</h2></div>
+      <div className="ba-explora">
+        {EXPLORA.map(([id, t, d], i) => (
+          <button key={id} onClick={() => verCat(id)}>
+            <b>{t}</b><span>{d}</span>
+            {i === EXPLORA.length - 1 && <Isotipo size={44} tinta="linea" className="asoma" />}
+          </button>
+        ))}
+        <button className="lleno" onClick={() => irA('semana')}><b>Arma tu semana</b><span>Cinco comidas en un minuto, con precio de plan.</span></button>
+      </div>
     </div>
   );
 }
+const EXPLORA = [
+  ['bowls', 'Bowls', 'Completos y con proteína de verdad.'],
+  ['wraps', 'Wraps', 'Para comer caminando entre juntas.'],
+  ['bebidas', 'Bebidas', 'Aguas frescas del día, sin azúcar añadida.'],
+];
 
 function TarjetaPedido({ p, onClick }) {
   const pasos = PASOS[p.modo || 'recoger'];
@@ -568,15 +584,15 @@ function TarjetaPedido({ p, onClick }) {
 }
 
 // ── MENÚ ────────────────────────────────────────────────────────────────────
-function Menu({ abrir, agregar, perfil }) {
+function Menu({ abrir, agregar, perfil, catInicial = 'todo' }) {
   const dias = diasHabiles(5);
   const [dia, setDia] = useState(dias[0]);
-  const [cat, setCat] = useState('todo');
+  const [cat, setCat] = useState(catInicial);
   const especial = delDia(dia);
   const grupos = CATEGORIAS.filter(([id]) => cat === 'todo' || cat === id);
   return (
     <div className="ba-pantalla">
-      <header className="ba-cab"><div><small>{diaLargo(dia)} {numDia(dia)}</small><h1>Menú</h1></div></header>
+      <header className="ba-cab"><div><small>{diaLargo(dia)} {numDia(dia)}</small><h1>Menú</h1></div><Sello size={64} className="ba-sello" /></header>
       <div className="ba-dias">
         {dias.map((d) => <button key={d} className={d === dia ? 'on' : ''} onClick={() => setDia(d)}><small>{d === hoyISO() ? 'Hoy' : diaCorto(d)}</small><b>{numDia(d)}</b></button>)}
       </div>
@@ -922,7 +938,7 @@ function Pedidos({ e, vivos, abrirPedido, irA, repetir }) {
       <h3 className="ba-sub">Próximos</h3>
       {vivos.length ? vivos.map((p) => <Fila key={p.id} p={p} />) : (
         <div className="ba-vacio-caja">
-          <Isotipo size={44} aro="#D8DFA8" centro="#FFFFFF" />
+          <Bolsita size={64} tinta="linea" />
           <div><b>Todavía no pides hoy.</b><span>Elige tu comida y la hora: nosotros la tenemos lista.</span></div>
           <button className="ba-btn" onClick={() => irA('menu')}>Ver el menú</button>
         </div>
@@ -959,13 +975,13 @@ function Yo({ e, perfil, cambiar, cambiarPerfil, avisar, abrirMembresia }) {
 
       {perfil.miembro ? (
         <div className="ba-membresia activa">
-          <div className="arriba"><Isotipo size={30} aro="#D8DFA8" centro="#5E6B3F" /><span>{MEMBRESIA.nombre}</span><small>Activa</small></div>
+          <div className="arriba"><Isotipo size={34} /><span>{MEMBRESIA.nombre}</span><small>Activa</small></div>
           <b>Envío gratis y 10% en todo.</b>
           <span>Se renueva cada mes · {dinero(MEMBRESIA.precio)}</span>
         </div>
       ) : (
         <button className="ba-membresia" onClick={abrirMembresia}>
-          <div className="arriba"><Isotipo size={30} aro="#D8DFA8" centro="#5E6B3F" /><span>{MEMBRESIA.nombre}</span></div>
+          <div className="arriba"><Isotipo size={34} /><span>{MEMBRESIA.nombre}</span></div>
           <b>Envío gratis y 10% en todo.</b>
           <span>{dinero(MEMBRESIA.precio)} al mes · Conocer más</span>
         </button>
@@ -1024,7 +1040,7 @@ function HojaMembresia({ cerrar, unirme }) {
     <Hoja cerrar={cerrar} clase="membresia">
       <div className="ba-hoja-scroll">
         <div className="ba-memb-cab">
-          <Isotipo size={64} aro="#D8DFA8" centro="#5E6B3F" />
+          <Bolsita size={92} />
           <h2>{MEMBRESIA.nombre}</h2>
           <p>{dinero(MEMBRESIA.precio)} al mes · cancela cuando quieras</p>
         </div>

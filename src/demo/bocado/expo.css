@@ -62,9 +62,11 @@
 @keyframes bx-sube { from { opacity: 0; transform: translateY(22px); filter: blur(6px); } }
 .bx-portada .plato { position: relative; display: grid; place-items: center; aspect-ratio: 1; }
 .bx-portada .plato .aro { position: absolute; inset: 4%; border-radius: 50%; }
-.bx-portada .plato svg { position: relative; width: 66%; height: auto; filter: drop-shadow(0 30px 40px rgba(46, 51, 32, .3)); animation: bx-gira 1.2s var(--ease) both, bx-respira 7s 1.2s ease-in-out infinite; }
-@keyframes bx-gira { from { opacity: 0; transform: rotate(-40deg) scale(.8); } }
-@keyframes bx-respira { 50% { transform: translateY(-10px) rotate(3deg); } }
+/* la bolsita viva (montarBolsita.js) ocupa todo el círculo y un poco más */
+.bx-bolsita3d { position: absolute; inset: -10% -6% -4%; }
+.bx-bolsita3d canvas { cursor: grab; } .bx-bolsita3d canvas:active { cursor: grabbing; }
+.bx-portada .plato .respaldo { position: relative; width: 60%; height: auto; }
+.bx-toca { position: absolute; bottom: 2%; left: 50%; translate: -50% 0; font: 600 12px var(--x); letter-spacing: .08em; text-transform: uppercase; color: var(--suave); pointer-events: none; animation: bx-sube .9s 1.2s var(--ease) both; }
 
 /* secciones */
 .bx-sec { padding: 90px var(--px) 60px; max-width: 1280px; margin: 0 auto; scroll-margin-top: 20px; }
@@ -125,21 +127,26 @@
 .bx-idea .paso { border-radius: 28px; padding: 26px 24px 24px; display: flex; flex-direction: column; gap: 4px; }
 .bx-idea .paso b { font: 800 22px var(--d); letter-spacing: -.03em; margin-top: 14px; }
 .bx-idea .paso span { font-size: 14px; color: var(--suave); }
-.bx-plato { width: min(150px, 60%); height: auto; overflow: visible; align-self: center; margin: 6px 0 4px; }
+.bx-idea .dibujo { height: 150px; display: grid; place-items: center; margin: 4px 0; }
+.bx-idea .sin-brote :is(.tallo, .hoja) { display: none; }
+.bx-idea .sin-cara .cara { display: none; }
 .bx-idea .paso:nth-child(1) { z-index: 3; } .bx-idea .paso:nth-child(2) { z-index: 2; }
-.bx-idea.visto .bx-plato.p0 circle { animation: bx-crece .8s var(--ease) both; transform-origin: 50px 50px; transform-box: view-box; }
-.bx-idea.visto .bx-plato.p1 circle { animation: bx-traza 1.4s .3s ease both; }
-.bx-idea.visto .bx-plato.p2 { animation: bx-muerde .7s .9s cubic-bezier(.3, 1.5, .5, 1) both; }
+.bx-idea.visto .paso:nth-child(1) svg { animation: bx-crece .8s var(--ease) both; }
+.bx-idea.visto .paso:nth-child(2) :is(.tallo, .hoja) { transform-box: fill-box; transform-origin: 0% 100%; animation: bx-brota .9s .4s cubic-bezier(.3, 1.5, .5, 1) both; }
+.bx-idea.visto .paso:nth-child(3) svg { animation: bx-crece .7s .9s cubic-bezier(.3, 1.5, .5, 1) both; }
+.bx-idea.visto .paso:nth-child(3) .brazo, .bx-idea.visto .paso:nth-child(3) .mano { transform-box: view-box; transform-origin: 104px 96px; animation: bx-saluda 1.6s 1.6s ease-in-out infinite; }
 @keyframes bx-crece { from { transform: scale(.4); opacity: 0; } }
-@keyframes bx-traza { from { stroke-dashoffset: 120; opacity: 0; } }
-@keyframes bx-muerde { from { transform: scale(.85) rotate(-25deg); opacity: 0; } }
+@keyframes bx-brota { from { transform: scale(0); } }
+@keyframes bx-saluda { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-14deg); } 75% { transform: rotate(10deg); } }
 .bx-idea .paso:not(:last-child)::after { content: '+'; position: absolute; right: -14px; top: 50%; translate: 50% -50%; z-index: 2; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font: 700 16px var(--x); color: var(--o2); background: rgba(255, 255, 255, .7); box-shadow: 0 6px 14px -6px rgba(46, 51, 32, .4); }
-.bx-idea .paso:nth-child(2)::after { content: '='; }
+.bx-idea .paso:nth-child(2)::after { content: '+'; }
 
 .bx-formas .rejilla { display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 14px; }
 .bx-formas .rejilla > div { border-radius: 26px; min-height: 210px; padding: 22px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; text-align: center; }
 .bx-formas small { font: 600 12px var(--x); color: var(--suave); }
 .bx-formas .bb-logo .bb-wm, .bx-formas .vert .bb-wm { color: var(--o); }
+.bx-formas .olivo .bb-logo .bb-wm { color: #fff; }
+.bx-formas .ico { width: 110px; height: 110px; border-radius: 25px; background: #5E6B3F; display: grid; place-items: center; box-shadow: 0 14px 30px -14px rgba(0, 0, 0, .5); }
 .bx-formas .vert { display: flex; flex-direction: column; align-items: center; gap: 10px; }
 .bx-formas .oscura { background: linear-gradient(160deg, rgba(62, 68, 42, .92), rgba(38, 42, 26, .94)) !important; }
 .bx-formas .oscura small { color: rgba(238, 240, 226, .6); }
@@ -195,7 +202,8 @@
   .bx-titulo small { font-size: 56px; }
   .bx-idea .pasos { grid-template-columns: 1fr; }
   .bx-idea .paso { flex-direction: row; flex-wrap: wrap; align-items: center; column-gap: 16px; }
-  .bx-idea .paso .bx-plato { width: 74px; }
+  .bx-idea .paso .dibujo { height: 90px; width: 80px; }
+  .bx-idea .paso .dibujo svg { width: auto; height: 86px; }
   .bx-idea .paso b { margin-top: 0; }
   .bx-idea .paso span { flex-basis: 100%; }
   .bx-idea .paso:not(:last-child)::after { right: 50%; top: auto; bottom: -14px; translate: 50% 50%; }
@@ -214,4 +222,95 @@
 @media (prefers-reduced-motion: reduce) {
   .bx *, .bx-fondo i { animation: none !important; transition: none !important; }
   .bx-titulo { opacity: 1; transform: none; }
+}
+
+/* ── v6 (19-nov): ESTILO "LÍNEA" + PALETA HELECHO ───────────────────────────
+   Igual que la app: papel, trazo ceylanita de 1.5 px, bloques lisos de
+   albahaca, sin vidrio ni difuminados. El rojo solo en la bolsita.
+   ───────────────────────────────────────────────────────────────────────── */
+.bx {
+  --o: #526531; --o2: #30401C; --salvia: #B9C798; --kiwi: #DCE7BE; --papel: #F4F4E6; --tinta: #121F0D; --suave: #66734D; --tomate: #526531;
+  --raya: inset 0 0 0 1.5px var(--o2);
+  --d: 'Outfit', 'Inter', system-ui, sans-serif; --mano: 'Gochi Hand', 'Outfit', cursive;
+  background: var(--papel);
+}
+.bb.bb-expo { background: var(--papel); }
+.bx-fondo { display: none; }
+.bx::after { opacity: .045; }
+.bx .vidrio { background: transparent; -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: var(--raya); }
+.bx .vidrio::before { content: none; }
+
+.bx-cab { background: var(--papel) !important; }
+.bx-cab .marca { font-weight: 800; }
+.bx-cab nav button:hover { background: var(--kiwi); }
+.bx-btn { background: var(--o2); color: var(--papel); box-shadow: none; }
+.bx-btn.vidrio { background: transparent; color: var(--o2); }
+.bx-chip { color: var(--o2); }
+
+/* portada: la bolsita 3D sobre un disco liso de albahaca */
+.bx-portada h1 { color: var(--tinta); }
+.bx-portada h1 em { color: var(--o); }
+.bx-portada .plato .aro { background: var(--o) !important; box-shadow: none !important; }
+.bx-toca { font: 400 20px var(--mano); letter-spacing: 0; text-transform: none; color: var(--o2); bottom: -4%; }
+
+/* títulos de sección: el número en contorno */
+.bx-titulo small { color: transparent; -webkit-text-stroke: 1.5px var(--o2); text-shadow: none; }
+.bx-titulo h2 { color: var(--tinta); }
+
+/* 01 app */
+.bx-guia button:hover { background: var(--kiwi); }
+.bx-guia button.on { background: var(--o2); box-shadow: none; }
+.bx-guia button.on small { color: var(--kiwi); }
+.bx-guia button.on em { color: rgba(244, 244, 230, .75); }
+.bx-guia .pie a { color: var(--o2); text-decoration: underline; text-underline-offset: 3px; }
+.bx-tel::before { width: 118%; background: var(--kiwi); }
+
+/* 02 local */
+.bx-lienzo { background: var(--kiwi); }
+.bx-ficha { background: var(--papel) !important; }
+.bx-ayuda { background: var(--papel); box-shadow: var(--raya); -webkit-backdrop-filter: none; backdrop-filter: none; color: var(--o2); }
+.bx-zonas button.on { background: var(--o2); box-shadow: none; }
+.bx-zonas button.on small { color: var(--kiwi); }
+
+/* 03 marca */
+.bx-idea .paso:not(:last-child)::after { background: var(--papel); box-shadow: var(--raya); color: var(--o2); }
+.bx-formas .rejilla { grid-template-columns: 1.4fr 1fr 1fr 1fr 1fr; }
+.bx-formas .oscura { background: var(--o2) !important; }
+.bx-formas .oscura small { color: rgba(220, 231, 190, .75); }
+.bx-formas .olivo { background: var(--o) !important; color: var(--kiwi); }
+.bx-formas .olivo small { color: rgba(220, 231, 190, .8); }
+.bx-formas .ico { background: var(--o); box-shadow: none; }
+.bx-sello { color: var(--o2); }
+.bx-sello .giro { transform-box: view-box; transform-origin: 60px 60px; animation: bx-sello 28s linear infinite; }
+@keyframes bx-sello { to { transform: rotate(360deg); } }
+.bx-accion .dibujos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.bx-accion figure { margin: 0; border-radius: 26px; padding: 18px 18px 14px; }
+.bx-accion svg { display: block; width: 100%; height: auto; overflow: visible; }
+.bx-accion figcaption { font: 400 21px var(--mano); color: var(--o2); text-align: center; margin-top: 6px; }
+.bx-accion.visto .bb-bolsita :is(.brazo, .mano) { transform-box: view-box; transform-origin: 104px 96px; animation: bx-saluda 1.6s ease-in-out infinite; }
+.bx-colores .muestras { grid-template-columns: repeat(8, 1fr); }
+.bx-colores .muestra { box-shadow: var(--raya); }
+.bx-colores .proporcion i { box-shadow: none; }
+.bx-letra .mano { font: 400 clamp(30px, 3vw, 40px)/1.1 var(--mano); color: var(--o); margin-top: 8px; }
+.bx-letra li.si::before { background: var(--o2); color: var(--kiwi); }
+.bx-letra li.no::before { background: transparent; box-shadow: inset 0 0 0 1.5px var(--o2); color: var(--o2); }
+.bx-aplicada img, .bx-aplicada figure:nth-child(1) img, .bx-aplicada figure:nth-child(2) img { aspect-ratio: 4 / 3; }
+
+@media (max-width: 900px) {
+  .bx-formas .rejilla { grid-template-columns: 1fr 1fr; }
+  .bx-colores .muestras { grid-template-columns: repeat(4, 1fr); }
+  .bx-accion .dibujos { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bx-sello .giro, .bx-accion .bb-bolsita * { animation: none !important; }
+}
+
+/* teléfono (19-nov): número de sección pegado al título, nada se sale de lado */
+@media (max-width: 720px) {
+  .bx-titulo { grid-template-columns: 1fr; }
+  .bx-titulo small { grid-row: auto; font-size: 64px; margin-bottom: 4px; }
+  .bx-portada .plato { margin-bottom: 30px; }
+  .bx-toca { bottom: -9%; }
+  .bx-formas .rejilla > div { min-width: 0; overflow: hidden; }
+  .bx-formas .rejilla .olivo { grid-column: span 2; }
 }

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { isotipoSVG } from './marcaSvg';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // EL LOCAL EN 3D (17-nov-2026) — la MISMA escena del video
@@ -12,9 +13,10 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 // Se carga con lazy() desde Expo.jsx (three pesa ~600 KB).
 // ─────────────────────────────────────────────────────────────────────────────
 
+// Paleta "helecho" (19-nov). `tomate` ya no es rojo: el rojo solo vive en la bolsita.
 const C = {
-  olivo: '#5E6B3F', olivoOsc: '#4E5934', tomate: '#E2553B', masa: '#EEF0E2', crema: '#F4F5EA',
-  salvia: '#D8DFA8', carbon: '#2E3320', roble: '#D2B48A', fondo: '#CDD2AE',
+  olivo: '#526531', olivoOsc: '#30401C', tomate: '#758850', masa: '#EEF2DC', crema: '#F4F4E6',
+  salvia: '#B9C798', carbon: '#121F0D', roble: '#D2B48A', fondo: '#DCE7BE',
 };
 
 // Las zonas (vista de cámara + texto) viven en zonasLocal.js para que Expo
@@ -31,6 +33,26 @@ function texturaTexto(texto, { color = C.carbon, peso = 800, tam = 150, fuente =
   x.fillText(texto, w / 2, h / 2 + tam * 0.04);
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
   return t;
+}
+// Letrero de la fachada: la bolsita PEGADA al nombre, centrados juntos (19-nov:
+// antes el logo quedaba lejos, en la orilla). Async porque la bolsita es una imagen.
+function texturaLetrero() {
+  return new Promise((listo) => {
+    const img = new Image();
+    img.onload = () => {
+      const c = document.createElement('canvas'); c.width = 1400; c.height = 240;
+      const x = c.getContext('2d');
+      x.font = "900 150px 'Outfit', sans-serif"; x.textBaseline = 'middle';
+      const texto = 'el buen bocado'; const ancho = x.measureText(texto).width;
+      const alto = 200; const anchoLogo = alto * 0.82; const hueco = 34;
+      const ini = (1400 - (anchoLogo + hueco + ancho)) / 2;
+      x.drawImage(img, ini, 20, anchoLogo, alto);
+      x.fillStyle = C.masa; x.fillText(texto, ini + anchoLogo + hueco, 128);
+      const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
+      listo(t);
+    };
+    img.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(isotipoSVG(400))}`;
+  });
 }
 function texturaEtiqueta() {
   const c = document.createElement('canvas'); c.width = 560; c.height = 240;
@@ -52,15 +74,22 @@ function Caja({ pos, tam, color, sombra = true, rugoso = 0.85 }) {
     </mesh>
   );
 }
-function Logo3D({ pos, r, fondo, rot = [0, 0, 0] }) {
+// Letrero con la bolsita (19-nov; antes el plato con mordida). `r` = medio alto.
+let texLogo = null;
+function texturaLogo() {
+  if (!texLogo) {
+    texLogo = new THREE.TextureLoader().load(`data:image/svg+xml;charset=utf-8,${encodeURIComponent(isotipoSVG(512))}`);
+    texLogo.colorSpace = THREE.SRGBColorSpace; texLogo.anisotropy = 8;
+  }
+  return texLogo;
+}
+function Logo3D({ pos, r, rot = [0, 0, 0] }) {
+  const map = useMemo(() => texturaLogo(), []);
   return (
-    <group position={pos} rotation={rot}>
-      <mesh><circleGeometry args={[r, 64]} /><meshStandardMaterial color={C.tomate} roughness={0.6} /></mesh>
-      <mesh position={[0, 0, 0.01]}><circleGeometry args={[r * 0.5, 48]} /><meshStandardMaterial color={fondo} roughness={0.8} /></mesh>
-      {[[0.86, 0.64, 0.3], [1.05, 0.27, 0.25], [0.59, 0.91, 0.25]].map(([x, y, rr], i) => (
-        <mesh key={i} position={[x * r, y * r, 0.02]}><circleGeometry args={[rr * r, 32]} /><meshStandardMaterial color={fondo} roughness={0.8} /></mesh>
-      ))}
-    </group>
+    <mesh position={pos} rotation={rot}>
+      <planeGeometry args={[r * 2 * 0.82, r * 2]} />
+      <meshStandardMaterial map={map} transparent roughness={0.8} alphaTest={0.02} />
+    </mesh>
   );
 }
 function Bolsa({ esc = 1, etiqueta }) {
@@ -81,13 +110,73 @@ function Bolsa({ esc = 1, etiqueta }) {
     </group>
   );
 }
-function Persona({ pos, mandil, color = '#F1EEDF' }) {
+// Personas (19-nov, rehechas: antes eran una cápsula con bolita). Estilo de
+// muñequito: piernas, brazos, cara con ojos, peinado, mandil y gorro de cocina.
+// `sentada` dobla las piernas (barra); `rot` = hacia dónde mira (frente = +z).
+const PIEL = ['#C99A78', '#A8765A', '#E0B59A'];
+const PELO = ['#3A2A20', '#1F1A17', '#6B4A32'];
+function Persona({ pos, rot = 0, mandil, gorro, sentada, ropa = '#F1EEDF', pantalon = '#3E4A2A', piel = 0, pelo = 0, peinado = 'corto' }) {
+  const mPiel = <meshStandardMaterial color={PIEL[piel]} roughness={0.85} />;
+  const mPelo = <meshStandardMaterial color={PELO[pelo]} roughness={0.9} />;
+  const mRopa = <meshStandardMaterial color={ropa} roughness={0.9} />;
+  const mPant = <meshStandardMaterial color={pantalon} roughness={0.9} />;
+  const mZapato = <meshStandardMaterial color="#2A2620" roughness={0.7} />;
+  const yCadera = sentada ? 0.78 : 0.82;
   return (
-    <group position={pos}>
-      <mesh position={[0, 0.72, 0]} castShadow><capsuleGeometry args={[0.2, 0.75, 6, 16]} /><meshStandardMaterial color={color} roughness={0.9} /></mesh>
-      {mandil && <mesh position={[0, 0.66, 0.13]} castShadow><boxGeometry args={[0.36, 0.62, 0.16]} /><meshStandardMaterial color={C.olivo} roughness={0.9} /></mesh>}
-      <mesh position={[0, 1.5, 0]} castShadow><sphereGeometry args={[0.17, 24, 24]} /><meshStandardMaterial color="#C99A78" roughness={0.9} /></mesh>
-      <mesh position={[0, 1.56, -0.03]} scale={[1.06, 0.8, 1.06]}><sphereGeometry args={[0.17, 24, 16, 0, Math.PI * 2, 0, Math.PI / 1.7]} /><meshStandardMaterial color="#3a2a20" roughness={0.9} /></mesh>
+    <group position={pos} rotation={[0, rot, 0]}>
+      {/* piernas */}
+      {[-0.09, 0.09].map((x) => (
+        <group key={x} position={[x, 0, 0]}>
+          {sentada ? (
+            <>
+              <mesh position={[0, yCadera, 0.2]} rotation={[Math.PI / 2, 0, 0]} castShadow><capsuleGeometry args={[0.075, 0.3, 4, 12]} />{mPant}</mesh>
+              <mesh position={[0, yCadera / 2, 0.4]} castShadow><capsuleGeometry args={[0.068, yCadera - 0.2, 4, 12]} />{mPant}</mesh>
+              <mesh position={[0, 0.04, 0.45]} castShadow><boxGeometry args={[0.12, 0.08, 0.22]} />{mZapato}</mesh>
+            </>
+          ) : (
+            <>
+              <mesh position={[0, 0.44, 0]} castShadow><capsuleGeometry args={[0.075, 0.62, 4, 12]} />{mPant}</mesh>
+              <mesh position={[0, 0.04, 0.04]} castShadow><boxGeometry args={[0.12, 0.08, 0.24]} />{mZapato}</mesh>
+            </>
+          )}
+        </group>
+      ))}
+      <group position={[0, yCadera, 0]}>
+        {/* torso */}
+        <mesh position={[0, 0.3, 0]} scale={[1.15, 1, 0.78]} castShadow><capsuleGeometry args={[0.16, 0.36, 6, 16]} />{mRopa}</mesh>
+        {mandil && (
+          <group>
+            <mesh position={[0, 0.2, 0.12]} castShadow><boxGeometry args={[0.32, 0.5, 0.03]} /><meshStandardMaterial color={C.olivo} roughness={0.9} /></mesh>
+            <mesh position={[0, 0.5, 0.11]}><boxGeometry args={[0.2, 0.14, 0.03]} /><meshStandardMaterial color={C.olivo} roughness={0.9} /></mesh>
+            <mesh position={[0, 0.26, 0.137]}><circleGeometry args={[0.045, 20]} /><meshStandardMaterial color={C.crema} /></mesh>
+          </group>
+        )}
+        {/* brazos y manos */}
+        {[-1, 1].map((k) => (
+          <group key={k} position={[k * 0.25, 0.5, 0]} rotation={[sentada ? -0.7 : 0, 0, k * 0.1]}>
+            <mesh position={[0, -0.22, 0]} castShadow><capsuleGeometry args={[0.052, 0.36, 4, 12]} />{mRopa}</mesh>
+            <mesh position={[0, -0.47, 0]} castShadow><sphereGeometry args={[0.052, 16, 12]} />{mPiel}</mesh>
+          </group>
+        ))}
+        {/* cuello y cabeza */}
+        <mesh position={[0, 0.6, 0]}><cylinderGeometry args={[0.05, 0.055, 0.1, 12]} />{mPiel}</mesh>
+        <group position={[0, 0.78, 0]}>
+          <mesh scale={[1, 1.08, 1]} castShadow><sphereGeometry args={[0.135, 28, 20]} />{mPiel}</mesh>
+          {[-0.045, 0.045].map((x) => <mesh key={x} position={[x, 0.01, 0.124]}><sphereGeometry args={[0.016, 10, 8]} /><meshStandardMaterial color="#1E1A16" /></mesh>)}
+          <mesh position={[0, -0.045, 0.125]} rotation={[0, 0, Math.PI]}><torusGeometry args={[0.03, 0.007, 6, 16, Math.PI]} /><meshStandardMaterial color="#6E3B2C" /></mesh>
+          {[-0.09, 0.09].map((x) => <mesh key={x} position={[x, -0.035, 0.1]}><circleGeometry args={[0.022, 14]} /><meshStandardMaterial color="#E59A86" transparent opacity={0.55} /></mesh>)}
+          {/* pelo */}
+          <mesh position={[0, 0.035, -0.012]} scale={[1.07, 0.92, 1.07]}><sphereGeometry args={[0.135, 28, 16, 0, Math.PI * 2, 0, Math.PI / 1.85]} />{mPelo}</mesh>
+          {peinado === 'chongo' && <mesh position={[0, 0.11, -0.12]}><sphereGeometry args={[0.07, 16, 12]} />{mPelo}</mesh>}
+          {peinado === 'largo' && <mesh position={[0, -0.09, -0.07]} scale={[1, 1, 0.55]}><capsuleGeometry args={[0.12, 0.18, 4, 12]} />{mPelo}</mesh>}
+          {gorro && (
+            <group position={[0, 0.12, 0]}>
+              <mesh><cylinderGeometry args={[0.14, 0.14, 0.08, 24]} /><meshStandardMaterial color="#FAFAF2" roughness={0.9} /></mesh>
+              <mesh position={[0, 0.1, 0]} scale={[1, 0.8, 1]}><sphereGeometry args={[0.16, 20, 14]} /><meshStandardMaterial color="#FAFAF2" roughness={0.9} /></mesh>
+            </group>
+          )}
+        </group>
+      </group>
     </group>
   );
 }
@@ -105,7 +194,14 @@ function Planta({ pos, esc = 1 }) {
 function Camara({ zona, controles }) {
   const { camera, gl } = useThree();
   const vuela = useRef(true);
-  const meta = useMemo(() => ({ pos: new THREE.Vector3(...zona.pos), mira: new THREE.Vector3(...zona.mira) }), [zona]);
+  // En pantalla vertical (teléfono) la cámara se aleja para que quepa lo mismo de ancho.
+  const { size } = useThree();
+  const lejos = Math.min(1.75, Math.max(1, 1.2 / (size.width / size.height)));
+  const meta = useMemo(() => {
+    const mira = new THREE.Vector3(...zona.mira);
+    const pos = new THREE.Vector3(...zona.pos).sub(mira).multiplyScalar(lejos).add(mira);
+    return { pos, mira };
+  }, [zona, lejos]);
   useEffect(() => { vuela.current = true; }, [zona]);
   useEffect(() => {
     const c = new OrbitControls(camera, gl.domElement);
@@ -143,8 +239,8 @@ function Escena({ zona, texturas }) {
     if (fachada.current) { fachada.current.scale.y = Math.max(0.02, 1 - v.abre * 0.95); fachada.current.position.z = v.abre * 0.4; }
     if (toldo.current) toldo.current.visible = v.abre < 0.35;
     if (clienta.current) clienta.current.visible = zona.id === 'corte' && v.abre > 0.5;
-    if (brillo04.current) { brillo04.current.material.opacity = v.casilla * 0.9; brillo04.current.material.emissiveIntensity = v.casilla * 0.6; }
-    if (luz04.current) luz04.current.intensity = v.casilla * 1.4;
+    if (brillo04.current) { brillo04.current.material.opacity = v.casilla * 0.55; brillo04.current.material.emissiveIntensity = v.casilla * 0.25; }
+    if (luz04.current) luz04.current.intensity = v.casilla * 0.45;
     if (bolsa04.current) { bolsa04.current.position.z = v.casilla * 0.7; bolsa04.current.position.y = y4 - 0.37 + v.casilla * 0.12; bolsa04.current.rotation.y = v.casilla * -0.35; }
     if (camino.current) camino.current.children.forEach((m, i) => {
       const k = Math.max(0, Math.min(1, v.camino * 4 - i));
@@ -180,8 +276,7 @@ function Escena({ zona, texturas }) {
         <Caja pos={[0, 4.15, 4.65]} tam={[12.4, 1.1, 0.35]} color={C.olivo} />
         {[-6.1, 6.1].map((x) => <Caja key={x} pos={[x, 1.8, 4.65]} tam={[0.25, 3.7, 0.35]} color={C.olivo} />)}
         {[-2.4, 2.4].map((x) => <Caja key={x} pos={[x, 1.8, 4.65]} tam={[0.16, 3.6, 0.3]} color={C.olivo} />)}
-        <Logo3D pos={[-3.4, 4.15, 4.84]} r={0.36} fondo={C.olivo} />
-        {texturas && <mesh position={[0.3, 4.15, 4.84]}><planeGeometry args={[5.8, 0.9]} /><meshBasicMaterial map={texturas.letrero} transparent /></mesh>}
+        {texturas && <mesh position={[0, 4.15, 4.84]}><planeGeometry args={[5.6, 0.96]} /><meshBasicMaterial map={texturas.letrero} transparent /></mesh>}
       </group>
       <group ref={toldo}>
         <mesh position={[0, 3.25, 5.45]} rotation={[0.28, 0, 0]} castShadow><boxGeometry args={[5.0, 0.08, 1.7]} /><meshStandardMaterial color={C.olivoOsc} roughness={0.8} /></mesh>
@@ -207,7 +302,7 @@ function Escena({ zona, texturas }) {
           </group>
         );
       })}
-      <pointLight ref={luz04} position={[x4, y4, 1.0]} color="#F4F7C8" intensity={0} distance={3} />
+      <pointLight ref={luz04} position={[x4, y4 + 0.32, 0.05]} color="#F4F7C8" intensity={0} distance={1.6} />
       {[-1.5, 0, 1.5].map((x) => (
         <group key={x} position={[x, 3.5, 0.5]}>
           <mesh position={[0, 0.55, 0]}><cylinderGeometry args={[0.012, 0.012, 1.1, 6]} /><meshStandardMaterial color="#2a2a2a" /></mesh>
@@ -219,7 +314,7 @@ function Escena({ zona, texturas }) {
       <Caja pos={[4.3, 0.55, 1.4]} tam={[2.3, 1.1, 0.9]} color={C.roble} />
       <Caja pos={[4.3, 1.13, 1.4]} tam={[2.4, 0.06, 1.0]} color="#E2CBA4" />
       <mesh position={[4.0, 1.32, 1.5]} rotation={[-0.5, 0.2, 0]} castShadow><boxGeometry args={[0.5, 0.34, 0.03]} /><meshStandardMaterial color="#22262a" roughness={0.3} /></mesh>
-      <Persona pos={[4.4, 0, 0.6]} mandil />
+      <Persona pos={[4.4, 0, 0.6]} mandil ropa="#F4F4E6" piel={2} pelo={2} peinado="chongo" />
       <Logo3D pos={[5.98, 2.2, 1.6]} r={0.85} fondo={C.masa} rot={[0, -Math.PI / 2, 0]} />
 
       {/* cocina a la vista */}
@@ -227,7 +322,7 @@ function Escena({ zona, texturas }) {
       <Caja pos={[0.8, 0.5, -3.2]} tam={[8.6, 1.0, 0.9]} color="#C8CCC4" rugoso={0.35} />
       <Caja pos={[0.8, 1.03, -3.2]} tam={[8.7, 0.06, 1.0]} color="#DDE0D8" rugoso={0.25} />
       {[-2.2, -1.2, -0.2, 0.8, 1.8, 2.8].map((x, i) => <mesh key={x} position={[x, 1.12, -3.2]} castShadow><cylinderGeometry args={[0.22, 0.16, 0.14, 24]} /><meshStandardMaterial color={[C.crema, C.salvia, C.tomate, C.crema, '#E9C98A', '#7F9A5A'][i]} /></mesh>)}
-      <Persona pos={[-0.6, 0, -3.95]} mandil /><Persona pos={[2.2, 0, -3.95]} mandil />
+      <Persona pos={[-0.6, 0, -3.95]} mandil gorro ropa="#FAFAF2" piel={1} pelo={1} /><Persona pos={[2.2, 0, -3.95]} mandil gorro ropa="#FAFAF2" piel={0} pelo={0} peinado="chongo" />
       <mesh position={[0.8, 1.8, -2.3]}><boxGeometry args={[9.6, 3.0, 0.05]} /><meshStandardMaterial color="#E6EBDA" transparent opacity={0.22} roughness={0.1} /></mesh>
       <Caja pos={[-4.9, 1.8, -3.3]} tam={[2.2, 3.6, 2.4]} color="#ECECDE" />
       <Caja pos={[0.8, 3.05, -3.4]} tam={[5.2, 0.5, 1.1]} color="#C8CCC4" rugoso={0.3} />
@@ -243,7 +338,7 @@ function Escena({ zona, texturas }) {
           <mesh position={[0, 0.37, 0]}><cylinderGeometry args={[0.025, 0.025, 0.74, 8]} /><meshStandardMaterial color="#2a2a2a" /></mesh>
         </group>
       ))}
-      <Persona pos={[-4.7, 0.3, 1.2]} color="#C7D3E0" />
+      <Persona pos={[-4.75, 0, 1.2]} rot={-Math.PI / 2} sentada ropa="#B9C798" pantalon="#3B4A5C" piel={1} pelo={1} peinado="largo" />
       <Planta pos={[-2.9, 0, 0.3]} /><Planta pos={[5.2, 0, 3.6]} esc={1.2} /><Planta pos={[-5.2, 0, 3.9]} esc={0.9} />
 
       {/* banqueta, calle y jardineras */}
@@ -255,7 +350,7 @@ function Escena({ zona, texturas }) {
           {[-1, 0, 1].map((k) => <mesh key={k} position={[k * 0.9, 0.85, 0]} castShadow><icosahedronGeometry args={[0.42, 1]} /><meshStandardMaterial color={k ? '#8FA85B' : '#A9BC63'} roughness={0.9} flatShading /></mesh>)}
         </group>
       ))}
-      <group ref={clienta}><Persona pos={[0.9, 0, 1.9]} color="#E7D3C3" /></group>
+      <group ref={clienta}><Persona pos={[0.9, 0, 1.9]} rot={Math.PI} ropa="#758850" pantalon="#30401C" piel={2} pelo={0} peinado="largo" /></group>
 
       {/* recorrido del cliente (vista en corte) */}
       <group ref={camino}>
@@ -279,11 +374,11 @@ export default function Local3D({ zona }) {
   // Las texturas de texto esperan a que carguen las letras de la marca.
   useEffect(() => {
     let vivo = true;
-    (document.fonts?.ready || Promise.resolve()).then(() => {
+    (document.fonts?.ready || Promise.resolve()).then(() => texturaLetrero()).then((letrero) => {
       if (!vivo) return;
       setTexturas({
         numeros: Array.from({ length: 12 }, (_, i) => texturaTexto(String(i + 1).padStart(2, '0'), { color: '#3B2F22', tam: 150, w: 256, h: 160 })),
-        letrero: texturaTexto('el buen bocado', { color: C.masa, tam: 120, w: 1280, h: 200 }),
+        letrero,
         etiqueta: texturaEtiqueta(),
       });
     });
