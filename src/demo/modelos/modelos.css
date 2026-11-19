@@ -1204,3 +1204,16 @@ button.mo-kpi:hover { transform: translateY(-2px); box-shadow: 0 0 0 1px var(--m
 .mo-book-filtrar[aria-expanded='true'] { color: var(--mo-tinta) !important; }
 .mo-book-cab { margin-bottom: 28px; }
 .mo-book .mo-filtros-texto { margin-top: -10px; animation: mo-aparece .3s ease; }
+
+/* ── inicio sin cortes (23-oct): el video baja al negro y el estudio claro del
+   Giro se "enciende" desde ese negro y se vuelve a apagar al negro de abajo,
+   así los tres ambientes se encadenan en vez de pegarse con una línea. ──── */
+.mo-video::after { background: linear-gradient(180deg, rgba(0, 0, 0, .25), transparent 30%, transparent 52%, rgba(14, 14, 13, .72) 84%, #0E0E0D); }
+.mo-giro { background:
+  linear-gradient(180deg, #0E0E0D 0%, rgba(14, 14, 13, .55) 7%, transparent 18%, transparent 86%, rgba(14, 14, 13, .5) 94%, #0E0E0D 100%),
+  radial-gradient(ellipse 60% 70% at 50% 58%, #F6F4F0 0%, #E7E4DF 62%, #D9D6D0 100%); }
+.mo-giro-niebla { display: none; }
+/* el menú sobre lo oscuro: vidrio más denso para que las secciones siempre se lean */
+.mo-noche-cab::before { background: rgba(14, 14, 13, .74); }
+.mo-noche-cab.solido:not(.sobre-claro) .mo-nav button { color: rgba(238, 234, 227, .7); }
+.mo-noche-cab.solido:not(.sobre-claro) .mo-nav button:hover { color: var(--mo-tinta); }

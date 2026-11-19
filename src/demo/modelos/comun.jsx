@@ -62,7 +62,8 @@ export function Sello({ estado, texto }) {
 
 // Ventana modal accesible (la misma idea que Sorteos): foco adentro, Tab no se
 // sale, Escape cierra, la página de atrás no se mueve.
-export function Modal({ alCerrar, ancho, children, etiqueta }) {
+// variante 'kd' (sitio nuevo, 19-nov): hoja lateral de papel que entra por la derecha
+export function Modal({ alCerrar, ancho, children, etiqueta, variante }) {
   const ref = useRef(null);
   useEffect(() => {
     const antes = document.activeElement;
@@ -87,6 +88,16 @@ export function Modal({ alCerrar, ancho, children, etiqueta }) {
       antes?.focus?.({ preventScroll: true });
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  if (variante === 'kd') {
+    return (
+      <div className="kd kd-ventana-fondo" onMouseDown={(e) => { if (e.target === e.currentTarget) alCerrar(); }}>
+        <div ref={ref} className={`kd-ventana ${ancho ? 'ancha' : ''}`} role="dialog" aria-modal="true" aria-label={etiqueta}>
+          <button type="button" className="kd-ventana-cerrar" onClick={alCerrar} aria-label="Cerrar">Cerrar <X size={16} /></button>
+          {children}
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="mo-modal-fondo" onMouseDown={(e) => { if (e.target === e.currentTarget) alCerrar(); }}>
       <div ref={ref} className={`mo-modal ${ancho ? 'mo-modal-ancho' : ''}`} role="dialog" aria-modal="true" aria-label={etiqueta}>

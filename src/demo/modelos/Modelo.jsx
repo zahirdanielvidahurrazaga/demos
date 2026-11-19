@@ -161,7 +161,7 @@ function Inicio({ e, m, mios, pendientes, ir, verPortada }) {
             <span className="mo-gigante" style={{ position: 'absolute', left: 14, bottom: 4, color: '#fff', fontSize: '3.4rem', textTransform: 'uppercase' }}>{palabra}</span>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6, padding: 6 }}>
-            {['book', 'pose', 'bn'].map((t) => <Foto key={t} src={fotoDe(m, t)} style={{ aspectRatio: '3 / 4' }} />)}
+            {['book', 'pose', 'bn'].map((t) => <Foto key={t} src={fotoDe(m, t)} style={{ aspectRatio: '3 / 4', filter: t === 'bn' ? 'grayscale(1) contrast(1.06)' : undefined }} />)}
           </div>
           <div style={{ padding: '10px 16px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div><p className="mo-eti">Tu portada en el sitio</p><p style={{ fontSize: '.84rem', marginTop: 4 }}>Así te ven las marcas</p></div>
@@ -363,7 +363,7 @@ function Pagos({ mios }) {
   const anio = meses.reduce((a, x) => a + x.total, 0);
   return (
     <>
-      <h1><em>Pagos</em></h1>
+      <h1>Pagos</h1>
       <div className="mo-kpis">
         <div className="mo-kpi"><span className="mo-eti">Viene en camino</span><b>{dinero(suma(porCobrar) + suma(porDepositar))}</b></div>
         <div className="mo-kpi"><span className="mo-eti">El cliente debe</span><b>{dinero(suma(porCobrar))}</b></div>
@@ -454,7 +454,8 @@ function MiBook({ e, m, verPortada }) {
       </div>
       <p className="mo-tenue" style={{ fontSize: '.88rem', margin: '-8px 0 18px' }}>Elige la foto principal: es la que sale en el board y en las tiras del sitio.</p>
       <div className="mo-galeria">
-        {['book', 'pose', 'bn', 'cerca', 'polaroid'].map((t) => (
+        {/* solo las fotos que de verdad tiene (18-nov: cada modelo trae 1 o 2 en `fotos`) */}
+        {['book', 'pose'].slice(0, Math.max(1, m.fotos?.length || 0)).map((t) => (
           <div key={t} className={`mo-galeria-item ${m.principal === t ? 'principal' : ''}`}>
             <Foto src={fotoDe(m, t)} alt={NOMBRES[t]} />
             <div style={{ display: 'grid', justifyItems: 'start', gap: 6, marginTop: 8 }}>
@@ -526,7 +527,7 @@ function Documentos() {
   const [hechos, setHechos] = useState({});
   return (
     <>
-      <h1><em>Documentos</em></h1>
+      <h1>Documentos</h1>
       <div className="mo-portal-grid">
         <section className="mo-tarjeta" style={{ padding: '6px 20px' }}>
           {DOCS.map((d) => (

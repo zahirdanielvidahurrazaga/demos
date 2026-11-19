@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { ArrowLeft, ArrowRight, Camera, Check, ImagePlus, Plus, X } from 'lucide-react';
 import { AGENCIA, HORA, useAgencia, modeloPorId, postularse, fechaLarga, fechaCorta, hora, estaturaTxt } from './datos';
-import { Campo, Foto, FotoModelo, miniatura, useAltoCabeza } from './comun';
+import { Campo, Foto, miniatura } from './comun';
+import { Folio, Imagen, Rasgado, useRevela } from './kade';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SCOUTING EN LÍNEA — "Quiero ser modelo". La página de reclutamiento.
@@ -18,12 +19,11 @@ const LLAVE = 'demo_modelos_mi_postulacion';
 const leerMia = () => { try { return localStorage.getItem(LLAVE); } catch { return null; } };
 const MINIMO = { mujeres: 170, hombres: 180 };
 
-export default function Aspirante() {
+export default function Aspirante({ alVolver }) {
   const e = useAgencia();
-  const cabeza = useAltoCabeza();
   const [bajo, setBajo] = useState(false);
   useEffect(() => {
-    const alBajar = () => setBajo(window.scrollY > 120);
+    const alBajar = () => setBajo(window.scrollY > 40);
     alBajar();
     window.addEventListener('scroll', alBajar, { passive: true });
     return () => window.removeEventListener('scroll', alBajar);
@@ -33,85 +33,91 @@ export default function Aspirante() {
   const guardar = (id) => { try { localStorage.setItem(LLAVE, id); } catch { /* */ } setMia(id); window.scrollTo({ top: 0, behavior: 'smooth' }); };
   const otra = () => { try { localStorage.removeItem(LLAVE); } catch { /* */ } setMia(null); };
   return (
-    <div className="mo-sitio">
-      <div ref={cabeza} className={`mo-noche-cab ${a ? '' : 'sobre'} ${bajo ? 'solido' : ''}`}>
-        <header className="mo-cabeza">
-          <div className="mo-logo">{AGENCIA.nombre}<small>MODEL MANAGEMENT</small></div>
-          <span className="mo-eti">Scouting 2027</span>
-        </header>
-      </div>
+    <div className="kd kd-sitio kd-aspirante">
+      <header className={`kd-cab ${bajo ? 'bajo' : ''}`}>
+        <button type="button" className="kd-logo" onClick={alVolver} aria-label="Volver al sitio">{AGENCIA.nombre}</button>
+        <p className="kd-cab-giro">Scouting 2027<br />{AGENCIA.ciudad}</p>
+        <span />
+        <div className="kd-cab-der"><button type="button" onClick={alVolver}>← Volver al sitio</button></div>
+      </header>
       {a ? <Estado e={e} a={a} otra={otra} /> : <Reclutamiento e={e} alListo={guardar} />}
+      <footer className="kd-pie">
+        <div className="kd-pie-legal">
+          <span>© 2026 {AGENCIA.completo}</span>
+          <span>Nunca cobramos por postularte ni por representarte.</span>
+          <span>{AGENCIA.correo}</span>
+        </div>
+      </footer>
     </div>
   );
 }
 
 // ── la página antes de postularse ───────────────────────────────────────────
+const NUEVAS = ['sofia', 'lia', 'elena', 'noa'];
+
 function Reclutamiento({ e, alListo }) {
   const form = useRef(null);
-  const [sinVideo, setSinVideo] = useState(false);
-  const nuevas = ['sofia', 'andres'].map((id) => modeloPorId(e, id)).filter(Boolean);
+  const revela = useRevela();
+  const nuevas = NUEVAS.map((id) => modeloPorId(e, id)).filter(Boolean);
   const ir = () => form.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   return (
-    <>
-      <section className="mo-reclu-portada">
-        {/* el video del casting (Gemini); si no carga, su foto */}
-        {sinVideo
-          ? <img src="/modelos/mira/evento-casting.webp" alt="" />
-          : <video src="/modelos/mira/video/casting.mp4" poster="/modelos/mira/video/casting.jpg" autoPlay muted loop playsInline onError={() => setSinVideo(true)} />}
-        <div className="mo-reclu-texto">
-          <p className="mo-eti" style={{ color: 'rgba(255,255,255,.75)' }}>Scouting en línea · {AGENCIA.ciudad}</p>
-          <h1 className="mo-gigante">Quiero<br /><em>ser modelo.</em></h1>
-          <p className="mo-reclu-lema">No necesitas book ni experiencia. Dos fotos con tu celular y cinco minutos.</p>
-          <button type="button" className="mo-boton mo-boton-blanco" onClick={ir}>Postularme <ArrowRight size={16} /></button>
+    <div ref={revela}>
+      <section className="kd-reclu-portada">
+        <Imagen nombre="casting-1" sizes="100vw" prioridad posicion="50% 35%" />
+        <div className="kd-reclu-txt">
+          <Folio n={1}>Scouting en línea · {AGENCIA.ciudad}</Folio>
+          <h1 className="kd-titulo">Quiero<br /><span>ser modelo</span></h1>
+          <p className="kd-reclu-lema">No necesitas book ni experiencia. Dos fotos con tu celular y cinco minutos.</p>
+          <button type="button" className="kd-boton kd-boton-claro" onClick={ir}>Postularme →</button>
         </div>
       </section>
 
-      <section className="mo-seccion mo-reclu-dos">
-        <div>
-          <p className="mo-eti">Así empezaron</p>
-          <h2 className="mo-gigante" style={{ fontSize: 'clamp(2.4rem, 5vw, 4.2rem)', margin: '12px 0 16px' }}>Con dos fotos <em>del celular.</em></h2>
-          <p className="mo-tenue" style={{ lineHeight: 1.65, maxWidth: 460 }}>
-            Sofía y Andrés se postularon aquí mismo. Hoy están en el book de {AGENCIA.nombre} y ya trabajaron con marcas como Norte Denim y Sastrería Gil.
-          </p>
+      <section className="kd-claro kd-talento">
+        <div className="kd-sec-cab">
+          <Folio n={2}>Así empezaron</Folio>
+          <h2 className="kd-titulo kd-revela">Con dos fotos<br /><span>del celular</span></h2>
+          <p className="kd-mono-chico">New faces 2026</p>
         </div>
-        {/* la foto del celular con que se postularon y, detrás, su book de hoy */}
-        <div className="mo-reclu-polaroids">
-          {nuevas.map((m) => (
-            <div key={m.id} className="mo-antes-hoy">
-              <div className="mo-antes-hoy-hoy">
-                <FotoModelo m={m} tipo="book" />
-                <span className="mo-lapiz">hoy, Nº {m.num}</span>
-              </div>
-              <div className="mo-polaroid">
-                <FotoModelo m={m} tipo="polaroid" />
-                <div className="mo-polaroid-pie"><span className="mo-lapiz" style={{ fontSize: '1.3rem' }}>{m.nombre}, antes</span></div>
-              </div>
-            </div>
+        <p className="kd-reclu-intro kd-revela">Ellas se postularon aquí mismo. Hoy están en el board de {AGENCIA.nombre} y ya hicieron castings con marcas como Norte Denim y Casa Ámbar.</p>
+        <div className="kd-rejilla kd-rejilla-4">
+          {nuevas.map((m, k) => (
+            <article key={m.id} className="kd-carta kd-revela" style={{ '--k': k }}>
+              <div className="kd-carta-foto"><Rasgado nombre={m.fotos[0]} sizes="(max-width: 760px) 46vw, 24vw" semilla={k + 21} /><span className="kd-sello">New face</span></div>
+              <div className="kd-carta-pie"><h3>{m.nombre} {m.apellido}</h3><p>Firmada en 2026 · {m.ciudad}</p></div>
+            </article>
           ))}
         </div>
       </section>
 
-      <section className="mo-seccion">
-        <div className="mo-seccion-cab"><h2>Cómo <em>funciona</em></h2></div>
-        <ol className="mo-pasos-grandes">
+      <section className="kd-oscuro kd-eventos-inicio">
+        <div className="kd-sec-cab">
+          <Folio n={3}>Cómo funciona</Folio>
+          <h2 className="kd-titulo kd-revela">Cuatro<br /><span>pasos</span></h2>
+          <p className="kd-mono-chico">Respuesta en 48 h</p>
+        </div>
+        <ol className="kd-reclu-pasos">
           {[
             ['Mandas tus fotos', 'Dos fotos con luz de día: de frente y de perfil. Sin maquillaje ni filtros.'],
             ['Te revisamos', 'Una booker ve cada postulación. Te contestamos en menos de 48 horas.'],
             ['Casting abierto', 'Si nos interesas te llega tu pase. Vienes, te conocemos y te tomamos polaroids.'],
-            ['Firmas', 'Entras al book como New face y empiezas a hacer castings con marcas.'],
+            ['Firmas', 'Entras al board como New face y empiezas a hacer castings con marcas.'],
           ].map(([t, d], k) => (
-            <li key={t}><span className="mo-gigante">{String(k + 1).padStart(2, '0')}</span><b>{t}</b><p className="mo-tenue">{d}</p></li>
+            <li key={t} className="kd-revela" style={{ '--k': k }}><b>{String(k + 1).padStart(2, '0')}</b><h3>{t}</h3><p>{d}</p></li>
           ))}
         </ol>
       </section>
 
-      <section ref={form} className="mo-seccion" style={{ scrollMarginTop: 'calc(var(--mo-barra) + 80px)' }}>
+      <section ref={form} className="kd-claro kd-reclu-form" style={{ scrollMarginTop: 'var(--kd-arriba)' }}>
         <Formulario alListo={alListo} />
       </section>
 
-      <section className="mo-seccion">
-        <div className="mo-seccion-cab"><h2>Preguntas <em>frecuentes</em></h2></div>
-        <div className="mo-faq">
+      <section className="kd-claro kd-reclu-faq">
+        <div className="kd-sec-cab">
+          <Folio n={5}>Preguntas</Folio>
+          <h2 className="kd-titulo kd-revela">Lo que<br /><span>nos preguntan</span></h2>
+          <span />
+        </div>
+        <div className="kd-faq">
           {[
             ['¿Cuesta algo postularme o estar en la agencia?', `No. ${AGENCIA.nombre} nunca cobra por representarte, por el casting ni por tus fotos. Ganamos una comisión solo cuando tú ganas por un trabajo.`],
             ['Soy menor de edad, ¿puedo?', 'Sí, desde los 16 años. Tu mamá, papá o tutor tiene que acompañarte al casting y firmar contigo.'],
@@ -119,23 +125,19 @@ function Reclutamiento({ e, alListo }) {
             ['¿Qué pasa con mis fotos?', 'Solo las ve el equipo de scouting para evaluar tu postulación. Si no avanzas, se borran a los seis meses.'],
             ['No llego a la estatura, ¿vale la pena?', 'Para comercial, fitness y belleza la estatura importa menos. Postúlate igual: lo vemos caso por caso.'],
           ].map(([p, r]) => (
-            <details key={p}><summary>{p}<Plus size={18} /></summary><p className="mo-tenue">{r}</p></details>
+            <details key={p}><summary>{p}<Plus size={20} /></summary><p>{r}</p></details>
           ))}
         </div>
       </section>
 
-      <section className="mo-reclu-cierre">
-        <h2 className="mo-gigante">Cinco minutos.<br /><em>Dos fotos.</em></h2>
-        <button type="button" className="mo-boton mo-boton-blanco" onClick={ir}>Postularme <ArrowRight size={16} /></button>
-      </section>
-      <footer className="mo-pie">
+      <section className="kd-reclu-cierre">
+        <Imagen nombre="estudio-luz" sizes="100vw" posicion="50% 40%" />
         <div>
-          <div className="mo-logo" style={{ fontSize: '1.1rem' }}>{AGENCIA.nombre}</div>
-          <p style={{ marginTop: 8 }}>{AGENCIA.ciudad} · {AGENCIA.correo}</p>
+          <h2 className="kd-titulo">Cinco minutos.<br /><span>Dos fotos.</span></h2>
+          <button type="button" className="kd-boton kd-boton-claro" onClick={ir}>Postularme →</button>
         </div>
-        <p>Nunca cobramos por postularte ni por representarte.</p>
-      </footer>
-    </>
+      </section>
+    </div>
   );
 }
 
@@ -143,18 +145,18 @@ function Reclutamiento({ e, alListo }) {
 function SubirFoto({ etiqueta, perfil, valor, alCambiar }) {
   const ref = useRef(null);
   return (
-    <button type="button" onClick={() => ref.current?.click()} className="mo-polaroid mo-subir" style={{ textAlign: 'left', width: '100%' }}>
+    <button type="button" onClick={() => ref.current?.click()} className={`kd-subir ${valor ? 'lleno' : ''}`}>
       <input ref={ref} type="file" accept="image/*" hidden onChange={async (ev) => {
         const f = ev.target.files?.[0]; ev.target.value = '';
         if (f) alCambiar(await miniatura(f, 420));
       }} />
       {valor ? <Foto src={valor} /> : (
-        <div className="mo-foto mo-silueta">
+        <span className="kd-subir-vacio">
           <Silueta perfil={perfil} />
-          <span><Camera size={18} /> Toca para subir</span>
-        </div>
+          <span><Camera size={16} /> Toca para subir</span>
+        </span>
       )}
-      <div className="mo-polaroid-pie"><span className="mo-lapiz" style={{ fontSize: '1.3rem' }}>{etiqueta}</span>{valor && <Check size={16} />}</div>
+      <span className="kd-subir-pie">{etiqueta}{valor && <Check size={14} />}</span>
     </button>
   );
 }
@@ -178,16 +180,19 @@ const FALTA = [
 ];
 
 // fotos de ejemplo para enseñar la demo sin tener que subir nada
-const EJEMPLO = { mujeres: 'sofia', hombres: 'andres' };
+const EJEMPLO = { mujeres: ['valeria-1', 'valeria-2'], hombres: ['andres-1', 'andres-2'] };
 
 function Formulario({ alListo }) {
   const [paso, setPaso] = useState(0);
   // al cambiar de paso la hoja sube a su inicio (si no, el paso nuevo
   // aparece a media pantalla, con el título debajo del encabezado)
   const hoja = useRef(null);
-  const primera = useRef(true);
+  // solo cuando el paso CAMBIA (en modo estricto el efecto corre dos veces al
+  // montar y con una bandera de "primera vez" la página brincaba al formulario)
+  const anterior = useRef(paso);
   useEffect(() => {
-    if (primera.current) { primera.current = false; return; }
+    if (anterior.current === paso) return;
+    anterior.current = paso;
     hoja.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, [paso]);
   const [f, setF] = useState({ nombre: '', edad: '', ciudad: '', ig: '', telefono: '', board: 'mujeres', estatura: 172, cabello: '', ojos: '', fotos: [null, null], acepto: false, b: '', c: '', h: '' });
@@ -205,23 +210,20 @@ function Formulario({ alListo }) {
     alListo(n.id);
   };
   return (
-    <div ref={hoja} className="mo-hoja mo-claro mo-asistente" style={{ scrollMarginTop: 'calc(var(--mo-barra) + var(--mo-cab, 80px) + 12px)' }}>
-      <div className="mo-asistente-cab">
-        <div>
-          <p className="mo-eti">Tu postulación · paso {paso + 1} de {PASOS.length}</p>
-          <h2 className="mo-gigante" style={{ fontSize: 'clamp(2rem, 4vw, 3rem)', marginTop: 8 }}>{['Cuéntanos de ti', 'Tus medidas', 'Tus dos fotos', 'Así te vamos a ver'][paso]}</h2>
-        </div>
-        <ol className="mo-asistente-pasos">
-          {PASOS.map((p, k) => <li key={p} className={k < paso ? 'hecho' : k === paso ? 'ahora' : ''}><span>{k < paso ? <Check size={12} /> : k + 1}</span>{p}</li>)}
+    <div ref={hoja} className="kd-asistente" style={{ scrollMarginTop: 'calc(var(--kd-arriba) + 90px)' }}>
+      <div className="kd-asistente-cab">
+        <Folio n={4}>Tu postulación · paso {paso + 1} de {PASOS.length}</Folio>
+        <h2 className="kd-titulo">{['Cuéntanos', 'Tus', 'Tus dos', 'Así te'][paso]}<br /><span>{['de ti', 'medidas', 'fotos', 'vamos a ver'][paso]}</span></h2>
+        <ol className="kd-pasos" style={{ '--p': paso }}>
+          {PASOS.map((p, k) => <li key={p} className={k <= paso ? 'hecho' : ''}><i />{p}</li>)}
         </ol>
       </div>
-      <div className="mo-avance"><i style={{ width: `${((paso + 1) / PASOS.length) * 100}%` }} /></div>
 
-      <div key={paso} className="mo-entra" style={{ display: 'grid', gap: 18, padding: '24px 0 6px' }}>
+      <div key={paso} className="kd-asistente-cuerpo kd-form">
         {paso === 0 && (
           <>
-            <div style={{ display: 'flex', gap: 6 }}>
-              {[['mujeres', 'Mujer'], ['hombres', 'Hombre']].map(([v, t]) => <button key={v} type="button" className="mo-chip" aria-pressed={f.board === v} onClick={() => setF({ ...f, board: v, estatura: v === 'hombres' ? 182 : 172 })}>{t}</button>)}
+            <div className="kd-pestanas" role="group" aria-label="Board">
+              {[['mujeres', 'Mujer'], ['hombres', 'Hombre']].map(([v, t]) => <button key={v} type="button" aria-pressed={f.board === v} onClick={() => setF({ ...f, board: v, estatura: v === 'hombres' ? 182 : 172 })}>{t}</button>)}
             </div>
             <Campo etiqueta="Nombre completo"><input value={f.nombre} onChange={pon('nombre')} autoComplete="name" /></Campo>
             <div className="mo-dos">
@@ -230,25 +232,25 @@ function Formulario({ alListo }) {
               <Campo etiqueta="WhatsApp"><input type="tel" inputMode="tel" value={f.telefono} onChange={pon('telefono')} autoComplete="tel" /></Campo>
               <Campo etiqueta="Instagram (opcional)"><input value={f.ig} onChange={pon('ig')} placeholder="@" /></Campo>
             </div>
-            {menor && <div className="mo-aviso">Eres menor de edad: tu mamá, papá o tutor tendrá que acompañarte al casting y firmar contigo.</div>}
+            {menor && <p className="kd-v-aviso">Eres menor de edad: tu mamá, papá o tutor tendrá que acompañarte al casting y firmar contigo.</p>}
           </>
         )}
 
         {paso === 1 && (
           <>
-            <div className="mo-regla-caja">
+            <div className="kd-estatura">
               <div>
-                <p className="mo-eti">Estatura</p>
-                <p className="mo-gigante" style={{ fontSize: '4.4rem', marginTop: 6 }}>{estaturaTxt(f.estatura)}</p>
-                <p className={cumple ? 'mo-ok-txt' : 'mo-tenue'} style={{ fontSize: '.86rem', marginTop: 10 }}>
+                <p className="kd-mono-chico">Estatura</p>
+                <p className="kd-estatura-num">{estaturaTxt(f.estatura)}</p>
+                <p className={cumple ? 'kd-ok' : 'kd-v-nota'}>
                   {cumple ? `✓ Cumples para pasarela y editorial (desde ${estaturaTxt(MINIMO[f.board])})` : `Para pasarela pedimos desde ${estaturaTxt(MINIMO[f.board])}; para comercial y belleza, postúlate igual.`}
                 </p>
               </div>
-              <div className="mo-regla" aria-hidden="true">
+              <div className="kd-regla-cm" aria-hidden="true">
                 {Array.from({ length: 41 }, (_, k) => 150 + k).map((cm) => <i key={cm} className={`${cm % 5 ? '' : 'larga'} ${cm <= f.estatura ? 'on' : ''}`} />)}
               </div>
             </div>
-            <input className="mo-deslizador" type="range" min="150" max="200" value={f.estatura} onChange={(ev) => setF({ ...f, estatura: Number(ev.target.value) })} aria-label="Estatura en centímetros" />
+            <input className="kd-deslizador" type="range" min="150" max="200" value={f.estatura} onChange={(ev) => setF({ ...f, estatura: Number(ev.target.value) })} aria-label="Estatura en centímetros" />
             <div className="mo-tres">
               <Campo etiqueta={f.board === 'hombres' ? 'Pecho (cm, opcional)' : 'Busto (cm, opcional)'}><input type="number" inputMode="numeric" value={f.b} onChange={pon('b')} placeholder={f.board === 'hombres' ? 'Ej. 98' : 'Ej. 84'} /></Campo>
               <Campo etiqueta="Cintura (cm, opcional)"><input type="number" inputMode="numeric" value={f.c} onChange={pon('c')} placeholder={f.board === 'hombres' ? 'Ej. 78' : 'Ej. 61'} /></Campo>
@@ -263,63 +265,62 @@ function Formulario({ alListo }) {
 
         {paso === 2 && (
           <>
-            <div className="mo-dos mo-fotos-subir">
-              <SubirFoto etiqueta="de frente" valor={f.fotos[0]} alCambiar={(v) => setF((x) => ({ ...x, fotos: [v, x.fotos[1]] }))} />
-              <SubirFoto etiqueta="de perfil" perfil valor={f.fotos[1]} alCambiar={(v) => setF((x) => ({ ...x, fotos: [x.fotos[0], v] }))} />
+            <div className="kd-subir-dos">
+              <SubirFoto etiqueta="De frente" valor={f.fotos[0]} alCambiar={(v) => setF((x) => ({ ...x, fotos: [v, x.fotos[1]] }))} />
+              <SubirFoto etiqueta="De perfil" perfil valor={f.fotos[1]} alCambiar={(v) => setF((x) => ({ ...x, fotos: [x.fotos[0], v] }))} />
             </div>
-            <div className="mo-asi">
-              <div><b className="mo-ok-txt"><Check size={14} /> Así sí</b><p className="mo-tenue">Luz de día, pared lisa, ropa ajustada y sencilla, cabello suelto o recogido, sin maquillaje.</p></div>
-              <div><b style={{ color: 'var(--mo-rojo)' }}><X size={14} /> Así no</b><p className="mo-tenue">Selfies, filtros, lentes de sol, fotos en grupo o con poca luz.</p></div>
+            <div className="kd-asi">
+              <div><b className="kd-ok"><Check size={14} /> Así sí</b><p>Luz de día, pared lisa, ropa ajustada y sencilla, cabello suelto o recogido, sin maquillaje.</p></div>
+              <div><b className="kd-rojo"><X size={14} /> Así no</b><p>Selfies, filtros, lentes de sol, fotos en grupo o con poca luz.</p></div>
             </div>
-            <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-              <button type="button" className="mo-boton mo-boton-claro mo-boton-chico" onClick={() => setF((x) => ({ ...x, fotos: [`/modelos/mira/${EJEMPLO[x.board]}-polaroid.webp`, `/modelos/mira/${EJEMPLO[x.board]}-pose.webp`] }))}>
-                <ImagePlus size={15} /> Usar fotos de ejemplo
+            <div className="kd-v-acciones">
+              <button type="button" className="kd-enlace" onClick={() => setF((x) => ({ ...x, fotos: EJEMPLO[x.board].map((n) => `/modelos/kade/${n}-1200.webp`) }))}>
+                [ <ImagePlus size={14} style={{ verticalAlign: -2 }} /> Usar fotos de ejemplo ]
               </button>
-              <p className="mo-tenue" style={{ fontSize: '.76rem' }}>Solo en la demo: también sirve cualquier imagen tuya.</p>
+              <p className="kd-v-nota">Solo en la demo: también sirve cualquier imagen tuya.</p>
             </div>
           </>
         )}
 
         {paso === 3 && (
           <>
-            <div className="mo-mini-composite">
+            <div className="kd-mini-composite">
               <Foto src={f.fotos[0]} />
-              <div style={{ display: 'grid', gap: 8, alignContent: 'space-between' }}>
-                <Foto src={f.fotos[1]} style={{ aspectRatio: '4 / 5' }} />
+              <div>
+                <Foto src={f.fotos[1]} />
                 <div>
-                  <p className="mo-eti">Aspirante · {f.board === 'hombres' ? 'Hombres' : 'Mujeres'}</p>
-                  <p className="mo-gigante" style={{ fontSize: '1.9rem', marginTop: 6 }}>{f.nombre || 'Tu nombre'}</p>
-                  <p style={{ fontSize: '.84rem', marginTop: 6 }}>{f.edad || '—'} años · {estaturaTxt(f.estatura)} · {f.ciudad || '—'}</p>
-                  {(f.cabello || f.ojos) && <p className="mo-tenue" style={{ fontSize: '.8rem' }}>{[f.cabello && `Cabello ${f.cabello}`, f.ojos && `ojos ${f.ojos}`].filter(Boolean).join(' · ')}</p>}
+                  <p className="kd-mono-chico">Aspirante · {f.board === 'hombres' ? 'Hombres' : 'Mujeres'}</p>
+                  <p className="kd-mini-composite-nombre">{f.nombre || 'Tu nombre'}</p>
+                  <p className="kd-mono-chico" style={{ color: 'inherit' }}>{f.edad || '—'} años · {estaturaTxt(f.estatura)} · {f.ciudad || '—'}</p>
+                  {(f.cabello || f.ojos) && <p className="kd-mono-chico">{[f.cabello && `Cabello ${f.cabello}`, f.ojos && `ojos ${f.ojos}`].filter(Boolean).join(' · ')}</p>}
                 </div>
               </div>
             </div>
-            <label style={{ display: 'flex', gap: 10, alignItems: 'flex-start', fontSize: '.84rem', lineHeight: 1.45 }}>
-              <input type="checkbox" checked={f.acepto} onChange={(ev) => setF({ ...f, acepto: ev.target.checked })} style={{ marginTop: 3 }} />
-              <span className="mo-tenue">Acepto que {AGENCIA.nombre} guarde mis fotos y datos solo para evaluar mi postulación (aviso de privacidad).</span>
+            <label className="kd-acepto">
+              <input type="checkbox" checked={f.acepto} onChange={(ev) => setF({ ...f, acepto: ev.target.checked })} />
+              <span>Acepto que {AGENCIA.nombre} guarde mis fotos y datos solo para evaluar mi postulación (aviso de privacidad).</span>
             </label>
           </>
         )}
       </div>
 
-      <div className="mo-asistente-pie">
-        {paso > 0 ? <button type="button" className="mo-boton mo-boton-claro" onClick={() => setPaso(paso - 1)}><ArrowLeft size={16} /> Atrás</button> : <span />}
+      <div className="kd-asistente-pie">
+        {paso > 0 ? <button type="button" className="kd-enlace" onClick={() => setPaso(paso - 1)}>[ ← Atrás ]</button> : <span />}
         {paso < PASOS.length - 1
-          ? <button type="button" className="mo-boton" disabled={!listo[paso]} onClick={() => setPaso(paso + 1)}>Siguiente <ArrowRight size={16} /></button>
-          : <button type="button" className="mo-boton" disabled={!listo.every(Boolean)} onClick={mandar}>Mandar mi postulación <ArrowRight size={16} /></button>}
+          ? <button type="button" className="kd-boton" disabled={!listo[paso]} onClick={() => setPaso(paso + 1)}>Siguiente →</button>
+          : <button type="button" className="kd-boton" disabled={!listo.every(Boolean)} onClick={mandar}>Mandar mi postulación →</button>}
       </div>
-      {/* en el primer paso, solo cuando ya empezó a llenar (no regañar de entrada) */}
-      {!listo[paso] && (paso > 0 || f.nombre || f.edad || f.ciudad || f.telefono) && <p className="mo-falta" style={{ marginTop: 10, textAlign: 'right' }}>{FALTA[paso](f)}</p>}
+      {!listo[paso] && (paso > 0 || f.nombre || f.edad || f.ciudad || f.telefono) && <p className="kd-v-falta" style={{ textAlign: 'right' }}>{FALTA[paso](f)}</p>}
     </div>
   );
 }
 
 // ── después de postularse ───────────────────────────────────────────────────
 const TITULOS = {
-  nueva: <>La estamos<br /><em>revisando.</em></>,
-  casting: <>Te queremos<br /><em>conocer.</em></>,
-  firmada: <>Bienvenida<br /><em>a {AGENCIA.nombre}.</em></>,
-  descartada: <>Gracias<br /><em>por postularte.</em></>,
+  nueva: <>La estamos<br /><span>revisando</span></>,
+  casting: <>Te queremos<br /><span>conocer</span></>,
+  firmada: <>Bienvenida<br /><span>a {AGENCIA.nombre}</span></>,
+  descartada: <>Gracias<br /><span>por postularte</span></>,
 };
 const SELLO = { nueva: 'Recibida', casting: 'Invitada', firmada: 'Firmada', descartada: 'Cerrada' };
 
@@ -336,61 +337,65 @@ function Estado({ e, a, otra }) {
   ];
   return (
     <>
-      <section className="mo-estado">
+      <section className="kd-claro kd-estado">
         <div>
-          <p className="mo-eti">Tu postulación · {a.nombre}</p>
-          <h1 className="mo-gigante" style={{ fontSize: 'clamp(3rem, 7vw, 6rem)', margin: '16px 0 18px' }}>{TITULOS[a.estado]}</h1>
-          <p className="mo-tenue" style={{ lineHeight: 1.65, maxWidth: 440 }}>
+          <Folio n={1}>Tu postulación · {a.nombre}</Folio>
+          <h1 className="kd-titulo">{TITULOS[a.estado]}</h1>
+          <p className="kd-v-texto">
             {a.estado === 'nueva' && 'Te avisamos por WhatsApp y aquí ves el estado en vivo. (En la demo: ábrela desde "Booker → Scouting" y mándala al casting.)'}
             {a.estado === 'casting' && 'Tu pase para el casting abierto está listo. Ven sin maquillaje, con jeans y blusa negra, y trae una identificación.'}
-            {a.estado === 'firmada' && 'Ya estás en el book como New face. Tu booker te llama para tu primera sesión de fotos.'}
+            {a.estado === 'firmada' && 'Ya estás en el board como New face. Tu booker te llama para tu primera sesión de fotos.'}
             {a.estado === 'descartada' && 'Por ahora no tenemos un lugar para tu perfil. Puedes volver a postularte en seis meses.'}
           </p>
           {a.estado !== 'descartada' && (
-            <ol className="mo-linea-tiempo">
-              {linea.map(([t, d, hecho]) => <li key={t} className={hecho ? 'hecho' : ''}><b>{t}</b><span>{d}</span></li>)}
+            <ol className="kd-linea">
+              {linea.map(([t, d, hecho]) => <li key={t} className={hecho ? 'hecho' : ''}><i /><b>{t}</b><span>{d}</span></li>)}
             </ol>
           )}
-          <button type="button" className="mo-boton mo-boton-claro mo-boton-chico" style={{ marginTop: 26 }} onClick={otra}>Hacer otra postulación</button>
+          <button type="button" className="kd-enlace" style={{ marginTop: 30 }} onClick={otra}>[ Hacer otra postulación ]</button>
         </div>
 
-        <div className="mo-estado-der">
+        <div className="kd-estado-der">
           {a.estado === 'casting' && pase && casting ? (
-            <div className="mo-pase mo-claro mo-pase-grande">
-              <span className="mo-sello mo-sello-ambar">Pase · casting abierto</span>
-              <p className="mo-gigante" style={{ fontSize: '1.9rem' }}>{fechaLarga(casting.fecha)}</p>
-              <p className="mo-tenue" style={{ fontSize: '.86rem' }}>{hora(casting.fecha)} · {casting.lugar}</p>
-              <QRCodeSVG value={pase.codigo} size={170} bgColor="#FBF9F5" fgColor="#151413" />
-              <b className="mo-mono" style={{ letterSpacing: '.14em' }}>{pase.codigo}</b>
-              <p className="mo-tenue" style={{ fontSize: '.76rem' }}>Lo escanean en la puerta.</p>
+            <div className="kd-pase kd-pase-vertical">
+              <div className="kd-pase-fecha">
+                <small>Pase · casting abierto</small>
+                <b>{new Date(casting.fecha).getDate()}</b>
+                <small>{fechaLarga(casting.fecha)} · {hora(casting.fecha)}</small>
+              </div>
+              <div className="kd-pase-cuerpo">
+                <small>{casting.lugar}</small>
+                <b>{a.nombre}</b>
+                <code>{pase.codigo}</code>
+              </div>
+              <div className="kd-pase-qr"><QRCodeSVG value={pase.codigo} size={150} bgColor="#F1EEE8" fgColor="#121211" /></div>
             </div>
           ) : (
-            <div className="mo-mesa" style={{ justifyContent: 'center', position: 'relative' }}>
-              {a.fotos.map((src, j) => (
-                <div key={j} className="mo-polaroid" style={{ width: 200, transform: `rotate(${j ? 3 : -3}deg)` }}>
-                  <Foto src={src} />
-                  <div className="mo-polaroid-pie"><span className="mo-lapiz">{j ? 'perfil' : a.nombre.split(' ')[0]}</span></div>
-                </div>
-              ))}
-              <span key={a.estado} className={`mo-sello-grande ${a.estado}`}>{SELLO[a.estado]}</span>
+            <div className="kd-estado-fotos">
+              {a.fotos.map((src, j) => <div key={j} className="kd-estado-foto"><Foto src={src} /><small>{j ? 'Perfil' : 'Frente'}</small></div>)}
+              <span key={a.estado} className={`kd-estado-sello ${a.estado}`}>{SELLO[a.estado]}</span>
             </div>
           )}
         </div>
       </section>
 
       {a.estado !== 'descartada' && a.estado !== 'firmada' && (
-        <section className="mo-seccion">
-          <div className="mo-seccion-cab"><h2>Mientras <em>tanto</em></h2></div>
-          <div className="mo-consejos">
+        <section className="kd-oscuro kd-eventos-inicio">
+          <div className="kd-sec-cab">
+            <Folio n={2}>Mientras tanto</Folio>
+            <h2 className="kd-titulo">Prepárate<br /><span>para el casting</span></h2>
+            <span />
+          </div>
+          <ol className="kd-reclu-pasos">
             {[
               ['Practica tu caminata', 'Tacones de 8 cm, en línea recta, mirando al frente. Diez minutos al día.'],
               ['Cuida tu piel y descansa', 'La cámara nota el desvelo. Duerme bien la semana del casting.'],
               ['Ve sin maquillaje', 'Queremos ver tu cara real. Cabello limpio y suelto, uñas sin color.'],
               ['Lleva lo básico', 'Jeans ajustados, blusa negra sencilla, tacones en la bolsa y tu INE.'],
             ].map(([t, d], k) => (
-              <div key={t}><span className="mo-mono mo-tenue">{String(k + 1).padStart(2, '0')}</span><b>{t}</b><p className="mo-tenue">{d}</p></div>
+              <li key={t}><b>{String(k + 1).padStart(2, '0')}</b><h3>{t}</h3><p>{d}</p></li>
             ))}
-          </div>
+          </ol>
         </section>
       )}
     </>

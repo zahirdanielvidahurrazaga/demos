@@ -10,6 +10,8 @@ import Aspirante from './Aspirante';
 import Carga, { yaCargo, olvidarCarga } from './Carga';
 import { AvisoListo } from './comun';
 import './modelos.css';
+import './kade.css';
+import { FUENTES_KADE } from './kade';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // MAQUETA DE AGENCIA DE MODELOS — /modelos/kade
@@ -85,6 +87,9 @@ export default function ModelosDemo() {
     link.id = 'fuentes-modelos'; link.rel = 'stylesheet';
     link.href = 'https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,500;1,6..96,400&family=DM+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;600&family=Nanum+Pen+Script&display=swap';
     document.head.appendChild(link);
+    const kade = document.createElement('link');
+    kade.id = 'fuentes-kade'; kade.rel = 'stylesheet'; kade.href = FUENTES_KADE;
+    document.head.appendChild(kade);
   }, []);
 
   // el negocio se mueve solo (una sola pestaña simula)
@@ -118,7 +123,7 @@ export default function ModelosDemo() {
   const mensaje = 'Hola KaiZen, vi la demo de agencia de modelos y me interesa para mi agencia.';
 
   return (
-    <div className={`mo ${['cliente', 'aspirante'].includes(rol) ? 'mo-oscuro' : ''}`} style={{ '--mo-barra': `${completa ? 0 : alto}px` }}>
+    <div className={`mo ${['cliente', 'aspirante'].includes(rol) ? 'mo-oscuro' : 'mo-kd'}`} style={{ '--mo-barra': `${completa ? 0 : alto}px` }}>
       <div ref={encabezado} className="mo-barra-demo" hidden={completa}>
         <BarraDemo roles={ROLES} rol={rol} alCambiar={cambiarRol}
           guiaAbierta={guia} alGuia={() => setGuia((x) => !x)}
@@ -152,7 +157,7 @@ export default function ModelosDemo() {
 
       {/* el sitio se queda montado: al regresar sigue donde estaba */}
       <div hidden={rol !== 'cliente'}><Sitio alPostularse={() => cambiarRol('aspirante')} /></div>
-      {rol === 'aspirante' && <Aspirante />}
+      {rol === 'aspirante' && <Aspirante alVolver={() => cambiarRol('cliente')} />}
       {rol === 'modelo' && <Modelo />}
       {rol === 'booker' && <Booker />}
       <AvisoListo />

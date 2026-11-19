@@ -173,7 +173,7 @@ function Solicitudes({ e, abierta, setAbierta }) {
   return (
     <>
       <div className="mo-titulo">
-        <div><p className="mo-eti">{lista.length} {filtro}</p><h1><em>Solicitudes</em></h1></div>
+        <div><p className="mo-eti">{lista.length} {filtro}</p><h1>Solicitudes</h1></div>
         <div style={{ display: 'flex', gap: 6 }}>
           <button type="button" className="mo-chip" aria-pressed={filtro === 'activas'} onClick={() => setFiltro('activas')}>Activas</button>
           <button type="button" className="mo-chip" aria-pressed={filtro === 'cerradas'} onClick={() => setFiltro('cerradas')}>Cerradas</button>
@@ -288,7 +288,7 @@ function Calendario({ e }) {
   return (
     <>
       <div className="mo-titulo">
-        <div><p className="mo-eti">{new Date(dias[0]).toLocaleDateString('es-MX', { day: 'numeric', month: 'long' })} — {new Date(dias[13]).toLocaleDateString('es-MX', { day: 'numeric', month: 'long' })}</p><h1><em>Calendario</em></h1></div>
+        <div><p className="mo-eti">{new Date(dias[0]).toLocaleDateString('es-MX', { day: 'numeric', month: 'long' })} — {new Date(dias[13]).toLocaleDateString('es-MX', { day: 'numeric', month: 'long' })}</p><h1>Calendario</h1></div>
         <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
           <button type="button" className="mo-chip" onClick={() => setDesde(desde - 7)} aria-label="Semana anterior"><ChevronLeft size={15} /></button>
           <button type="button" className="mo-chip" onClick={() => setDesde(0)}>Hoy</button>
@@ -404,7 +404,7 @@ const COLUMNAS = [['nueva', 'Nuevas'], ['casting', 'Al casting'], ['firmada', 'F
 function Scouting({ e }) {
   return (
     <>
-      <h1><em>Scouting</em></h1>
+      <h1>Scouting</h1>
       <p className="mo-tenue" style={{ fontSize: '.86rem', margin: '-8px 0 18px', lineHeight: 1.5 }}>Postulaciones que llegan del sitio con sus fotos. Mándalas al casting abierto (les llega su pase) o fírmalas: entran al book como New face.</p>
       <div className="mo-kanban">
         {COLUMNAS.map(([id, t]) => {
@@ -452,7 +452,7 @@ function Eventos({ e }) {
   return (
     <>
       <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
-        <h1><em>Eventos</em></h1>
+        <h1>Eventos</h1>
         <button type="button" className="mo-boton mo-boton-chico" style={{ marginBottom: 20 }} onClick={() => setNuevo(true)}>Nuevo evento</button>
       </div>
       <div style={{ display: 'flex', gap: 6, overflowX: 'auto', marginBottom: 16, scrollbarWidth: 'none' }}>
@@ -577,7 +577,7 @@ function Dinero({ e }) {
   const comision = hechos.filter((t) => t.fecha > Date.now() - 30 * DIA).reduce((a, t) => a + t.tarifa * AGENCIA.comision, 0);
   return (
     <>
-      <div className="mo-titulo"><div><p className="mo-eti">Cobros y liquidaciones</p><h1><em>Dinero</em></h1></div></div>
+      <div className="mo-titulo"><div><p className="mo-eti">Cobros y liquidaciones</p><h1>Dinero</h1></div></div>
       <div className="mo-kpis">
         <div className="mo-kpi"><span className="mo-eti">Clientes deben</span><b>{dinero(porCobrar.reduce((a, t) => a + t.tarifa * (1 + AGENCIA.iva), 0))}</b></div>
         <div className="mo-kpi"><span className="mo-eti">Por pagar a modelos</span><b>{dinero(porLiquidar.reduce((a, t) => a + neto(t.tarifa), 0))}</b></div>

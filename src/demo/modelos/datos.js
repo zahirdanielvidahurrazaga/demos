@@ -26,50 +26,57 @@ export const AGENCIA = {
   iva: 0.16,
 };
 
-export const CATEGORIAS = ['Editorial', 'Comercial', 'Pasarela', 'Fitness', 'New faces'];
-export const FOTO = (id, tipo = 'book') => `/modelos/mira/${id}-${tipo}.webp`;
+export const CATEGORIAS = ['Editorial', 'Comercial', 'Pasarela', 'Belleza', 'Fitness', 'New faces'];
+// fotos (18-nov-2026): Unsplash, licencia libre, en public/modelos/kade/<nombre>-{1200,2400,3600}.webp
+// (+ -2400.avif y -lqip.webp, el desenfoque mientras carga). Cada modelo trae su lista en `fotos`.
+export const FOTO_KADE = (nombre, ancho = 1200) => `/modelos/kade/${nombre}-${ancho}.webp`;
+export const FOTO = (id) => FOTO_KADE(`${id}-1`);
 
 // medidas en cm; hombres: pecho / cintura / traje
 export const MODELOS = [
-  { id: 'valeria', nombre: 'Valeria', apellido: 'Ruiz', num: '014', board: 'mujeres', estatura: 178, medidas: [84, 61, 89], calzado: 25, ojos: 'Café', cabello: 'Castaño oscuro', ciudad: 'CDMX', categorias: ['Editorial', 'Pasarela'], idiomas: 'Español · Inglés', ig: '48.2k', tarifa: 18000, bio: 'Portadas y lookbooks. Fashion Week México 2025 y 2026.' },
-  { id: 'camila', nombre: 'Camila', apellido: 'Ortega', num: '021', board: 'mujeres', estatura: 175, medidas: [86, 63, 91], calzado: 24.5, ojos: 'Miel', cabello: 'Castaño claro', ciudad: 'Puebla', categorias: ['Comercial'], idiomas: 'Español · Inglés', ig: '31.5k', tarifa: 12000, bio: 'La cara de campañas de belleza y retail. Muy natural a cámara.' },
-  { id: 'renata', nombre: 'Renata', apellido: 'Salas', num: '008', board: 'mujeres', estatura: 180, medidas: [82, 60, 88], calzado: 25.5, ojos: 'Negro', cabello: 'Negro', ciudad: 'CDMX', categorias: ['Pasarela', 'Editorial'], idiomas: 'Español · Inglés · Francés', ig: '62.0k', tarifa: 22000, bio: 'Pasarela internacional. Temporadas en París y Madrid.' },
-  { id: 'ximena', nombre: 'Ximena', apellido: 'Lara', num: '033', board: 'mujeres', estatura: 172, medidas: [85, 62, 92], calzado: 24, ojos: 'Café', cabello: 'Negro', ciudad: 'Puebla', categorias: ['Fitness', 'Comercial'], idiomas: 'Español', ig: '27.8k', tarifa: 11000, bio: 'Deportiva de verdad: corre, nada y hace pilates. Ropa activa y bebidas.' },
-  { id: 'sofia', nombre: 'Sofía', apellido: 'Méndez', num: '041', board: 'mujeres', estatura: 176, medidas: [80, 59, 87], calzado: 24.5, ojos: 'Verde', cabello: 'Cobrizo', ciudad: 'CDMX', categorias: ['New faces', 'Editorial'], idiomas: 'Español · Inglés', ig: '6.4k', tarifa: 8000, bio: 'Recién firmada. Pecas, cobrizo y una cara que no se olvida.' },
-  { id: 'ana', nombre: 'Ana Paula', apellido: 'Ríos', num: '017', board: 'mujeres', estatura: 177, medidas: [83, 62, 90], calzado: 25, ojos: 'Café oscuro', cabello: 'Rizado negro', ciudad: 'CDMX', categorias: ['Editorial', 'Comercial'], idiomas: 'Español · Inglés · Portugués', ig: '39.1k', tarifa: 16000, bio: 'Editorial de moda y belleza. Rizo natural, piel impecable.' },
-  { id: 'diego', nombre: 'Diego', apellido: 'Navarro', num: '105', board: 'hombres', estatura: 188, medidas: [98, 78, 40], calzado: 28, ojos: 'Café', cabello: 'Negro', ciudad: 'CDMX', categorias: ['Pasarela', 'Editorial'], idiomas: 'Español · Inglés', ig: '35.7k', tarifa: 17000, bio: 'Sastrería y pasarela. Abrió el desfile de cierre de la última temporada.' },
-  { id: 'mateo', nombre: 'Mateo', apellido: 'Cruz', num: '112', board: 'hombres', estatura: 185, medidas: [100, 80, 40], calzado: 27.5, ojos: 'Avellana', cabello: 'Castaño', ciudad: 'Puebla', categorias: ['Comercial'], idiomas: 'Español · Inglés', ig: '22.3k', tarifa: 11000, bio: 'Comerciales de tele, autos y bancos. El papá joven que todos quieren.' },
-  { id: 'emilio', nombre: 'Emilio', apellido: 'Vargas', num: '118', board: 'hombres', estatura: 187, medidas: [104, 79, 42], calzado: 28.5, ojos: 'Café', cabello: 'Rapado', ciudad: 'Puebla', categorias: ['Fitness', 'Comercial'], idiomas: 'Español', ig: '44.9k', tarifa: 12000, bio: 'Crossfit y nutrición deportiva. Suplementos, gimnasios y ropa activa.' },
-  { id: 'andres', nombre: 'Andrés', apellido: 'Kim', num: '109', board: 'hombres', estatura: 184, medidas: [96, 76, 38], calzado: 27, ojos: 'Negro', cabello: 'Negro', ciudad: 'CDMX', categorias: ['Editorial', 'New faces'], idiomas: 'Español · Inglés · Coreano', ig: '12.6k', tarifa: 9000, bio: 'Editorial y belleza masculina. Firmado en marzo.' },
+  { id: 'valeria', fotos: ['valeria-1', 'valeria-2'], nombre: 'Valeria', apellido: 'Ruiz', num: '014', board: 'mujeres', estatura: 178, medidas: [84, 61, 89], calzado: 25, ojos: 'Café', cabello: 'Trenzas', ciudad: 'CDMX', categorias: ['Editorial', 'Pasarela'], idiomas: 'Español · Inglés', ig: '48.2k', tarifa: 18000, bio: 'Portadas y lookbooks. Fashion Week México 2025 y 2026.' },
+  { id: 'camila', fotos: ['camila-1'], nombre: 'Camila', apellido: 'Ortega', num: '021', board: 'mujeres', estatura: 175, medidas: [86, 63, 91], calzado: 24.5, ojos: 'Azul', cabello: 'Castaño claro', ciudad: 'Puebla', categorias: ['Belleza', 'Comercial'], idiomas: 'Español · Inglés', ig: '31.5k', tarifa: 12000, bio: 'La cara de campañas de belleza y cuidado de la piel. Muy natural a cámara.' },
+  { id: 'renata', fotos: ['renata-1'], nombre: 'Renata', apellido: 'Salas', num: '008', board: 'mujeres', estatura: 180, medidas: [82, 60, 88], calzado: 25.5, ojos: 'Café', cabello: 'Castaño oscuro', ciudad: 'CDMX', categorias: ['Pasarela', 'Editorial'], idiomas: 'Español · Inglés · Francés', ig: '62.0k', tarifa: 22000, bio: 'Pasarela internacional. Temporadas en París y Madrid.' },
+  { id: 'ximena', fotos: ['ximena-1'], nombre: 'Ximena', apellido: 'Lara', num: '033', board: 'mujeres', estatura: 179, medidas: [83, 60, 90], calzado: 25, ojos: 'Negro', cabello: 'Negro', ciudad: 'Puebla', categorias: ['Editorial', 'Fitness'], idiomas: 'Español', ig: '27.8k', tarifa: 14000, bio: 'Bailarina de formación: el cuerpo como escultura. Editorial de luz dura.' },
+  { id: 'sofia', fotos: ['sofia-1'], nombre: 'Sofía', apellido: 'Méndez', num: '041', board: 'mujeres', estatura: 176, medidas: [80, 59, 87], calzado: 24.5, ojos: 'Azul', cabello: 'Rubio', ciudad: 'CDMX', categorias: ['New faces', 'Editorial'], idiomas: 'Español · Inglés', ig: '6.4k', tarifa: 8000, bio: 'Recién firmada. Rubia, seria a cámara y con el rojo como firma.' },
+  { id: 'ana', fotos: ['ana-1'], nombre: 'Ana Paula', apellido: 'Ríos', num: '017', board: 'mujeres', estatura: 177, medidas: [83, 62, 90], calzado: 25, ojos: 'Café oscuro', cabello: 'Rizado', ciudad: 'CDMX', categorias: ['Editorial', 'Belleza'], idiomas: 'Español · Inglés · Portugués', ig: '39.1k', tarifa: 16000, bio: 'Editorial de moda y belleza. Rizo natural, piel impecable.' },
+  { id: 'mara', fotos: ['mara-1'], nombre: 'Mara', apellido: 'Ibarra', num: '026', board: 'mujeres', estatura: 174, medidas: [84, 62, 90], calzado: 24, ojos: 'Verde', cabello: 'Castaño', ciudad: 'Puebla', categorias: ['Comercial', 'Editorial'], idiomas: 'Español · Inglés', ig: '18.9k', tarifa: 11000, bio: 'Sastrería y color. Campañas de retail con actitud de editorial.' },
+  { id: 'lia', fotos: ['lia-1'], nombre: 'Lía', apellido: 'Montes', num: '044', board: 'mujeres', estatura: 176, medidas: [81, 60, 88], calzado: 24.5, ojos: 'Café', cabello: 'Negro', ciudad: 'CDMX', categorias: ['New faces', 'Editorial'], idiomas: 'Español', ig: '4.1k', tarifa: 8000, bio: 'Recién firmada. Maquillaje gráfico y mirada directa.' },
+  { id: 'nia', fotos: ['nia-1'], nombre: 'Nía', apellido: 'Robles', num: '019', board: 'mujeres', estatura: 181, medidas: [82, 61, 89], calzado: 26, ojos: 'Negro', cabello: 'Corto negro', ciudad: 'CDMX', categorias: ['Pasarela', 'Comercial'], idiomas: 'Español · Inglés', ig: '52.3k', tarifa: 20000, bio: 'Pasarela y campañas de lujo. Abrió el desfile de primavera de Casa Ámbar.' },
+  { id: 'zuri', fotos: ['zuri-1'], nombre: 'Zuri', apellido: 'Mena', num: '029', board: 'mujeres', estatura: 173, medidas: [84, 63, 91], calzado: 24, ojos: 'Café oscuro', cabello: 'Trenzas', ciudad: 'Puebla', categorias: ['Belleza', 'Comercial'], idiomas: 'Español · Inglés', ig: '22.7k', tarifa: 13000, bio: 'Belleza de cerca: piel, labios y ojos. Cosméticos y joyería.' },
+  { id: 'kim', fotos: ['kim-1'], nombre: 'Kim', apellido: 'Arteaga', num: '037', board: 'mujeres', estatura: 177, medidas: [80, 59, 86], calzado: 25, ojos: 'Café', cabello: 'Castaño', ciudad: 'CDMX', categorias: ['Editorial', 'Comercial'], idiomas: 'Español · Inglés', ig: '15.2k', tarifa: 10000, bio: 'Streetwear y marcas deportivas. Se mueve muy bien en video.' },
+  { id: 'elena', fotos: ['elena-1'], nombre: 'Elena', apellido: 'Vidal', num: '048', board: 'mujeres', estatura: 175, medidas: [82, 60, 88], calzado: 24.5, ojos: 'Gris', cabello: 'Rubio', ciudad: 'Puebla', categorias: ['New faces', 'Editorial'], idiomas: 'Español · Inglés · Alemán', ig: '3.8k', tarifa: 8000, bio: 'Recién firmada. Le encanta experimentar con luz y movimiento.' },
+  { id: 'noa', fotos: ['noa-1'], nombre: 'Noa', apellido: 'Fuentes', num: '052', board: 'mujeres', estatura: 182, medidas: [81, 60, 88], calzado: 26, ojos: 'Negro', cabello: 'Negro (pelucas)', ciudad: 'CDMX', categorias: ['New faces', 'Pasarela'], idiomas: 'Español · Inglés', ig: '9.6k', tarifa: 9000, bio: 'Recién firmada. Pasarela y editorial conceptual: cambia de personaje en cada toma.' },
+  { id: 'diego', fotos: ['diego-1'], nombre: 'Diego', apellido: 'Navarro', num: '105', board: 'hombres', estatura: 186, medidas: [96, 76, 40], calzado: 28, ojos: 'Café', cabello: 'Rizado castaño', ciudad: 'CDMX', categorias: ['Editorial', 'Pasarela'], idiomas: 'Español · Inglés', ig: '35.7k', tarifa: 17000, bio: 'Editorial y pasarela. Abrió el desfile de cierre de la última temporada.' },
+  { id: 'mateo', fotos: ['mateo-1'], nombre: 'Mateo', apellido: 'Cruz', num: '112', board: 'hombres', estatura: 185, medidas: [98, 78, 40], calzado: 27.5, ojos: 'Café oscuro', cabello: 'Afro corto', ciudad: 'Puebla', categorias: ['Comercial', 'Editorial'], idiomas: 'Español · Inglés', ig: '22.3k', tarifa: 11000, bio: 'Comerciales y retrato. Mirada que sostiene un cartel de diez metros.' },
+  { id: 'emilio', fotos: ['emilio-1'], nombre: 'Emilio', apellido: 'Vargas', num: '118', board: 'hombres', estatura: 187, medidas: [102, 78, 42], calzado: 28.5, ojos: 'Café', cabello: 'Afro', ciudad: 'Puebla', categorias: ['Fitness', 'Editorial'], idiomas: 'Español', ig: '44.9k', tarifa: 12000, bio: 'Atleta. Ropa interior, suplementos y ropa activa.' },
+  { id: 'andres', fotos: ['andres-1', 'andres-2'], nombre: 'Andrés', apellido: 'Kim', num: '109', board: 'hombres', estatura: 182, medidas: [92, 72, 38], calzado: 27, ojos: 'Negro', cabello: 'Decolorado', ciudad: 'CDMX', categorias: ['Editorial', 'New faces'], idiomas: 'Español · Inglés · Coreano', ig: '12.6k', tarifa: 9000, bio: 'Editorial y moda sin género. Firmado en marzo.' },
 ];
 
-// la portada-collage de cada modelo: una palabra grande y una línea
+// una palabra y una línea por modelo (su página y la app de la modelo)
 export const PORTADAS = {
   valeria: ['Actitud', 'Lo simple, dicho fuerte.'],
-  camila: ['Luz propia', 'Una sonrisa que vende sola.'],
+  camila: ['Piel', 'Belleza sin filtro.'],
   renata: ['Pasarela', 'Tres temporadas en París.'],
-  ximena: ['Sin pausa', 'Fuerza que se ve real.'],
-  sofia: ['Cara nueva', 'Pecas, cobre y calma.'],
+  ximena: ['Escultura', 'Luz dura, cuerpo en calma.'],
+  sofia: ['Rojo', 'Cara nueva, firma vieja.'],
   ana: ['Volumen', 'El rizo como firma.'],
-  diego: ['Sastrería', 'Hecho para el corte.'],
-  mateo: ['Cercano', 'El que todos reconocen.'],
+  mara: ['Color', 'Sastrería con actitud.'],
+  lia: ['Gráfica', 'Una mirada que se queda.'],
+  nia: ['Presencia', 'La primera en salir.'],
+  zuri: ['Detalle', 'Hecha para el close-up.'],
+  kim: ['Calle', 'Streetwear en movimiento.'],
+  elena: ['Luz', 'Pinta con el cuerpo.'],
+  noa: ['Personaje', 'Una distinta en cada toma.'],
+  diego: ['Pausa', 'Editorial en voz baja.'],
+  mateo: ['Mirada', 'El que sostiene el cartel.'],
   emilio: ['Disciplina', 'Cuerpo de atleta, mirada de cine.'],
-  andres: ['Silencio', 'Editorial en voz baja.'],
+  andres: ['Sin género', 'Moda que no pide permiso.'],
 };
-export const FOTOS_PORTADA = ['book', 'pose', 'bn', 'cerca', 'polaroid'];
+export const FOTOS_PORTADA = ['book', 'pose'];
 
-// vista "Giro" del book: cuántos cuadros tiene el giro de cada modelo
-// (public/modelos/mira/giro/<id>/NN.webp) y cuántos su versión ligera para la
-// fila (giro/<id>/ligero/NN.webp, uno de cada dos a 450 px). Para agregar a
-// otra: scripts/giro/hacer-giro.sh (hace las dos) → aquí lo que imprime.
-export const GIROS = {
-  valeria: { n: 150, ligero: 75, vuelta: true },
-  camila: { n: 221, ligero: 111, vuelta: true },
-  renata: { n: 183, ligero: 92, vuelta: true },
-  diego: { n: 206, ligero: 103, vuelta: true },
-  ana: { n: 220, ligero: 110, vuelta: true },
-  andres: { n: 165, ligero: 83, vuelta: true },
-};
+// la vista "Giro" quedó fuera en el rediseño del 18-nov (era de las fotos de MIRA)
+export const GIROS = {};
 
 // la cuenta "Modelo" de la demo
 export const YO_MODELO = 'valeria';
@@ -179,20 +186,20 @@ function sembrar() {
   const eventos = [
     {
       id: 'pasarela', titulo: 'Desfile de invierno · Atelier Ruiz', tipo: 'Pasarela', fecha: enDias(6, 19), lugar: 'Museo de Arte, Puebla',
-      foto: '/modelos/mira/evento-pasarela.webp', publico: true, cupo: 180,
+      foto: '/modelos/kade/nia-1-1200.webp', publico: true, cupo: 180,
       descripcion: '22 looks de la colección de invierno. Coctel al terminar.',
       convocadas: { renata: 'confirmada', diego: 'confirmada', valeria: 'pendiente', ana: 'confirmada', andres: 'pendiente' },
       invitados: invitadosEjemplo(64),
     },
     {
       id: 'casting', titulo: 'Casting abierto · New faces 2027', tipo: 'Casting abierto', fecha: enDias(10, 11), lugar: 'Agencia KADE, Puebla',
-      foto: '/modelos/mira/evento-casting.webp', publico: true, cupo: 60,
+      foto: '/modelos/kade/casting-1-1200.webp', publico: true, cupo: 60,
       descripcion: 'Buscamos caras nuevas de 16 a 25 años. Ven sin maquillaje, con jeans y blusa negra. Trae una identificación.',
       convocadas: {}, invitados: invitadosEjemplo(23, true),
     },
     {
       id: 'campana', titulo: 'Campaña "sin pretextos" · Volt', tipo: 'Campaña', fecha: enDias(5, 6), lugar: 'Gimnasio Atlas, Puebla',
-      foto: '/modelos/mira/evento-campana.webp', publico: false, cupo: 0,
+      foto: '/modelos/kade/campana-hombres-1200.webp', publico: false, cupo: 0,
       descripcion: 'Producción privada. Call time 6:00, desayuno en set.',
       convocadas: { ximena: 'confirmada', emilio: 'confirmada' }, invitados: [],
     },
@@ -243,7 +250,7 @@ function aspiranteEjemplo(nombre, edad, estatura, ciudad, ig, estado, horas, boa
 function codigoPase() { return 'KADE-' + Math.random().toString(36).slice(2, 6).toUpperCase(); }
 
 // ── almacén ─────────────────────────────────────────────────────────────────
-const LLAVE = 'demo_modelos_v5';
+const LLAVE = 'demo_modelos_v7';
 let estado = null;
 const oyentes = new Set();
 
@@ -302,7 +309,11 @@ export const modeloPorId = (e, mid) => todasLasModelos(e).find((m) => m.id === m
 // las modelos que entraron por scouting solo tienen sus dos fotos
 export const fotoDe = (m, tipo = 'book') => {
   if (tipo === 'polaroid' && m?.polaroidNueva) return m.polaroidNueva;
-  return m?.foto ? (m.foto[tipo] || m.foto.book) : FOTO(m?.id, tipo);
+  if (m?.foto) return m.foto[tipo] || m.foto.book;
+  // la segunda foto (si tiene) es su "pose"; todo lo demás sale de la principal
+  const f = m?.fotos || [];
+  const n = tipo === 'pose' || tipo === 'polaroid' ? f[1] || f[0] : (m?.principal === 'pose' && f[1]) || f[0];
+  return n ? FOTO_KADE(n) : '';
 };
 export const bloqueado = (e, mid, fecha) => (e.bloqueos?.[mid] || []).some((d) => mismoDia(d, fecha));
 export const nombreDe = (m) => (m ? `${m.nombre} ${m.apellido}` : '—');
@@ -513,7 +524,7 @@ export function responderConvocatoria(eid, mid, si) {
 }
 export function crearEvento(datos) {
   cambiar((e) => {
-    e.eventos.push({ id: id(), foto: '/modelos/mira/evento-campana.webp', convocadas: {}, invitados: [], ...datos });
+    e.eventos.push({ id: id(), foto: '/modelos/kade/campana-hombres-1200.webp', convocadas: {}, invitados: [], ...datos });
   });
 }
 

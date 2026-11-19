@@ -1,53 +1,41 @@
 import { useEffect, useRef, useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
-import { ArrowRight, Check, Download, Heart, MapPin, Menu, Printer, Send, Sparkles, X } from 'lucide-react';
+import { ArrowRight, Check, Download, Heart, MapPin, Printer, Send, Sparkles, X } from 'lucide-react';
 import {
   AGENCIA, CATEGORIAS, PORTADAS, TIPOS_TRABAJO, USOS, DIA,
-  useAgencia, todasLasModelos, modeloPorId, nombreDe, fotoDe, choques, alternarFavorito, vaciarPackage,
+  useAgencia, todasLasModelos, modeloPorId, nombreDe, choques, alternarFavorito, vaciarPackage,
   enviarSolicitud, aceptarCotizacion, rechazarCotizacion, registrarseEvento,
   dinero, fechaLarga, hora, medidasTxt, estaturaTxt,
 } from './datos';
-import { Campo, FotoModelo, Foto, Modal, Polaroid, Sello, aLocal, useAltoCabeza } from './comun';
+import { Campo, FotoModelo, Foto, Modal, Polaroid, Sello, aLocal } from './comun';
 import Portada from './Portada';
-import Carrusel from './Carrusel';
-import Giro from './Giro';
+import { Enlace, Folio, Imagen, RasgaFondo, Rasgado, useAvance, useRevela } from './kade';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SITIO DE LA AGENCIA — lo que ve una marca, un fotógrafo o una productora.
-// Book con filtros → ficha con medidas, polaroids y disponibilidad → package
-// (la mesa de polaroids) → solicitud de casting o booking → cotización.
+// Rediseño 18-nov-2026 ("cine + revista"; referencias de Zahir: una agencia con
+// paneles de foto a pantalla completa y serotoninn.com — solo inspiración):
+// fotos grandes de Unsplash a máxima calidad, blanco y negro que se RASGA a
+// color, letra condensada enorme + máquina de escribir, folios rojos.
+// Book con filtros → página de la modelo → package → solicitud → cotización.
 // ─────────────────────────────────────────────────────────────────────────────
 
 const VISTAS = [
   ['inicio', 'Inicio'], ['mujeres', 'Mujeres'], ['hombres', 'Hombres'], ['new', 'New faces'],
   ['eventos', 'Eventos'], ['solicitudes', 'Mis solicitudes'],
 ];
-// lo que dice el telón al cambiar de sección
 const TITULOS = { ...Object.fromEntries(VISTAS), inicio: AGENCIA.nombre };
 
 export default function Sitio({ alPostularse }) {
   const e = useAgencia();
-  const cabeza = useAltoCabeza();
-  // en celular, al bajar la fila de secciones se recoge en un menú
-  const [compacto, setCompacto] = useState(false);
   const [menu, setMenu] = useState(false);
-  const [sobreClaro, setSobreClaro] = useState(false);
+  const [bajo, setBajo] = useState(false);
   useEffect(() => {
-    // con margen (se recoge pasando 120 px, regresa abajo de 40) para que no
-    // parpadee justo en el límite
-    const alBajar = () => {
-      setCompacto((c) => (c ? window.scrollY > 40 : window.scrollY > 120));
-      // ¿qué hay justo debajo del encabezado? sobre el estudio claro del Giro
-      // el encabezado se vuelve claro (una barra negra ahí se ve pesada)
-      const r = cabeza.current?.getBoundingClientRect();
-      const debajo = r && document.elementFromPoint(window.innerWidth / 2, r.bottom + 6);
-      setSobreClaro(!!debajo?.closest?.('.mo-giro'));
-    };
+    const alBajar = () => setBajo(window.scrollY > 40);
     alBajar();
     window.addEventListener('scroll', alBajar, { passive: true });
     return () => window.removeEventListener('scroll', alBajar);
   }, []);
-  // con el menú abierto: la página de atrás no se mueve y Esc lo cierra
   useEffect(() => {
     if (!menu) return undefined;
     const html = document.documentElement;
@@ -58,15 +46,14 @@ export default function Sitio({ alPostularse }) {
     return () => { html.style.overflow = antes; window.removeEventListener('keydown', tecla); };
   }, [menu]);
   const [vista, setVista] = useState('inicio');
-  const [modelo, setModelo] = useState(null);       // la portada abierta
-  const [lista, setLista] = useState([]);           // con quién se pasa ← →
-  const [package_, setPackage] = useState(null);    // null | 'mesa' | 'form'
+  const [modelo, setModelo] = useState(null);
+  const [lista, setLista] = useState([]);
+  const [package_, setPackage] = useState(null);
   const [composite, setComposite] = useState(null);
   const [evento, setEvento] = useState(null);
 
-  // telón entre secciones: baja negro con el nombre de lo que viene, se
-  // cambia la página por debajo y sube. Así la revista no "salta".
-  const [telon, setTelon] = useState(null);           // { texto, fase: 'cubre' | 'abre' }
+  // telón entre secciones: baja negro con el nombre de lo que viene
+  const [telon, setTelon] = useState(null);
   const conTelon = (texto, accion) => {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) { accion(); window.scrollTo({ top: 0 }); return; }
     setTelon({ texto, fase: 'cubre' });
@@ -74,95 +61,92 @@ export default function Sitio({ alPostularse }) {
     setTimeout(() => setTelon(null), 1250);
   };
   const ir = (v) => conTelon(TITULOS[v], () => { setModelo(null); setVista(v); });
-  // desde el carrusel la foto ya creció a pantalla completa: sin telón encima
-  const abrir = (id, ids, { sinTelon } = {}) => {
-    const hacer = () => { setLista(ids?.length ? ids : todasLasModelos(e).map((m) => m.id)); setModelo(id); };
-    if (sinTelon) hacer(); else conTelon(modeloPorId(e, id)?.nombre || AGENCIA.nombre, hacer);
-  };
+  const abrir = (id, ids) => conTelon(modeloPorId(e, id)?.nombre || AGENCIA.nombre, () => {
+    setLista(ids?.length ? ids : todasLasModelos(e).map((m) => m.id)); setModelo(id);
+  });
   const pedir = (id) => { if (!e.favoritos.includes(id)) alternarFavorito(id); setPackage('form'); };
   const misSolicitudes = e.solicitudes.filter((s) => s.mia);
   const porContestar = misSolicitudes.filter((s) => s.estado === 'cotizada').length;
+  const sobreFoto = !modelo && ['inicio', 'eventos'].includes(vista) && !bajo;
 
   return (
-    <div className="mo-sitio">
-      {/* sin barra: los elementos flotan; sobre el video (inicio y eventos) el
-          video sube hasta arriba; al bajar, un degradado suave para que se lean */}
-      <div ref={cabeza} className={`mo-noche-cab ${!modelo && ['inicio', 'eventos'].includes(vista) ? 'sobre' : ''} ${compacto || menu ? 'solido' : ''} ${sobreClaro && !menu ? 'mo-claro sobre-claro' : ''}`}>
-        <header className={`mo-cabeza ${compacto ? 'compacto' : ''}`}>
-          <button type="button" className="mo-logo" onClick={() => ir('inicio')} aria-label="Inicio">
-            {AGENCIA.nombre}<small>MODEL MANAGEMENT</small>
-          </button>
-          <nav className="mo-nav" aria-label="Secciones">
-            {VISTAS.slice(1).map(([id, t]) => (
-              <button key={id} type="button" aria-current={!modelo && vista === id ? 'page' : undefined} onClick={() => ir(id)}>
-                {t}{id === 'solicitudes' && porContestar > 0 && <span className="mo-lapiz" style={{ marginLeft: 4 }}>({porContestar})</span>}
-              </button>
-            ))}
-            <button type="button" onClick={alPostularse}>Quiero ser modelo</button>
-          </nav>
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            <button type="button" className="mo-package-boton" onClick={() => setPackage('mesa')}>
-              Package <b>{e.favoritos.length}</b>
+    <div className="kd kd-sitio">
+      <header className={`kd-cab ${sobreFoto ? 'sobre-foto' : ''} ${bajo ? 'bajo' : ''}`}>
+        <button type="button" className="kd-logo" onClick={() => ir('inicio')} aria-label="Inicio">{AGENCIA.nombre}</button>
+        <p className="kd-cab-giro">Model management<br />Casting · Booking</p>
+        <nav className="kd-nav" aria-label="Secciones">
+          {VISTAS.slice(1).map(([id, t]) => (
+            <button key={id} type="button" aria-current={!modelo && vista === id ? 'page' : undefined} onClick={() => ir(id)}>
+              {t}{id === 'solicitudes' && porContestar > 0 && <sup>{porContestar}</sup>}
             </button>
-            <button type="button" className="mo-hamburguesa" onClick={() => setMenu(true)} aria-label="Abrir menú" aria-expanded={menu}>
-              <Menu size={20} />{porContestar > 0 && <i />}
-            </button>
-          </div>
-          <div className="mo-nav-movil" aria-hidden={compacto || undefined}>
-            {VISTAS.map(([id, t]) => (
-              <button key={id} type="button" className="mo-chip" aria-pressed={!modelo && vista === id} onClick={() => ir(id)}>
-                {t}{id === 'solicitudes' && porContestar > 0 ? ` (${porContestar})` : ''}
-              </button>
-            ))}
-            <button type="button" className="mo-chip" onClick={alPostularse}>Quiero ser modelo</button>
-          </div>
-        </header>
-      </div>
+          ))}
+        </nav>
+        <div className="kd-cab-der">
+          <button type="button" className="kd-cab-postula" onClick={alPostularse}>Quiero ser modelo</button>
+          <button type="button" className="kd-cab-package" onClick={() => setPackage('mesa')}>Package <b>({e.favoritos.length})</b></button>
+          <button type="button" className="kd-cab-menu" onClick={() => setMenu(true)} aria-expanded={menu}>Menú{porContestar > 0 && <i />}</button>
+        </div>
+      </header>
 
       {modelo ? (
         <Portada key={modelo} id={modelo} lista={lista} alCambiar={setModelo} alCerrar={() => conTelon(TITULOS[vista], () => setModelo(null))}
           alComposite={setComposite} alPedir={pedir} />
       ) : (
         <>
-          {vista === 'inicio' && <Inicio e={e} ir={ir} abrir={abrir} abrirEvento={setEvento} />}
+          {vista === 'inicio' && <Inicio e={e} ir={ir} abrir={abrir} abrirEvento={setEvento} alPostularse={alPostularse} />}
           {['mujeres', 'hombres', 'new'].includes(vista) && <Book key={vista} e={e} board={vista} abrir={abrir} />}
           {vista === 'eventos' && <Eventos e={e} abrir={setEvento} />}
           {vista === 'solicitudes' && <Solicitudes e={e} lista={misSolicitudes} ir={ir} />}
         </>
       )}
 
-      <footer className="mo-pie">
-        <div>
-          <div className="mo-logo" style={{ fontSize: '1.1rem' }}>{AGENCIA.nombre}</div>
-          <p style={{ marginTop: 8 }}>{AGENCIA.ciudad} · {AGENCIA.correo}</p>
+      <footer className="kd-pie">
+        <div className="kd-pie-cta">
+          <Folio n={6}>Contacto</Folio>
+          <h2 className="kd-titulo">¿Tienes un<br /><span>proyecto?</span></h2>
+          <div className="kd-pie-cta-der">
+            <p>Castings, campañas, pasarela y contenido. Cuéntanos qué buscas y te mandamos un package en 24 horas.</p>
+            <a className="kd-pie-correo" href={`mailto:${AGENCIA.correo}`}>{AGENCIA.correo} <span aria-hidden="true">↗</span></a>
+            <button type="button" className="kd-enlace" onClick={() => setPackage(e.favoritos.length ? 'form' : 'mesa')}>[ Arma tu package ]</button>
+          </div>
         </div>
-        <button type="button" className="mo-boton mo-boton-claro mo-boton-chico" onClick={alPostularse}>
-          ¿Quieres ser modelo? Postúlate <ArrowRight size={15} />
-        </button>
+        <div className="kd-pie-fila">
+          <div><p className="kd-mono-chico">Agencia</p><p>{AGENCIA.completo}<br />{AGENCIA.ciudad}</p></div>
+          <div><p className="kd-mono-chico">Booking</p><p>{AGENCIA.correo}<br />Lun a vie · 9 a 19 h</p></div>
+          <div><p className="kd-mono-chico">Board</p><p className="kd-pie-links">
+            {VISTAS.slice(1, 5).map(([id, t]) => <button key={id} type="button" onClick={() => ir(id)}>{t}</button>)}
+          </p></div>
+          <div><p className="kd-mono-chico">Scouting</p><p>¿Quieres ser modelo?<br /><button type="button" className="kd-rojo" onClick={alPostularse}>Postúlate →</button></p></div>
+        </div>
+        <p className="kd-pie-marca" aria-hidden="true">{AGENCIA.nombre}</p>
+        <div className="kd-pie-legal">
+          <span>© 2026 {AGENCIA.completo}</span>
+          <span>Aviso de privacidad</span>
+          <span>Instagram · TikTok</span>
+          <button type="button" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>Volver arriba ↑</button>
+        </div>
       </footer>
 
       {menu && (
-        <div className="mo-menu" role="dialog" aria-modal="true" aria-label="Menú">
-          <div className="mo-menu-cab">
-            <span className="mo-logo">{AGENCIA.nombre}<small>MODEL MANAGEMENT</small></span>
-            <button type="button" className="mo-hamburguesa" style={{ display: 'grid' }} onClick={() => setMenu(false)} aria-label="Cerrar menú"><X size={20} /></button>
+        <div className="kd kd-menu" role="dialog" aria-modal="true" aria-label="Menú">
+          <div className="kd-menu-cab">
+            <span className="kd-logo">{AGENCIA.nombre}</span>
+            <button type="button" className="kd-cab-menu" onClick={() => setMenu(false)} aria-label="Cerrar menú"><X size={20} /></button>
           </div>
           <nav>
             {VISTAS.map(([id, t], k) => (
-              <button key={id} type="button" style={{ animationDelay: `${k * 45}ms` }} aria-current={!modelo && vista === id ? 'page' : undefined}
-                onClick={() => { setMenu(false); ir(id); }}>
-                <span className="mo-mono">{String(k + 1).padStart(2, '0')}</span>{t}
-                {id === 'solicitudes' && porContestar > 0 && <span className="mo-lapiz" style={{ fontSize: '1.4rem' }}>({porContestar})</span>}
+              <button key={id} type="button" style={{ animationDelay: `${k * 45}ms` }} onClick={() => { setMenu(false); ir(id); }}>
+                <small>{String(k + 1).padStart(2, '0')}</small>{t}{id === 'solicitudes' && porContestar > 0 && <sup>{porContestar}</sup>}
               </button>
             ))}
             <button type="button" style={{ animationDelay: `${VISTAS.length * 45}ms` }} onClick={() => { setMenu(false); alPostularse(); }}>
-              <span className="mo-mono">{String(VISTAS.length + 1).padStart(2, '0')}</span><em>Quiero ser modelo</em>
+              <small>{String(VISTAS.length + 1).padStart(2, '0')}</small><span className="kd-rojo">Quiero ser modelo</span>
             </button>
           </nav>
-          <p className="mo-eti" style={{ marginTop: 'auto' }}>{AGENCIA.ciudad} · {AGENCIA.correo}</p>
+          <p className="kd-mono-chico">{AGENCIA.ciudad} · {AGENCIA.correo}</p>
         </div>
       )}
-      {telon && <div className={`mo-telon ${telon.fase}`} aria-hidden="true"><span className="mo-gigante">{telon.texto}</span></div>}
+      {telon && <div className={`kd-telon ${telon.fase}`} aria-hidden="true"><span>{telon.texto}</span></div>}
       {composite && <Composite m={modeloPorId(e, composite)} alCerrar={() => setComposite(null)} />}
       {package_ && <Package e={e} pasoInicial={package_} alCerrar={() => setPackage(null)} alEnviado={() => { setPackage(null); ir('solicitudes'); }} abrir={(id) => { setPackage(null); abrir(id, e.favoritos); }} />}
       {evento && <RegistroEvento e={e} ev={e.eventos.find((x) => x.id === evento)} alCerrar={() => setEvento(null)} />}
@@ -170,134 +154,135 @@ export default function Sitio({ alPostularse }) {
   );
 }
 
-// ── inicio ──────────────────────────────────────────────────────────────────
-const VIDEOS = ['hero-1', 'hero-2', 'hero-3'].map((n) => `/modelos/mira/video/${n}.mp4`);
-const DIAPOSITIVAS = ['renata', 'diego', 'ana', 'valeria', 'emilio'];
+// ── entrada: video a pantalla completa ──────────────────────────────────────
+// Montaje de 17 s (6 tomas 4K de Pexels, cortes secos de 2.8 s; se arma con
+// ffmpeg, ver CLAUDE.md). 1440p en pantallas grandes, 1080p en lo demás; el
+// cuadro fijo se ve mientras llega. Encima casi nada (19-nov, Zahir: "que no
+// tenga tanta info"): el lema y un enlace para bajar.
+const VIDEO = '/modelos/kade/video/hero';
 
-// Video a pantalla completa con KADE encima. Corre los videos que existan (los
-// hace Gemini); si ninguno carga, pasa las fotos con movimiento lento.
-function Portadilla({ alBajar }) {
-  // primero se pregunta cuáles videos existen (un 404 aquí regresa el index
-  // de la SPA, por eso se revisa el tipo): así no hay parpadeo buscando los
-  // que faltan. Mientras, y si no hay ninguno, van las fotos con Ken Burns.
-  const [videos, setVideos] = useState([]);
-  const [i, setI] = useState(0);
+function Entrada({ alBajar }) {
+  const video = useRef(null);
   const [listo, setListo] = useState(false);
-  const [dia, setDia] = useState(0);
+  const [src] = useState(() => (window.innerWidth * (window.devicePixelRatio || 1) > 2000 ? `${VIDEO}-1440.mp4` : `${VIDEO}-1080.mp4`));
   useEffect(() => {
-    let vivo = true;
-    Promise.all(VIDEOS.map((v) => fetch(v, { method: 'HEAD' })
-      .then((r) => (r.ok && (r.headers.get('content-type') || '').startsWith('video') ? v : null)).catch(() => null)))
-      .then((l) => { if (vivo) setVideos(l.filter(Boolean)); });
-    return () => { vivo = false; };
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) video.current?.pause();
   }, []);
-  const video = videos.length ? videos[i % videos.length] : null;
-  useEffect(() => {
-    if (video && listo) return undefined;
-    const id = setInterval(() => setDia((d) => (d + 1) % DIAPOSITIVAS.length), 6000);
-    return () => clearInterval(id);
-  }, [video, listo]);
   return (
-    <section className="mo-video" aria-label="Portada">
-      {DIAPOSITIVAS.map((id, k) => (
-        <div key={id} className={`mo-kb ${k === dia && !(video && listo) ? 'activa' : ''}`}><img src={`/modelos/mira/${id}-book.webp`} alt="" /></div>
-      ))}
-      {video && (
-        <video key={video} src={video} poster={video.replace('.mp4', '.jpg')} autoPlay muted playsInline loop={videos.length === 1}
-          className={`mo-video-clip ${listo ? 'listo' : ''}`} onPlaying={() => setListo(true)}
-          onEnded={() => setI((x) => x + 1)} onError={() => setVideos((l) => l.filter((x) => x !== video))} />
-      )}
-      <div className="mo-video-logo"><span>{AGENCIA.nombre}</span></div>
-      <div className="mo-video-pie">
-        <span />
-        <button type="button" onClick={alBajar}>Ver el board ↓</button>
-        <span />
-      </div>
+    <section className="kd-entrada" aria-label="Portada">
+      <img className="kd-entrada-poster" src={`${VIDEO}-poster.webp`} alt="" />
+      <video ref={video} className={`kd-entrada-video ${listo ? 'listo' : ''}`} src={src} autoPlay muted loop playsInline preload="auto"
+        onPlaying={() => setListo(true)} aria-label="Video de la agencia" />
+      <p className="kd-entrada-lema">Caras que se quedan.</p>
+      <button type="button" className="kd-entrada-bajar" onClick={alBajar}>[ Ver el talento ↓ ]</button>
     </section>
   );
 }
 
-function Inicio({ e, ir, abrir, abrirEvento }) {
-  const modelos = todasLasModelos(e);
-  const tiras = useRef(null);
-  const destacada = modeloPorId(e, 'valeria');
+// ── inicio ──────────────────────────────────────────────────────────────────
+const DESTACADAS = ['valeria', 'nia', 'renata', 'mara', 'zuri', 'andres'];
+
+function Inicio({ e, ir, abrir, abrirEvento, alPostularse }) {
   const proximos = e.eventos.filter((x) => x.publico && x.fecha > Date.now()).sort((a, b) => a.fecha - b.fecha);
-  const [palabra, linea] = PORTADAS.valeria;
+  const revela = useRevela();
+  const talento = useRef(null);
   return (
-    <>
-      <Portadilla alBajar={() => tiras.current?.scrollIntoView({ behavior: 'smooth' })} />
+    <div ref={revela}>
+      <Entrada alBajar={() => talento.current?.scrollIntoView({ behavior: 'smooth' })} />
 
-      <section ref={tiras} className="mo-tiras-sec">
-        {/* el board del inicio es el mismo Giro del book: todas en fila, al tocar una crece y gira */}
-        <Giro e={e} modelos={modelos} abrir={abrir} />
-      </section>
-
-      <Indice modelos={modelos} eventos={proximos.length} ir={ir} />
-
-      {/* la portada de la semana: un adelanto del collage */}
-      <section className="mo-seccion">
-        <button type="button" onClick={() => abrir('valeria')} className="mo-destacada">
-          <div style={{ position: 'relative' }}>
-            <FotoModelo m={destacada} tipo="cerca" style={{ aspectRatio: '16 / 10' }} />
-            <span className="mo-gigante" style={{ position: 'absolute', left: 18, bottom: 6, color: '#fff', fontSize: 'clamp(3rem, 9vw, 8rem)', textTransform: 'uppercase' }}>{palabra}</span>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-            <FotoModelo m={destacada} tipo="bn" style={{ aspectRatio: '3 / 4.6' }} />
-            <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', paddingBottom: 6 }}>
-              <p className="mo-eti">En portada · Nº {destacada.num}</p>
-              <div>
-                <p className="mo-gigante" style={{ fontSize: 'clamp(2.2rem, 4.5vw, 4rem)' }}>{destacada.nombre}<br /><em>{destacada.apellido}</em></p>
-                <p className="mo-tenue" style={{ marginTop: 12, fontFamily: 'var(--mo-serif)', fontStyle: 'italic', fontSize: '1.1rem' }}>{linea}</p>
-                <span className="mo-cartel-ir mo-evento-ir" style={{ marginTop: 18 }}>Ver su portada <ArrowRight size={14} /></span>
-              </div>
-            </div>
-          </div>
-        </button>
-      </section>
-
-      {/* doble página: una foto a sangre y una frase, como abre una sección de revista */}
-      <section className="mo-doble">
-        <FotoModelo m={modeloPorId(e, 'renata')} tipo="bn" className="mo-doble-foto" />
-        <div className="mo-doble-texto">
-          <p className="mo-eti">Temporada 26/27 · Nº 008</p>
-          <p className="mo-gigante">Caras que<br /><em>se quedan.</em></p>
-          <p className="mo-doble-pie">Renata Salas, fotografiada para el desfile de invierno de Atelier Ruiz. Pasarela en París, Madrid y CDMX.</p>
+      <section ref={talento} className="kd-claro kd-talento">
+        <div className="kd-sec-cab">
+          <Folio n={1}>Talento</Folio>
+          <h2 className="kd-titulo kd-revela">Caras que<br /><span>se quedan</span></h2>
+          <Enlace onClick={() => ir('mujeres')}>Ver todas</Enlace>
+        </div>
+        <div className="kd-rejilla kd-rejilla-3">
+          {DESTACADAS.map((id, i) => <Carta key={id} m={modeloPorId(e, id)} e={e} i={i} abrir={(x) => abrir(x, DESTACADAS)} />)}
         </div>
       </section>
 
-      {proximos.length > 0 && <Carteles eventos={proximos} abrir={abrirEvento} />}
-    </>
+      <Campana />
+
+      <Lista e={e} ir={ir} abrir={abrir} />
+
+      {proximos.length > 0 && (
+        <section className="kd-oscuro kd-eventos-inicio">
+          <div className="kd-sec-cab">
+            <Folio n={4}>Eventos</Folio>
+            <h2 className="kd-titulo kd-revela">En<br /><span>la agenda</span></h2>
+            <Enlace onClick={() => ir('eventos')}>Ver eventos</Enlace>
+          </div>
+          <ol className="kd-filas">
+            {proximos.slice(0, 3).map((ev, k) => (
+              <li key={ev.id} className="kd-revela" style={{ '--k': k }}>
+                <button type="button" onClick={() => abrirEvento(ev.id)}>
+                  <span className="kd-fila-fecha">{new Date(ev.fecha).toLocaleDateString('es-MX', { day: '2-digit', month: 'short' }).replace('.', '')}</span>
+                  <span className="kd-fila-nombre">{ev.titulo}</span>
+                  <span className="kd-fila-lugar">{ev.lugar} · {hora(ev.fecha)}</span>
+                  <span className="kd-fila-ir">[ Registrarme ]</span>
+                </button>
+              </li>
+            ))}
+          </ol>
+        </section>
+      )}
+
+      <section className="kd-scouting">
+        <Imagen nombre="estudio-luz" sizes="(max-width: 760px) 100vw, 50vw" className="kd-scouting-foto" />
+        <div className="kd-scouting-txt">
+          <Folio n={5}>Scouting</Folio>
+          <h2 className="kd-titulo kd-revela">Tu cara,<br /><span>nuestro</span><br />próximo book</h2>
+          <p>Mándanos dos fotos con el celular, sin maquillaje y con luz de día. Si vemos algo, te invitamos al siguiente casting abierto.</p>
+          <Enlace onClick={alPostularse}>Postúlate en 2 minutos</Enlace>
+        </div>
+      </section>
+    </div>
   );
 }
 
-// "En este número": el índice de la revista. Al pasar el cursor por una línea,
-// la foto de esa sección flota junto al cursor.
-function Indice({ modelos, eventos, ir }) {
-  const flota = useRef(null);
-  const [foto, setFoto] = useState(null);
-  const lineas = [
-    ['mujeres', 'Mujeres', modelos.filter((m) => m.board === 'mujeres').length, '/modelos/mira/camila-book.webp'],
-    ['hombres', 'Hombres', modelos.filter((m) => m.board === 'hombres').length, '/modelos/mira/diego-book.webp'],
-    ['new', 'New faces', modelos.filter((m) => m.categorias.includes('New faces')).length, '/modelos/mira/sofia-book.webp'],
-    ['eventos', 'Eventos', eventos, '/modelos/mira/evento-pasarela.webp'],
-  ];
-  const mover = (ev) => { if (flota.current) flota.current.style.transform = `translate3d(${ev.clientX + 24}px, ${ev.clientY - 120}px, 0)`; };
+// "02. Campaña": una foto a sangre partida en color | blanco y negro por una
+// rasgadura que se mueve con el scroll.
+function Campana() {
+  const [ref, a] = useAvance();
+  const p = 18 + a * 64;
   return (
-    <section className="mo-indice" onMouseMove={mover} onMouseLeave={() => setFoto(null)}>
-      <p className="mo-eti">En este número</p>
+    <section ref={ref} className="kd-campana">
+      <Rasgado nombre="valeria-2" sizes="100vw" semilla={11} p={p} posicion="50% 12%" />
+      <div className="kd-campana-txt">
+        <Folio n={2}>Campaña</Folio>
+        <h2 className="kd-titulo">Invierno<br />26 / 27</h2>
+      </div>
+      <p className="kd-campana-nota">Valeria Ruiz para Norte Denim.<br />Fotografiada en Puebla, octubre 2026.</p>
+    </section>
+  );
+}
+
+// "03. El board": todos los nombres en líneas gigantes. Al pasar el cursor el
+// renglón se rasga a negro de izquierda a derecha (la misma orilla de papel de
+// las fotos, SIN foto) y el nombre queda en hueso encima. (19-nov: la foto que
+// seguía al cursor, la "ventana" y la foto dentro del renglón no le gustaron.)
+function Lista({ e, ir, abrir }) {
+  const modelos = todasLasModelos(e);
+  const ids = modelos.map((m) => m.id);
+  return (
+    <section className="kd-claro kd-lista">
+      <div className="kd-sec-cab">
+        <Folio n={3}>El board</Folio>
+        <p className="kd-mono-chico">{modelos.length} caras · {AGENCIA.ciudad}</p>
+        <Enlace onClick={() => ir('mujeres')}>Filtrar el board</Enlace>
+      </div>
       <ol>
-        {lineas.map(([id, t, n, src], k) => (
-          <li key={id}>
-            <button type="button" onClick={() => ir(id)} onMouseEnter={() => setFoto(src)} onFocus={() => setFoto(null)}>
-              <span className="mo-mono">{String(k + 1).padStart(2, '0')}</span>
-              <span className="mo-indice-t">{t}</span>
-              <sup>({String(n).padStart(2, '0')})</sup>
-              <ArrowRight size={22} />
+        {modelos.map((m, k) => (
+          <li key={m.id}>
+            <button type="button" onClick={() => abrir(m.id, ids)}>
+              <RasgaFondo semilla={k + 5} />
+              <small>{String(k + 1).padStart(2, '0')}</small>
+              <span className="kd-lista-nombre">{m.nombre} {m.apellido}</span>
+              <span className="kd-lista-datos">{estaturaTxt(m.estatura)} · {m.categorias[0]} · Nº {m.num}</span>
             </button>
           </li>
         ))}
       </ol>
-      <div ref={flota} className={`mo-indice-foto ${foto ? 'on' : ''}`} aria-hidden="true">{foto && <img key={foto} src={foto} alt="" />}</div>
     </section>
   );
 }
@@ -308,123 +293,74 @@ function Book({ e, board, abrir }) {
   const [min, setMin] = useState('');
   const [ciudad, setCiudad] = useState('');
   const [cabello, setCabello] = useState('');
-  const [modo, setModo] = useState('giro');
-  const [filtrar, setFiltrar] = useState(false);          // primero el giro, luego tiras y cuadrícula
+  const [filtrar, setFiltrar] = useState(false);
   const todas = todasLasModelos(e);
   const base = board === 'new' ? todas.filter((m) => m.categorias.includes('New faces')) : todas.filter((m) => m.board === board);
   const lista = base.filter((m) => (!cat || m.categorias.includes(cat)) && (!min || m.estatura >= Number(min))
     && (!ciudad || m.ciudad === ciudad) && (!cabello || m.cabello === cabello));
   const cabellos = [...new Set(base.map((m) => m.cabello))];
   const activos = [cat, min, ciudad, cabello].filter(Boolean).length;
-  const titulo = { mujeres: <>Mujeres</>, hombres: <>Hombres</>, new: <>New <em>faces</em></> }[board];
+  const titulo = { mujeres: 'Mujeres', hombres: 'Hombres', new: 'New faces' }[board];
   const ids = lista.map((m) => m.id);
-  const rejilla = useRef(null);
-
-  // cada foto se descubre al entrar a la pantalla
-  useEffect(() => {
-    const el = rejilla.current;
-    if (!el) return undefined;
-    const io = new IntersectionObserver((xs) => xs.forEach((x) => { if (x.isIntersecting) { x.target.classList.add('visto'); io.unobserve(x.target); } }), { threshold: 0.15 });
-    el.querySelectorAll('.mo-carta').forEach((c) => io.observe(c));
-    return () => io.disconnect();
-  }, [ids.join(), modo]); // eslint-disable-line react-hooks/exhaustive-deps
-
+  const revela = useRevela(ids.join());
   return (
-    <section className="mo-seccion mo-book" style={{ paddingTop: 30 }}>
-      <div className="mo-book-cab">
-        <h2 className="mo-gigante">{titulo}<sup className="mo-mono">({String(lista.length).padStart(2, '0')})</sup></h2>
-        <div className="mo-book-modo" role="group" aria-label="Cómo ver el board">
-          <button type="button" aria-pressed={modo === 'giro'} onClick={() => setModo('giro')}>Giro</button>
-          <span>/</span>
-          <button type="button" aria-pressed={modo === 'tiras'} onClick={() => setModo('tiras')}>Tiras</button>
-          <span>/</span>
-          <button type="button" aria-pressed={modo === 'cuadricula'} onClick={() => setModo('cuadricula')}>Cuadrícula</button>
-          {/* los filtros quedan plegados detrás de un solo enlace (23-oct: minimalismo) */}
-          <button type="button" className="mo-book-filtrar" aria-expanded={filtrar} onClick={() => setFiltrar((x) => !x)}>
-            Filtrar{activos ? ` (${activos})` : ''}
-          </button>
-        </div>
+    <section ref={revela} className="kd-claro kd-book">
+      <div className="kd-sec-cab">
+        <Folio n={{ mujeres: 1, hombres: 2, new: 3 }[board]}>{titulo}</Folio>
+        <h1 className="kd-titulo kd-revela">{titulo}<sup>({String(lista.length).padStart(2, '0')})</sup></h1>
+        <Enlace aria-expanded={filtrar} onClick={() => setFiltrar((x) => !x)}>Filtrar{activos ? ` (${activos})` : ''}</Enlace>
       </div>
-      {filtrar && <div className="mo-filtros mo-filtros-texto">
-        <button type="button" aria-pressed={!cat} onClick={() => setCat('')}>Todas</button>
-        {CATEGORIAS.filter((c) => board !== 'new' || c !== 'New faces').map((c) => (
-          <button key={c} type="button" aria-pressed={cat === c} onClick={() => setCat(cat === c ? '' : c)}>{c}</button>
-        ))}
-        <span style={{ flex: 1 }} />
-        <select value={min} onChange={(ev) => setMin(ev.target.value)} aria-label="Estatura mínima">
-          <option value="">Estatura</option>
-          {[170, 175, 178, 180, 185].map((n) => <option key={n} value={n}>Desde {estaturaTxt(n)}</option>)}
-        </select>
-        <select value={ciudad} onChange={(ev) => setCiudad(ev.target.value)} aria-label="Ciudad">
-          <option value="">Ciudad</option><option>CDMX</option><option>Puebla</option>
-        </select>
-        <select value={cabello} onChange={(ev) => setCabello(ev.target.value)} aria-label="Cabello">
-          <option value="">Cabello</option>
-          {cabellos.map((c) => <option key={c}>{c}</option>)}
-        </select>
-      </div>}
-      {!lista.length && <p className="mo-tenue" style={{ padding: '40px 0' }}>Nadie con esos filtros. <span className="mo-lapiz">quita uno</span></p>}
-      {lista.length > 0 && modo === 'tiras' && <Carrusel key={ids.join()} modelos={lista} abrir={abrir} />}
-      {lista.length > 0 && modo === 'giro' && <Giro key={ids.join()} e={e} modelos={lista} abrir={abrir} />}
-      {lista.length > 0 && modo === 'cuadricula' && (
-        <div ref={rejilla} className="mo-board mo-board-revista">{lista.map((m, i) => <Carta key={m.id} m={m} e={e} i={i} abrir={(id) => abrir(id, ids)} />)}</div>
+      {filtrar && (
+        <div className="kd-filtros">
+          <button type="button" aria-pressed={!cat} onClick={() => setCat('')}>Todas</button>
+          {CATEGORIAS.filter((c) => board !== 'new' || c !== 'New faces').map((c) => (
+            <button key={c} type="button" aria-pressed={cat === c} onClick={() => setCat(cat === c ? '' : c)}>{c}</button>
+          ))}
+          <span style={{ flex: 1 }} />
+          <select value={min} onChange={(ev) => setMin(ev.target.value)} aria-label="Estatura mínima">
+            <option value="">Estatura</option>
+            {[170, 175, 178, 180, 185].map((n) => <option key={n} value={n}>Desde {estaturaTxt(n)}</option>)}
+          </select>
+          <select value={ciudad} onChange={(ev) => setCiudad(ev.target.value)} aria-label="Ciudad">
+            <option value="">Ciudad</option><option>CDMX</option><option>Puebla</option>
+          </select>
+          <select value={cabello} onChange={(ev) => setCabello(ev.target.value)} aria-label="Cabello">
+            <option value="">Cabello</option>
+            {cabellos.map((c) => <option key={c}>{c}</option>)}
+          </select>
+        </div>
       )}
-      <CursorVer />
+      {!lista.length && <p className="kd-vacio">Nadie con esos filtros. <button type="button" onClick={() => { setCat(''); setMin(''); setCiudad(''); setCabello(''); }}>[ Quitar filtros ]</button></p>}
+      <div className="kd-rejilla kd-rejilla-4">
+        {lista.map((m, i) => <Carta key={m.id} m={m} e={e} i={i} abrir={(id) => abrir(id, ids)} />)}
+      </div>
     </section>
   );
 }
 
-// Sobre las fotos, el cursor se vuelve un círculo con "Ver" (solo con mouse).
-function CursorVer() {
-  const ref = useRef(null);
-  useEffect(() => {
-    if (!window.matchMedia('(hover: hover)').matches) return undefined;
-    let x = 0, y = 0, cx = 0, cy = 0, raf = 0, dentro = false;
-    const mover = (ev) => {
-      x = ev.clientX; y = ev.clientY;
-      const sobre = !!ev.target.closest?.('.mo-carta-foto');
-      if (sobre !== dentro) { dentro = sobre; ref.current?.classList.toggle('on', sobre); }
-    };
-    const vuelta = () => {
-      cx += (x - cx) * 0.2; cy += (y - cy) * 0.2;
-      if (ref.current) ref.current.style.transform = `translate3d(${cx}px, ${cy}px, 0) translate(-50%, -50%)`;
-      raf = requestAnimationFrame(vuelta);
-    };
-    window.addEventListener('mousemove', mover, { passive: true });
-    raf = requestAnimationFrame(vuelta);
-    return () => { window.removeEventListener('mousemove', mover); cancelAnimationFrame(raf); };
-  }, []);
-  return <div ref={ref} className="mo-cursor" aria-hidden="true">Ver</div>;
-}
-
+// Una modelo en el board: blanco y negro que se rasga a color al pasar el
+// cursor; nombre en grande abajo; ♡ para el package.
 function Carta({ m, e, i, abrir }) {
   const fav = e.favoritos.includes(m.id);
-  const alterna = m.principal === 'pose' ? 'bn' : 'pose';
+  const nombreFoto = m.fotos ? (m.principal === 'pose' && m.fotos[1]) || m.fotos[0] : null;
   return (
-    <div className="mo-carta" style={{ '--i': i % 4 }}>
-      <button type="button" onClick={() => abrir(m.id)} style={{ width: '100%', textAlign: 'left' }} aria-label={`Ver a ${nombreDe(m)}`}>
-        <div className="mo-carta-foto mo-foto">
-          <FotoModelo m={m} tipo={m.principal} className="mo-carta-base" style={{ position: 'absolute', inset: 0 }} />
-          {!m.foto && <img className="mo-carta-alt" src={fotoDe(m, alterna)} alt="" loading="lazy" onError={(ev) => { ev.currentTarget.style.display = 'none'; }} />}
-          <span className="mo-carta-num">Nº {m.num}</span>
-          <span className="mo-carta-medidas">{estaturaTxt(m.estatura)} · {m.medidas.join('·')} · {m.ciudad}</span>
-        </div>
+    <article className="kd-carta kd-revela" style={{ '--k': i % 4 }}>
+      <button type="button" className="kd-carta-foto" onClick={() => abrir(m.id)} aria-label={`Ver a ${nombreDe(m)}`}>
+        {nombreFoto
+          ? <Rasgado nombre={nombreFoto} sizes="(max-width: 760px) 92vw, (max-width: 1200px) 46vw, 32vw" semilla={i + 1} />
+          : <FotoModelo m={m} style={{ position: 'absolute', inset: 0 }} />}
+        {m.categorias.includes('New faces') && <span className="kd-sello">New face</span>}
+        <span className="kd-carta-num">Nº {m.num}</span>
       </button>
-      <div style={{ position: 'relative' }}>
-        <button type="button" className="mo-corazon" aria-pressed={fav} onClick={() => alternarFavorito(m.id)}
-          aria-label={fav ? `Quitar a ${m.nombre} del package` : `Agregar a ${m.nombre} al package`}
-          style={{ position: 'absolute', top: -52 }}>
-          <Heart size={17} fill={fav ? 'currentColor' : 'none'} />
+      <div className="kd-carta-pie">
+        <h3>{m.nombre} {m.apellido}</h3>
+        <button type="button" className="kd-corazon" aria-pressed={fav} onClick={() => alternarFavorito(m.id)}
+          aria-label={fav ? `Quitar a ${m.nombre} del package` : `Agregar a ${m.nombre} al package`}>
+          <Heart size={16} fill={fav ? 'currentColor' : 'none'} />
         </button>
+        <p>{estaturaTxt(m.estatura)} · {m.medidas.join(' · ')} · {m.ciudad}</p>
       </div>
-      <div className="mo-carta-pie">
-        <span className="mo-mono">{String(i + 1).padStart(2, '0')}</span>
-        <div>
-          <h3>{m.nombre} <em>{m.apellido}</em></h3>
-          <p>{m.categorias.join(' · ')}</p>
-        </div>
-      </div>
-    </div>
+    </article>
   );
 }
 
@@ -457,10 +393,11 @@ function Composite({ m, alCerrar }) {
 }
 
 // ── package + solicitud ─────────────────────────────────────────────────────
+// Hoja lateral de papel (19-nov). Paso 1: las modelos elegidas en renglones con
+// su foto; paso 2: el formulario con campos de línea; al final, el folio.
 function Package({ e, pasoInicial = 'mesa', alCerrar, alEnviado, abrir }) {
   const modelos = e.favoritos.map((id) => modeloPorId(e, id)).filter(Boolean);
   const [paso, setPaso] = useState(pasoInicial);
-  // el cliente ya pidió antes: sus datos de contacto vienen llenos
   const previa = e.solicitudes.find((s) => s.mia);
   const [f, setF] = useState(() => ({
     marca: previa?.marca || '', contacto: previa?.contacto || '', correo: previa?.correo || '', telefono: previa?.telefono || '',
@@ -472,58 +409,64 @@ function Package({ e, pasoInicial = 'mesa', alCerrar, alEnviado, abrir }) {
   const fechaTs = new Date(f.fecha).getTime();
   const ocupadas = modelos.filter((m) => choques(e, m.id, fechaTs).some((t) => t.estado === 'confirmado'));
   const falta = [!f.marca.trim() && 'marca', !f.contacto.trim() && 'tu nombre', !f.correo && !f.telefono && 'correo o WhatsApp', !f.proyecto.trim() && 'proyecto', !f.fecha && 'fecha'].filter(Boolean);
-  const listo = !falta.length;
+  const listo = !falta.length && modelos.length > 0;
 
   if (hecho) {
     return (
-      <Modal alCerrar={alCerrar} etiqueta="Solicitud enviada">
-        <div style={{ textAlign: 'center', display: 'grid', gap: 14, justifyItems: 'center', padding: '10px 0' }}>
-          <span className="mo-sello mo-sello-verde" style={{ fontSize: '.8rem' }}><Check size={14} /> Recibida</span>
-          <h2 className="mo-serif" style={{ fontSize: '2.2rem', lineHeight: 1 }}>Folio <em>{hecho}</em></h2>
-          <p className="mo-tenue" style={{ maxWidth: 360, lineHeight: 1.55 }}>Tu booker ya la tiene. Te avisamos cuando las modelos confirmen y te mandamos la cotización aquí mismo.</p>
-          <button type="button" className="mo-boton" onClick={alEnviado}>Ver mis solicitudes <ArrowRight size={16} /></button>
+      <Modal variante="kd" alCerrar={alCerrar} etiqueta="Solicitud enviada">
+        <div className="kd-v-hecho">
+          <Folio n={1}>Solicitud recibida</Folio>
+          <p className="kd-v-titulo">Folio<br /><span>{hecho}</span></p>
+          <p className="kd-v-texto">Tu booker ya la tiene. Te avisamos cuando las modelos confirmen y aquí mismo te llega la cotización.</p>
+          <button type="button" className="kd-boton" onClick={alEnviado}>Ver mis solicitudes →</button>
         </div>
       </Modal>
     );
   }
 
   return (
-    <Modal alCerrar={alCerrar} etiqueta="Tu package">
-      <p className="mo-eti">Tu package</p>
-      <h2 className="mo-serif" style={{ fontSize: '2rem', margin: '8px 0 16px', lineHeight: 1 }}>
-        {paso === 'mesa' ? <>{modelos.length || 'Sin'} <em>{modelos.length === 1 ? 'modelo' : 'modelos'}</em></> : <>Pide tu <em>{f.tipo}</em></>}
-      </h2>
+    <Modal variante="kd" alCerrar={alCerrar} etiqueta="Tu package">
+      <Folio n={paso === 'mesa' ? 1 : 2}>{paso === 'mesa' ? 'Tu package' : 'La solicitud'}</Folio>
+      <p className="kd-v-titulo">
+        {paso === 'mesa'
+          ? <>{modelos.length ? String(modelos.length).padStart(2, '0') : 'Sin'}<br /><span>{modelos.length === 1 ? 'modelo' : 'modelos'}</span></>
+          : <>Pide tu<br /><span>{f.tipo === 'casting' ? 'casting' : 'booking'}</span></>}
+      </p>
 
-      {paso === 'mesa' && (
-        modelos.length ? (
-          <>
-            <div className="mo-mesa">
-              {modelos.map((m, i) => (
-                <button key={m.id} type="button" onClick={() => abrir(m.id)} style={{ display: 'block' }} aria-label={`Ver a ${m.nombre}`}>
-                  <Polaroid m={m} pie={`${i + 1}. ${m.nombre}`} />
+      {paso === 'mesa' && (modelos.length ? (
+        <>
+          <ol className="kd-v-modelos">
+            {modelos.map((m, k) => (
+              <li key={m.id}>
+                <button type="button" className="kd-v-modelo" onClick={() => abrir(m.id)} aria-label={`Ver a ${nombreDe(m)}`}>
+                  <span className="kd-v-modelo-foto">{m.fotos?.[0] ? <Imagen nombre={m.fotos[0]} sizes="120px" /> : <FotoModelo m={m} />}</span>
+                  <span>
+                    <small>{String(k + 1).padStart(2, '0')} · Nº {m.num}</small>
+                    <b>{m.nombre} {m.apellido}</b>
+                    <small>{estaturaTxt(m.estatura)} · {m.categorias.join(' · ')}</small>
+                  </span>
                 </button>
-              ))}
-            </div>
-            <div style={{ display: 'flex', gap: 8, marginTop: 22, flexWrap: 'wrap' }}>
-              <button type="button" className="mo-boton" onClick={() => setPaso('form')}>Pedir casting o booking <ArrowRight size={16} /></button>
-              <button type="button" className="mo-boton mo-boton-claro" onClick={vaciarPackage}>Vaciar</button>
-            </div>
-          </>
-        ) : (
-          <p className="mo-tenue" style={{ lineHeight: 1.6 }}>Toca el <Heart size={14} style={{ verticalAlign: -2 }} /> en las modelos que te gusten y aquí se juntan para pedir casting o booking de todas en una sola solicitud.</p>
-        )
-      )}
+                <button type="button" className="kd-v-quitar" onClick={() => alternarFavorito(m.id)} aria-label={`Quitar a ${m.nombre}`}><X size={16} /></button>
+              </li>
+            ))}
+          </ol>
+          <div className="kd-v-acciones">
+            <button type="button" className="kd-boton" onClick={() => setPaso('form')}>Pedir casting o booking →</button>
+            <button type="button" className="kd-enlace" onClick={vaciarPackage}>[ Vaciar ]</button>
+          </div>
+        </>
+      ) : (
+        <p className="kd-v-texto">Toca el <Heart size={14} style={{ verticalAlign: -2 }} /> en las modelos que te gusten. Aquí se juntan para pedir casting o booking de todas en una sola solicitud.</p>
+      ))}
 
       {paso === 'form' && (
-        <form onSubmit={(ev) => { ev.preventDefault(); if (!listo) return; setHecho(enviarSolicitud({ ...f, fecha: fechaTs, horas: Number(f.horas), modelos: modelos.map((m) => m.id) })); }} style={{ display: 'grid', gap: 16 }}>
-          <div style={{ display: 'flex', gap: 6 }}>
+        <form className="kd-form" onSubmit={(ev) => { ev.preventDefault(); if (!listo) return; setHecho(enviarSolicitud({ ...f, fecha: fechaTs, horas: Number(f.horas), modelos: modelos.map((m) => m.id) })); }}>
+          <div className="kd-pestanas" role="group" aria-label="Tipo de solicitud">
             {[['casting', 'Casting'], ['booking', 'Booking directo']].map(([v, t]) => (
-              <button key={v} type="button" className="mo-chip" aria-pressed={f.tipo === v} onClick={() => setF((x) => ({ ...x, tipo: v, trabajo: v === 'casting' ? 'Casting' : 'Sesión', horas: v === 'casting' ? 2 : 6 }))}>{t}</button>
+              <button key={v} type="button" aria-pressed={f.tipo === v} onClick={() => setF((x) => ({ ...x, tipo: v, trabajo: v === 'casting' ? 'Casting' : 'Sesión', horas: v === 'casting' ? 2 : 6 }))}>{t}</button>
             ))}
           </div>
-          <p className="mo-tenue" style={{ fontSize: '.8rem', lineHeight: 1.5 }}>
-            {f.tipo === 'casting' ? 'Las conoces en persona antes de decidir. El casting no tiene costo.' : 'Ya sabes a quién quieres: te cotizamos con las que estén disponibles.'}
-          </p>
+          <p className="kd-v-nota">{f.tipo === 'casting' ? 'Las conoces en persona antes de decidir. El casting no tiene costo.' : 'Ya sabes a quién quieres: te cotizamos con las que estén disponibles.'}</p>
           <div className="mo-dos">
             <Campo etiqueta="Marca o empresa *"><input value={f.marca} onChange={pon('marca')} required /></Campo>
             <Campo etiqueta="Tu nombre *"><input value={f.contacto} onChange={pon('contacto')} required /></Campo>
@@ -544,21 +487,18 @@ function Package({ e, pasoInicial = 'mesa', alCerrar, alEnviado, abrir }) {
             )}
           </div>
           <Campo etiqueta="Lugar"><input value={f.lugar} onChange={pon('lugar')} placeholder="Estudio, locación o ciudad" /></Campo>
-          <Campo etiqueta="Algo que debamos saber"><textarea value={f.nota} onChange={pon('nota')} placeholder="Look, edad, referencias…" /></Campo>
+          <Campo etiqueta="Algo que debamos saber"><textarea value={f.nota} onChange={pon('nota')} placeholder="Look, edad, referencias…" rows={3} /></Campo>
           {ocupadas.length > 0 && (
-            <div className="mo-aviso">
-              <span>●</span>
-              <span>{ocupadas.map((m) => m.nombre).join(', ')} ya {ocupadas.length === 1 ? 'tiene' : 'tienen'} trabajo confirmado ese día. Puedes mandarla igual y tu booker te propone otra fecha.</span>
-            </div>
+            <p className="kd-v-aviso">{ocupadas.map((m) => m.nombre).join(', ')} ya {ocupadas.length === 1 ? 'tiene' : 'tienen'} trabajo confirmado ese día. Puedes mandarla igual y tu booker te propone otra fecha.</p>
           )}
-          <div className="mo-mesa" style={{ gap: 8 }}>
-            {modelos.map((m) => <FotoModelo key={m.id} m={m} className="mo-mini" />)}
+          <div className="kd-v-tira">
+            {modelos.map((m) => <span key={m.id}>{m.fotos?.[0] ? <Imagen nombre={m.fotos[0]} sizes="90px" /> : <FotoModelo m={m} />}<small>{m.nombre}</small></span>)}
           </div>
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            <button type="submit" className="mo-boton" disabled={!listo}><Send size={16} /> Enviar solicitud</button>
-            <button type="button" className="mo-boton mo-boton-claro" onClick={() => setPaso('mesa')}>Atrás</button>
+          <div className="kd-v-acciones">
+            <button type="submit" className="kd-boton" disabled={!listo}><Send size={15} /> Enviar solicitud</button>
+            <button type="button" className="kd-enlace" onClick={() => setPaso('mesa')}>[ Atrás ]</button>
           </div>
-          {falta.length > 0 && <p className="mo-falta">Te falta: {falta.join(', ')}.</p>}
+          {falta.length > 0 && <p className="kd-v-falta">Te falta: {falta.join(', ')}.</p>}
         </form>
       )}
     </Modal>
@@ -568,56 +508,70 @@ function Package({ e, pasoInicial = 'mesa', alCerrar, alEnviado, abrir }) {
 // ── mis solicitudes ─────────────────────────────────────────────────────────
 const PASOS = ['Enviada', 'Con las modelos', 'Cotización', 'Confirmada'];
 const pasoDe = (s) => ({ nueva: 0, en_opcion: 1, cotizada: 2, confirmada: 3, cancelada: -1 }[s.estado] ?? 0);
+const ESTADO_TXT = { nueva: 'Enviada', en_opcion: 'Con las modelos', cotizada: 'Por aceptar', confirmada: 'Confirmada', cancelada: 'Cancelada' };
 
 function Solicitudes({ e, lista, ir }) {
+  const revela = useRevela(lista.length);
   return (
-    <section className="mo-hoja mo-claro">
-      <div className="mo-seccion-cab"><h2>Mis <em>solicitudes</em></h2></div>
+    <section ref={revela} className="kd-claro kd-book kd-solicitudes">
+      <div className="kd-sec-cab">
+        <Folio n={1}>Mis solicitudes</Folio>
+        <h1 className="kd-titulo kd-revela">Tus<br /><span>proyectos</span></h1>
+        <p className="kd-mono-chico">{lista.length} {lista.length === 1 ? 'solicitud' : 'solicitudes'}</p>
+      </div>
       {!lista.length && (
-        <div style={{ padding: '30px 0', display: 'grid', gap: 16, justifyItems: 'start' }}>
-          <p className="mo-tenue">Aún no pides nada. Arma tu package en el book y aquí sigues todo: respuesta de las modelos, cotización y confirmación.</p>
-          <button type="button" className="mo-boton" onClick={() => ir('mujeres')}>Ir al book <ArrowRight size={16} /></button>
+        <div className="kd-vacio-grande">
+          <p>Aún no pides nada. Arma tu package en el board y aquí sigues todo: la respuesta de las modelos, la cotización y la confirmación.</p>
+          <button type="button" className="kd-boton" onClick={() => ir('mujeres')}>Ir al board →</button>
         </div>
       )}
-      <div style={{ display: 'grid', gap: 16 }}>
+      <div className="kd-sols">
         {lista.map((s) => {
           const p = pasoDe(s);
           const trabajos = e.trabajos.filter((t) => t.solicitud === s.id);
           return (
-            <article key={s.id} className="mo-tarjeta" style={{ padding: 22 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', alignItems: 'start' }}>
-                <div>
-                  <p className="mo-eti">{s.folio} · {s.tipo === 'casting' ? 'Casting' : s.trabajo}</p>
-                  <h3 className="mo-serif" style={{ fontSize: '1.7rem', marginTop: 6 }}>{s.proyecto}</h3>
-                  <p className="mo-tenue" style={{ fontSize: '.86rem', marginTop: 4 }}>{fechaLarga(s.fecha)} · {hora(s.fecha)} · {s.horas} h{s.lugar ? ` · ${s.lugar}` : ''}</p>
-                </div>
-                <Sello estado={s.estado} />
+            <article key={s.id} className={`kd-sol kd-revela ${s.estado}`}>
+              <div className="kd-sol-cab">
+                <p className="kd-mono-chico">{s.folio} · {s.tipo === 'casting' ? 'Casting' : s.trabajo}</p>
+                <span className={`kd-insignia ${s.estado}`}>{ESTADO_TXT[s.estado] || s.estado}</span>
+                <h2>{s.proyecto}</h2>
+                <p className="kd-sol-cuando">{fechaLarga(s.fecha)} · {hora(s.fecha)} · {s.horas} h{s.lugar ? ` · ${s.lugar}` : ''}</p>
               </div>
-              {p >= 0 && <div className="mo-pasos">{PASOS.map((t, i) => <div key={t} className={i <= p ? 'hecho' : ''}>{t}</div>)}</div>}
-              <div className="mo-mesa" style={{ marginTop: 14 }}>
+              {p >= 0 && (
+                <ol className="kd-pasos" style={{ '--p': p }}>
+                  {PASOS.map((t, i) => <li key={t} className={i <= p ? 'hecho' : ''}><i />{t}</li>)}
+                </ol>
+              )}
+              <div className="kd-sol-modelos">
                 {s.modelos.map((mid) => {
                   const m = modeloPorId(e, mid);
                   const t = trabajos.find((x) => x.modeloId === mid);
-                  const txt = !t ? 'esperando' : { opcion: 'preguntando…', aceptado: 'disponible', rechazado: 'no puede', confirmado: 'confirmada', liberado: 'liberada' }[t.estado];
-                  return m && <Polaroid key={mid} m={m} pie={m.nombre} extra={<span style={{ fontSize: '.62rem', color: 'var(--mo-tenue)' }}>{txt}</span>} />;
+                  const txt = !t ? 'Esperando' : { opcion: 'Preguntando…', aceptado: 'Disponible', rechazado: 'No puede', confirmado: 'Confirmada', liberado: 'Liberada' }[t.estado];
+                  return m && (
+                    <div key={mid} className={`kd-sol-modelo ${t?.estado || ''}`}>
+                      <span className="kd-sol-foto">{m.fotos?.[0] ? <Imagen nombre={m.fotos[0]} sizes="160px" /> : <FotoModelo m={m} />}</span>
+                      <b>{m.nombre}</b>
+                      <small>{txt}</small>
+                    </div>
+                  );
                 })}
               </div>
               {s.estado === 'cotizada' && s.cotizacion && (
-                <div style={{ marginTop: 20, padding: 18, borderRadius: 14, background: 'var(--mo-papel)' }}>
-                  <p className="mo-eti" style={{ marginBottom: 8 }}>Cotización · {s.uso}</p>
-                  <table className="mo-cot"><tbody>
+                <div className="kd-cot">
+                  <p className="kd-mono-chico">Cotización · {s.uso}</p>
+                  <table><tbody>
                     {s.cotizacion.lineas.map((l) => <tr key={l.modeloId}><td>{nombreDe(modeloPorId(e, l.modeloId))} · {s.horas} h</td><td>{dinero(l.tarifa)}</td></tr>)}
                     <tr><td>IVA 16%</td><td>{dinero(s.cotizacion.iva)}</td></tr>
-                    <tr className="total"><td>Total</td><td>{dinero(s.cotizacion.total)}</td></tr>
                   </tbody></table>
-                  <div style={{ display: 'flex', gap: 8, marginTop: 14, flexWrap: 'wrap' }}>
-                    <button type="button" className="mo-boton" onClick={() => aceptarCotizacion(s.id)}><Check size={16} /> Aceptar y confirmar</button>
-                    <button type="button" className="mo-boton mo-boton-claro" onClick={() => rechazarCotizacion(s.id)}>No, gracias</button>
+                  <p className="kd-cot-total"><span>Total</span>{dinero(s.cotizacion.total)}</p>
+                  <div className="kd-v-acciones">
+                    <button type="button" className="kd-boton" onClick={() => aceptarCotizacion(s.id)}><Check size={15} /> Aceptar y confirmar</button>
+                    <button type="button" className="kd-enlace" onClick={() => rechazarCotizacion(s.id)}>[ No, gracias ]</button>
                   </div>
                 </div>
               )}
               {s.estado === 'confirmada' && (
-                <div className="mo-aviso mo-ok" style={{ marginTop: 16 }}><Sparkles size={16} /> <span>Listo. Las modelos ya lo tienen en su agenda con dirección y hora{s.cotizacion ? `; te llega la factura por ${dinero(s.cotizacion.total)}` : ''}.</span></div>
+                <p className="kd-sol-listo">Listo. Las modelos ya lo tienen en su agenda con dirección y hora{s.cotizacion ? `; te llega la factura por ${dinero(s.cotizacion.total)}` : ''}.</p>
               )}
             </article>
           );
@@ -628,109 +582,82 @@ function Solicitudes({ e, lista, ir }) {
 }
 
 // ── eventos ─────────────────────────────────────────────────────────────────
-// Video del evento si existe (lo hace Gemini: video/<id>.mp4, por ahora solo
-// "casting"); si no, su foto. Un 404 regresa el HTML de la SPA y el <video>
-// falla solo: ahí se queda la foto.
-function FondoEvento({ ev }) {
-  const [sinVideo, setSinVideo] = useState(false);
-  return sinVideo
-    ? <img src={ev.foto} alt="" />
-    : <video src={`/modelos/mira/video/${ev.id}.mp4`} poster={ev.foto} autoPlay muted loop playsInline onError={() => setSinVideo(true)} />;
-}
+// La foto de cada evento (sale de public/modelos/kade; los que crea la booker
+// usan la del estudio).
+const FOTO_EVENTO = { pasarela: 'nia-1', casting: 'casting-1', campana: 'campana-hombres' };
+const fotoEvento = (ev) => FOTO_EVENTO[ev.id] || 'estudio-luz';
 
 function Cuenta({ hasta }) {
   const [ahora, setAhora] = useState(() => Date.now());
   useEffect(() => { const id = setInterval(() => setAhora(Date.now()), 1000); return () => clearInterval(id); }, []);
   const s = Math.max(0, Math.floor((hasta - ahora) / 1000));
-  const partes = [['d', Math.floor(s / 86400)], ['h', Math.floor((s % 86400) / 3600)], ['m', Math.floor((s % 3600) / 60)], ['s', s % 60]];
-  // una sola línea: 05d 18h 16m 45s
+  const partes = [['días', Math.floor(s / 86400)], ['horas', Math.floor((s % 86400) / 3600)], ['min', Math.floor((s % 3600) / 60)], ['seg', s % 60]];
   return (
-    <p className="mo-cuenta mo-mono" role="timer" aria-label={`Faltan ${partes[0][1]} días`}>
-      {partes.map(([t, v]) => <span key={t}>{String(v).padStart(2, '0')}<small>{t}</small></span>)}
-    </p>
-  );
-}
-
-// Próximos eventos del inicio: carteles a sangre, uno junto al otro, en blanco y
-// negro; el que tiene el cursor se ensancha y toma color. Encima, solo la fecha
-// en contorno, el título y una línea con lugar y hora.
-function Carteles({ eventos, abrir }) {
-  return (
-    <section className="mo-carteles" aria-label="Próximos eventos">
-      <p className="mo-eti mo-carteles-eti">Próximos eventos</p>
-      {eventos.map((ev) => {
-        const d = new Date(ev.fecha);
-        return (
-          <button key={ev.id} type="button" className="mo-cartel" onClick={() => abrir(ev.id)}>
-            <img src={ev.foto} alt="" loading="lazy" />
-            <span className="mo-cartel-texto">
-              <span className="mo-cartel-fecha">{String(d.getDate()).padStart(2, '0')}·{String(d.getMonth() + 1).padStart(2, '0')}</span>
-              <span className="mo-cartel-titulo">{ev.titulo}</span>
-              <span className="mo-cartel-pie"><span className="mo-mono">{ev.lugar} · {hora(ev.fecha)}</span><span className="mo-cartel-ir">Registrarme <ArrowRight size={14} /></span></span>
-            </span>
-          </button>
-        );
-      })}
-    </section>
+    <div className="kd-cuenta" role="timer" aria-label={`Faltan ${partes[0][1]} días`}>
+      {partes.map(([t, v]) => <span key={t}><b>{String(v).padStart(2, '0')}</b><small>{t}</small></span>)}
+    </div>
   );
 }
 
 function Eventos({ e, abrir }) {
-  const lista = e.eventos.filter((x) => x.publico && x.fecha > Date.now() - 6 * 3600000).sort((a, b) => a.fecha - b.fecha);
+  const ahora = useState(() => Date.now())[0];
+  const lista = e.eventos.filter((x) => x.publico && x.fecha > ahora - 6 * 3600000).sort((a, b) => a.fecha - b.fecha);
+  const revela = useRevela(lista.length);
   const [primero] = lista;
-  if (!primero) return <section className="mo-seccion"><p className="mo-tenue">Sin eventos por ahora.</p></section>;
+  if (!primero) return <section className="kd-claro kd-book"><p className="kd-vacio">Sin eventos por ahora.</p></section>;
   const modelos = Object.entries(primero.convocadas).filter(([, v]) => v === 'confirmada').map(([id]) => modeloPorId(e, id)).filter(Boolean);
   const [titulo, sub] = primero.titulo.split(' · ');
   return (
-    <>
-      <section className="mo-evento-portada">
-        <FondoEvento ev={primero} />
-        <div className="mo-evento-portada-texto">
-          {/* lo mínimo (23-oct): título, una línea con cuándo y dónde, la cuenta y "Registrarme" */}
-          <h1 className="mo-gigante">{titulo}{sub && <><br /><em>{sub}</em></>}</h1>
-          <p className="mo-mono mo-evento-cuando">{fechaLarga(primero.fecha)} · {hora(primero.fecha)} · {primero.lugar}</p>
-          <div className="mo-evento-portada-pie">
+    <div ref={revela}>
+      <section className="kd-ev-portada">
+        <Imagen nombre={fotoEvento(primero)} sizes="100vw" prioridad posicion="50% 30%" />
+        <div className="kd-ev-portada-txt">
+          <Folio n={1}>Próximo evento · {primero.tipo}</Folio>
+          <h1 className="kd-titulo">{titulo}{sub && <><br /><span>{sub}</span></>}</h1>
+          <p className="kd-ev-cuando">{fechaLarga(primero.fecha)} · {hora(primero.fecha)} · {primero.lugar}</p>
+          <div className="kd-ev-pie">
             <Cuenta hasta={primero.fecha} />
-            <button type="button" className="mo-cartel-ir mo-evento-ir" onClick={() => abrir(primero.id)}>Registrarme <ArrowRight size={14} /></button>
+            <button type="button" className="kd-boton kd-boton-claro" onClick={() => abrir(primero.id)}>Registrarme →</button>
           </div>
         </div>
       </section>
 
       {modelos.length > 0 && (
-        <section className="mo-seccion mo-lineup">
-          <div className="mo-seccion-cab"><h2>Desfilan</h2></div>
-          <div className="mo-lineup-fila">
-            {modelos.map((m, k) => (
-              <div key={m.id} className="mo-lineup-modelo" style={{ '--k': k }}>
-                <FotoModelo m={m} tipo="book" />
-                <b>{m.nombre}</b>
-              </div>
-            ))}
+        <section className="kd-claro kd-talento">
+          <div className="kd-sec-cab">
+            <Folio n={2}>Line-up</Folio>
+            <h2 className="kd-titulo kd-revela">Des<br /><span>filan</span></h2>
+            <p className="kd-mono-chico">{modelos.length} modelos confirmadas</p>
+          </div>
+          <div className={`kd-rejilla ${modelos.length <= 3 ? 'kd-rejilla-3' : 'kd-rejilla-4'}`}>
+            {modelos.map((m, i) => <Carta key={m.id} m={m} e={e} i={i} abrir={() => {}} />)}
           </div>
         </section>
       )}
 
-      <section className="mo-seccion">
-        <div className="mo-seccion-cab"><h2>La <em>agenda</em></h2></div>
-        <div className="mo-agenda-ev">
-          {lista.map((ev) => {
-            const d = new Date(ev.fecha);
+      <section className="kd-oscuro kd-eventos-inicio">
+        <div className="kd-sec-cab">
+          <Folio n={3}>La agenda</Folio>
+          <h2 className="kd-titulo kd-revela">Lo que<br /><span>viene</span></h2>
+          <p className="kd-mono-chico">{lista.length} eventos abiertos</p>
+        </div>
+        <ol className="kd-filas">
+          {lista.map((ev, k) => {
             const mio = e.misRegistros.some((r) => r.evento === ev.id);
             return (
-              <button key={ev.id} type="button" className="mo-agenda-fila" onClick={() => abrir(ev.id)}>
-                <span className="mo-agenda-fecha"><b>{d.getDate()}</b>{d.toLocaleDateString('es-MX', { month: 'short' })}<br />{d.toLocaleDateString('es-MX', { weekday: 'short' })}</span>
-                <span className="mo-agenda-info">
-                  <b>{ev.titulo}</b>
-                  <small>{hora(ev.fecha)} · {ev.lugar}{mio ? ' · ya tienes pase' : ''}</small>
-                </span>
-                <span className="mo-agenda-foto"><img src={ev.foto} alt="" loading="lazy" /></span>
-                <ArrowRight className="mo-agenda-flecha" size={22} strokeWidth={1.4} />
-              </button>
+              <li key={ev.id} className="kd-revela" style={{ '--k': k }}>
+                <button type="button" onClick={() => abrir(ev.id)}>
+                  <span className="kd-fila-fecha">{new Date(ev.fecha).toLocaleDateString('es-MX', { day: '2-digit', month: 'short' }).replace('.', '')}</span>
+                  <span className="kd-fila-nombre">{ev.titulo}</span>
+                  <span className="kd-fila-lugar">{ev.lugar} · {hora(ev.fecha)}</span>
+                  <span className="kd-fila-ir">{mio ? '[ Ver mi pase ]' : '[ Registrarme ]'}</span>
+                </button>
+              </li>
             );
           })}
-        </div>
+        </ol>
       </section>
-    </>
+    </div>
   );
 }
 
@@ -754,58 +681,50 @@ function RegistroEvento({ e, ev, alCerrar }) {
   const modelos = Object.entries(ev.convocadas).filter(([, v]) => v === 'confirmada').map(([id]) => modeloPorId(e, id)).filter(Boolean);
   const d = new Date(ev.fecha);
   return (
-    <Modal alCerrar={alCerrar} etiqueta={ev.titulo}>
-      <Foto src={ev.foto} className="mo-modal-portada" />
-      <p className="mo-eti">{ev.tipo} · {fechaLarga(ev.fecha)} · {hora(ev.fecha)}</p>
-      <h2 className="mo-serif" style={{ fontSize: '2rem', lineHeight: 1.02, margin: '8px 0 10px' }}>{ev.titulo}</h2>
-      <p className="mo-tenue" style={{ lineHeight: 1.55 }}>{ev.descripcion}</p>
-      <p style={{ fontSize: '.86rem', margin: '10px 0 16px', display: 'flex', gap: 6, alignItems: 'center' }}><MapPin size={14} /> {ev.lugar}</p>
+    <Modal variante="kd" alCerrar={alCerrar} etiqueta={ev.titulo}>
+      <div className="kd-v-portada"><Imagen nombre={fotoEvento(ev)} sizes="640px" posicion="50% 30%" /></div>
+      <Folio n={1}>{ev.tipo} · {fechaLarga(ev.fecha)} · {hora(ev.fecha)}</Folio>
+      <p className="kd-v-titulo kd-v-titulo-chico">{ev.titulo}</p>
+      <p className="kd-v-texto">{ev.descripcion}</p>
+      <p className="kd-v-lugar"><MapPin size={14} /> {ev.lugar}</p>
       {modelos.length > 0 && !miPase && (
-        <div style={{ marginBottom: 18 }}>
-          <p className="mo-eti" style={{ marginBottom: 8 }}>Desfilan</p>
-          <div style={{ display: 'flex', gap: 6 }}>{modelos.map((m) => <FotoModelo key={m.id} m={m} className="mo-mini-redonda" />)}</div>
+        <div className="kd-v-tira">
+          {modelos.map((m) => <span key={m.id}>{m.fotos?.[0] ? <Imagen nombre={m.fotos[0]} sizes="90px" /> : <FotoModelo m={m} />}<small>{m.nombre}</small></span>)}
         </div>
       )}
       {miPase ? (
         <>
-          <div className="mo-boleto">
-            <div className="mo-boleto-talon">
-              <span className="mo-eti">{d.toLocaleDateString('es-MX', { weekday: 'long' })}</span>
-              <b className="mo-gigante">{d.getDate()}</b>
-              <span className="mo-eti">{d.toLocaleDateString('es-MX', { month: 'long' })}</span>
-              <span className="mo-mono" style={{ fontSize: '.8rem', marginTop: 8 }}>{hora(ev.fecha)}</span>
+          <div className="kd-pase">
+            <div className="kd-pase-fecha">
+              <small>{d.toLocaleDateString('es-MX', { weekday: 'long' })}</small>
+              <b>{d.getDate()}</b>
+              <small>{d.toLocaleDateString('es-MX', { month: 'long' })} · {hora(ev.fecha)}</small>
             </div>
-            <div className="mo-boleto-cuerpo">
-              <div>
-                <p className="mo-eti">{AGENCIA.nombre} · {ev.tipo}</p>
-                <p className="mo-gigante" style={{ fontSize: '1.5rem', marginTop: 6 }}>{miPase.nombre}</p>
-                <p className="mo-tenue" style={{ fontSize: '.78rem', marginTop: 2 }}>{miPase.empresa || 'Invitada'}</p>
-                <b className="mo-mono" style={{ letterSpacing: '.14em', display: 'block', marginTop: 12 }}>{miPase.codigo}</b>
-              </div>
-              <QRCodeSVG value={miPase.codigo} size={112} bgColor="#FBF9F5" fgColor="#151413" />
+            <div className="kd-pase-cuerpo">
+              <small>{AGENCIA.nombre} · {ev.tipo} · Admite 1</small>
+              <b>{miPase.nombre}</b>
+              <small>{miPase.empresa || 'Invitada'}</small>
+              <code>{miPase.codigo}</code>
             </div>
-            <span className="mo-boleto-sello">Admite 1</span>
+            <div className="kd-pase-qr"><QRCodeSVG value={miPase.codigo} size={116} bgColor="#F1EEE8" fgColor="#121211" /></div>
           </div>
-          <div style={{ display: 'flex', gap: 8, marginTop: 14, flexWrap: 'wrap' }}>
-            <button type="button" className="mo-boton mo-boton-chico" onClick={() => icsEvento(ev, miPase)}><Check size={15} /> Agregar a mi calendario</button>
-            <a className="mo-boton mo-boton-claro mo-boton-chico" href={`https://maps.google.com/?q=${encodeURIComponent(ev.lugar)}`} target="_blank" rel="noreferrer"><MapPin size={15} /> Cómo llegar</a>
+          <div className="kd-v-acciones">
+            <button type="button" className="kd-boton" onClick={() => icsEvento(ev, miPase)}><Check size={15} /> Agregar a mi calendario</button>
+            <a className="kd-enlace" href={`https://maps.google.com/?q=${encodeURIComponent(ev.lugar)}`} target="_blank" rel="noreferrer">[ Cómo llegar ]</a>
           </div>
-          <p className="mo-tenue" style={{ fontSize: '.76rem', marginTop: 10 }}>Enséñalo en la puerta: lo escanean con el lector.</p>
+          <p className="kd-v-nota">Enséñalo en la puerta: lo escanean con el lector.</p>
         </>
       ) : (
-        <form onSubmit={(x) => { x.preventDefault(); if (f.nombre) registrarseEvento(ev.id, f); }} style={{ display: 'grid', gap: 14 }}>
-          <Campo etiqueta="Tu nombre"><input value={f.nombre} onChange={(x) => setF({ ...f, nombre: x.target.value })} required /></Campo>
+        <form className="kd-form" onSubmit={(x) => { x.preventDefault(); if (f.nombre) registrarseEvento(ev.id, f); }}>
+          <Campo etiqueta="Tu nombre *"><input value={f.nombre} onChange={(x) => setF({ ...f, nombre: x.target.value })} required /></Campo>
           <div className="mo-dos">
             <Campo etiqueta="Empresa o medio"><input value={f.empresa} onChange={(x) => setF({ ...f, empresa: x.target.value })} /></Campo>
             <Campo etiqueta="Correo"><input type="email" value={f.correo} onChange={(x) => setF({ ...f, correo: x.target.value })} /></Campo>
           </div>
-          {quedan !== null && (
-            <div className="mo-agenda-cupo" style={{ width: '100%' }}>
-              <small className="mo-mono">{ev.invitados.length} registrados · {quedan ? `quedan ${quedan}` : 'cupo lleno'}</small>
-              <i><em style={{ width: `${Math.min(1, ev.invitados.length / ev.cupo) * 100}%` }} /></i>
-            </div>
-          )}
-          <button type="submit" className="mo-boton" disabled={!f.nombre || quedan === 0}>Registrarme</button>
+          {quedan !== null && <p className="kd-v-nota">{ev.invitados.length} registrados · {quedan ? `quedan ${quedan} lugares` : 'cupo lleno'}</p>}
+          <div className="kd-v-acciones">
+            <button type="submit" className="kd-boton" disabled={!f.nombre || quedan === 0}>Registrarme →</button>
+          </div>
         </form>
       )}
     </Modal>
