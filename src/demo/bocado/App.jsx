@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  Bell, Bike, CalendarDays, Check, ChevronRight, Clock, CreditCard, Gift, HelpCircle, House, Leaf, LogOut, MapPin, Minus, Plus,
+  ArrowLeft, Bell, Bike, CalendarDays, Check, ChevronRight, Clock, CreditCard, Gift, Heart, HelpCircle, House, Leaf, LogOut, MapPin, Minus, Plus,
   ShoppingBag, Store, UserRound, UtensilsCrossed, X,
 } from 'lucide-react';
 import {
@@ -64,7 +64,17 @@ function usePerfil() {
   return [p, cambiar];
 }
 
-const Img = ({ id, className = '' }) => <img className={className} src={foto(id)} alt="" draggable={false} decoding="async" />;
+// v7 (19-nov): los platillos son RECORTES de producto sobre el papel (como el vaso
+// del video de referencia); si un recorte falta, cae a la foto de siempre.
+const recorte = (id) => `/bocado/c-${id}.webp`;
+function Img({ id, className = '', foto: conFoto = false }) {
+  const [mal, setMal] = useState(false);
+  const src = conFoto || mal ? foto(id) : recorte(id);
+  return <img className={`${className} ${conFoto || mal ? '' : 'recorte'}`} src={src} alt="" draggable={false} decoding="async" onError={() => setMal(true)} />;
+}
+// "Háptica": un toque corto en Android (iOS web no vibra; ahí lo da la animación).
+const toque = () => { try { navigator.vibrate?.(8); } catch { /* sin vibración */ } };
+const TITULOS = { inicio: 'el buen bocado', menu: 'Menú', semana: 'Tu semana', pedidos: 'Pedidos', yo: 'Yo' };
 const ordenar = (a, b) => (a.dia + String(a.hora).padStart(4, '0')).localeCompare(b.dia + String(b.hora).padStart(4, '0'));
 const REBAJA = { agua: 25, aguacate: 18, bowl: 125, envio: 0 };
 
@@ -100,6 +110,7 @@ export default function App({ marco = false, comando = null }) {
   const [membresia, setMembresia] = useState(false);
   const [golpe, setGolpe] = useState(0);              // la barra del carrito brinca al agregar
   const cuerpo = useRef(null);
+  const [arriba, setArriba] = useState(true);          // título grande (true) o compacto al bajar
 
   useEffect(() => { const t = setTimeout(() => setCarga(false), 3200); return () => clearTimeout(t); }, []);
   const avisar = useCallback((txt, icono = 'bocado') => setAviso({ txt, icono, k: Date.now() }), []);
@@ -108,7 +119,7 @@ export default function App({ marco = false, comando = null }) {
     const t = setTimeout(() => setAviso(null), 3800);
     return () => clearTimeout(t);
   }, [aviso]);
-  useEffect(() => { cuerpo.current?.scrollTo({ top: 0 }); }, [tab]);
+  useEffect(() => { cuerpo.current?.scrollTo({ top: 0 }); }, [tab]);   // el scroll a 0 dispara onScroll y regresa el título grande
 
   // Simulación acelerada de los pedidos de hoy.
   useEffect(() => {
@@ -163,6 +174,7 @@ export default function App({ marco = false, comando = null }) {
     cambiar((s) => { s.carrito.push(linea); });
     setVer(null);
     setGolpe((g) => g + 1);
+    toque();
   };
   // El "+" de las listas: lo agrega como viene (si ya está igual, suma uno).
   const agregarRapido = (id) => {
@@ -172,6 +184,7 @@ export default function App({ marco = false, comando = null }) {
       else s.carrito.push({ id, quitar: [], extras: [], cant: 1 });
     });
     setGolpe((g) => g + 1);
+    toque();
   };
   const repetir = (p) => {
     cambiar((s) => { s.carrito = structuredClone(p.lineas); });
@@ -214,8 +227,9 @@ export default function App({ marco = false, comando = null }) {
 
   return (
     <div className={raiz}>
-      <div className="ba-cuerpo" ref={cuerpo}>
-        {tab === 'inicio' && <Inicio perfil={perfil} puntos={e.puntos} cambiarPerfil={cambiarPerfil} vivos={vivos} abrir={setVer} abrirPedido={setPedidoAbierto} irA={setTab} agregar={agregarRapido} verCat={(c) => { setMenuCat(c); setTab('menu'); }} />}
+      <div className={`ba-nav ${arriba ? '' : 'visible'}`} aria-hidden={arriba}><b>{TITULOS[tab]}</b></div>
+      <div className="ba-cuerpo" ref={cuerpo} onScroll={(ev) => { const a = ev.currentTarget.scrollTop < 44; if (a !== arriba) setArriba(a); }}>
+        {tab === 'inicio' && <Inicio perfil={perfil} puntos={e.puntos} vivos={vivos} abrir={setVer} abrirPedido={setPedidoAbierto} irA={setTab} verCat={(c) => { setMenuCat(c); setTab('menu'); }} />}
         {tab === 'menu' && <Menu key={menuCat} catInicial={menuCat} abrir={setVer} agregar={agregarRapido} perfil={perfil} />}
         {tab === 'semana' && <Semana e={e} perfil={perfil} cambiar={cambiar} avisar={avisar} abrirPedido={setPedidoAbierto} />}
         {tab === 'pedidos' && <Pedidos e={e} vivos={vivos} abrirPedido={setPedidoAbierto} irA={setTab} repetir={repetir} />}
@@ -229,7 +243,7 @@ export default function App({ marco = false, comando = null }) {
       )}
       <Barra tab={tab} irA={setTab} />
 
-      {ver && <HojaPlatillo id={ver} perfil={perfil} cerrar={() => setVer(null)} agregar={agregar} />}
+      {ver && <Platillo id={ver} perfil={perfil} cerrar={() => setVer(null)} agregar={agregar} />}
       {carrito && <HojaCarrito e={e} perfil={perfil} modoInicial={carrito.modo} cambiar={cambiar} cerrar={() => setCarrito(null)} confirmar={confirmar} />}
       {pedidoAbierto && <HojaPedido p={e.pedidos.find((p) => p.id === pedidoAbierto)} perfil={perfil} cerrar={() => setPedidoAbierto(null)} cambiar={cambiar} avisar={avisar} />}
 
@@ -253,11 +267,11 @@ const TABS = [
 function Barra({ tab, irA }) {
   const i = TABS.findIndex(([id]) => id === tab);
   return (
-    <nav className="ba-barra" aria-label="Navegación">
-      <span className="activo" style={{ '--i': i }} aria-hidden="true" />
+    <nav className="ba-tabs" aria-label="Navegación" style={{ '--i': i }}>
       {TABS.map(([id, txt, Ic]) => (
-        <button key={id} className={tab === id ? 'on' : ''} onClick={() => irA(id)} aria-label={txt} aria-current={tab === id ? 'page' : undefined}>
-          <Ic size={19} strokeWidth={1.8} />
+        <button key={id} className={tab === id ? 'on' : ''} onClick={() => { if (tab !== id) toque(); irA(id); }} aria-current={tab === id ? 'page' : undefined}>
+          <Ic size={23} strokeWidth={tab === id ? 2.1 : 1.6} />
+          <span>{txt}</span>
         </button>
       ))}
     </nav>
@@ -510,51 +524,37 @@ function Modo({ modo, cambiar }) {
   );
 }
 
-function Inicio({ perfil, puntos, cambiarPerfil, vivos, abrir, abrirPedido, irA, agregar, verCat }) {
+// v7 (19-nov): Inicio como el video de referencia — el sello arriba, el saludo y
+// una lista de píldoras con contorno (una sola cosa por renglón) y UNA llena.
+// Sin foto gigante ni carrusel: lo que antes cargaba la pantalla vive en el Menú.
+function Inicio({ perfil, puntos, vivos, abrir, abrirPedido, irA, verCat }) {
   const del = platillo(delDia(diasHabiles(1)[0]));
   const proximo = vivos[0];
   const nombre = perfil.nombre.split(' ')[0] || 'tú';
-  const recomendados = PLATILLOS.filter((p) => p.cat !== 'bebidas' && p.id !== del.id && !p.tiene.some((t) => perfil.evita.includes(t)))
-    .sort((a, b) => (perfil.objetivo === 'Más proteína' ? b.prot - a.prot : a.kcal - b.kcal)).slice(0, 3);
   return (
-    <div className="ba-pantalla">
-      <header className="ba-cab inicio">
-        <div><small>Hola, {nombre}</small><h1>¿Qué se te antoja?</h1></div>
-        <button className="ba-bocados-chip" onClick={() => irA('yo')} aria-label={`${puntos} bocados`}><Isotipo size={22} /><b>{puntos}</b></button>
+    <div className="ba-pantalla ba-inicio">
+      <header className="arriba">
+        <Sello size={92} className="ba-sello" />
+        <p>Hola, {nombre}. <button className="ba-puntos-chip" onClick={() => irA('yo')}>{puntos} bocados</button></p>
       </header>
-      <Modo modo={perfil.modo} cambiar={(m) => cambiarPerfil({ modo: m })} />
 
-      {proximo
-        ? <div className="ba-bloque"><TarjetaPedido p={proximo} onClick={() => abrirPedido(proximo.id)} /></div>
-        : (
-          <button className="ba-del ba-bloque" onClick={() => abrir(del.id)}>
-            <Img id={del.id} />
-            <span className="etq">El del día</span>
-            <div className="info"><div><b>{del.nombre}</b><span>{datos(del)}</span></div><span className="precio">{dinero(del.precio)}</span><Mas clase="rojo" onClick={() => agregar(del.id)} /></div>
-          </button>
-        )}
+      {proximo && <div className="ba-bloque"><TarjetaPedido p={proximo} onClick={() => abrirPedido(proximo.id)} /></div>}
 
-      <div className="ba-tit-fila"><h2>Para ti</h2><span>{perfil.objetivo}</span></div>
-      <div className="ba-carrusel">
-        {(proximo ? [del, ...recomendados] : recomendados).map((p) => (
-          <button key={p.id} className="ba-mini" onClick={() => abrir(p.id)}>
-            <div className="foto"><Img id={p.id} /><Mas clase="vidrio" onClick={() => agregar(p.id)} /></div>
-            <b>{p.nombre}</b>
-            <span>{dinero(p.precio)}<i> · {p.kcal} kcal</i></span>
-          </button>
-        ))}
-      </div>
-
-      <div className="ba-tit-fila"><h2>Explora</h2></div>
       <div className="ba-explora">
-        {EXPLORA.map(([id, t, d], i) => (
+        <button className="con-foto" onClick={() => abrir(del.id)}>
+          <span><b>El del día</b><small>{del.nombre} · {dinero(del.precio)}</small></span>
+          <Img id={del.id} />
+        </button>
+        <button onClick={() => verCat('parati')}><span><b>Para ti</b><small>{perfil.objetivo || 'Lo que más te va'}, sin lo que evitas.</small></span></button>
+        {EXPLORA.map(([id, t, d], k) => (
           <button key={id} onClick={() => verCat(id)}>
-            <b>{t}</b><span>{d}</span>
-            {i === EXPLORA.length - 1 && <Isotipo size={44} tinta="linea" className="asoma" />}
+            <span><b>{t}</b><small>{d}</small></span>
+            {k === EXPLORA.length - 1 && <Isotipo size={40} tinta="linea" className="asoma" />}
           </button>
         ))}
-        <button className="lleno" onClick={() => irA('semana')}><b>Arma tu semana</b><span>Cinco comidas en un minuto, con precio de plan.</span></button>
+        <button className="lleno" onClick={() => irA('semana')}><span><b>Arma tu semana</b><small>Cinco comidas en un minuto, con precio de plan.</small></span></button>
       </div>
+      <Bolsita size={150} tinta="linea" className="ba-marca-agua" />
     </div>
   );
 }
@@ -584,57 +584,61 @@ function TarjetaPedido({ p, onClick }) {
 }
 
 // ── MENÚ ────────────────────────────────────────────────────────────────────
+// v7: título grande, categorías como pestañas de texto y una lista limpia con
+// el platillo recortado. Sin selector de días (el día se elige al pagar).
 function Menu({ abrir, agregar, perfil, catInicial = 'todo' }) {
-  const dias = diasHabiles(5);
-  const [dia, setDia] = useState(dias[0]);
   const [cat, setCat] = useState(catInicial);
-  const especial = delDia(dia);
-  const grupos = CATEGORIAS.filter(([id]) => cat === 'todo' || cat === id);
+  const especial = delDia(hoyISO());
+  const paraTi = PLATILLOS.filter((p) => p.cat !== 'bebidas' && !p.tiene.some((t) => perfil.evita.includes(t)))
+    .sort((a, b) => (perfil.objetivo === 'Más proteína' ? b.prot - a.prot : a.kcal - b.kcal)).slice(0, 3);
+  const PESTANAS = [['todo', 'Todo'], ['parati', 'Para ti'], ...CATEGORIAS];
+  const grupos = cat === 'parati' ? [['parati', 'Para ti', paraTi]]
+    : CATEGORIAS.filter(([id]) => cat === 'todo' || cat === id)
+      .map(([id, t]) => [id, t, PLATILLOS.filter((p) => p.cat === id).sort((a, b) => (b.id === especial) - (a.id === especial))]);
   return (
     <div className="ba-pantalla">
-      <header className="ba-cab"><div><small>{diaLargo(dia)} {numDia(dia)}</small><h1>Menú</h1></div><Sello size={64} className="ba-sello" /></header>
-      <div className="ba-dias">
-        {dias.map((d) => <button key={d} className={d === dia ? 'on' : ''} onClick={() => setDia(d)}><small>{d === hoyISO() ? 'Hoy' : diaCorto(d)}</small><b>{numDia(d)}</b></button>)}
+      <header className="ba-cab"><div><h1>Menú</h1></div></header>
+      <div className="ba-pestanas" role="tablist">
+        {PESTANAS.map(([id, t]) => <button key={id} role="tab" aria-selected={cat === id} className={cat === id ? 'on' : ''} onClick={() => setCat(id)}>{t}</button>)}
       </div>
-      <div className="ba-chips cats">{[['todo', 'Todo'], ...CATEGORIAS].map(([id, t]) => <button key={id} className={cat === id ? 'on' : ''} onClick={() => setCat(id)}>{t}</button>)}</div>
-      {grupos.map(([id, titulo]) => {
-        const items = PLATILLOS.filter((p) => p.cat === id).sort((a, b) => (b.id === especial) - (a.id === especial));
-        return (
-          <section key={id} className="ba-seccion">
-            {cat === 'todo' && <h3 className="ba-sec">{titulo}<span>{items.length}</span></h3>}
-            <div className="ba-lista">
-              {items.map((p) => {
-                const ojo = p.tiene.some((t) => perfil.evita.includes(t));
-                return (
-                  <button key={p.id} className="ba-item" onClick={() => abrir(p.id)}>
-                    <Img id={p.id} />
-                    <div className="info">
-                      <b>{p.nombre}</b>
-                      <span>{datos(p)}</span>
-                      <div className="tags">
-                        {p.id === especial && <i className="dia">Del día</i>}
-                        {p.etiquetas.slice(0, 1).map((t) => <i key={t}>{t}</i>)}
-                        {ojo && <i className="ojo">Lleva algo que evitas</i>}
-                      </div>
-                    </div>
-                    <div className="lado"><b>{dinero(p.precio)}</b><Mas onClick={() => agregar(p.id)} /></div>
-                  </button>
-                );
-              })}
-            </div>
-          </section>
-        );
-      })}
+      {grupos.map(([id, titulo, items]) => (
+        <section key={id} className="ba-seccion">
+          {cat === 'todo' && <h3 className="ba-sec">{titulo}</h3>}
+          {cat === 'parati' && <p className="ba-lead">{perfil.objetivo || 'Lo que más te va'}{perfil.evita.length ? `, sin ${perfil.evita.join(', ').toLowerCase()}` : ''}.</p>}
+          <div className="ba-lista">
+            {items.map((p) => {
+              const ojo = p.tiene.some((t) => perfil.evita.includes(t));
+              return (
+                <button key={p.id} className="ba-item" onClick={() => abrir(p.id)}>
+                  <Img id={p.id} />
+                  <div className="info">
+                    <b>{p.nombre}</b>
+                    <span>{p.id === especial ? 'El del día · ' : ''}{datos(p)}</span>
+                    {ojo && <span className="ojo">Lleva algo que evitas</span>}
+                  </div>
+                  <div className="lado"><b>{dinero(p.precio)}</b><Mas onClick={() => agregar(p.id)} /></div>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+      ))}
     </div>
   );
 }
 
 // ── HOJAS ───────────────────────────────────────────────────────────────────
 function Hoja({ children, cerrar, clase = '' }) {
+  // Se cierra arrastrándola hacia abajo desde la parte de arriba (como en iOS).
+  const [dy, setDy] = useState(0);
+  const ini = useRef(null);
+  const bajar = (ev) => { ini.current = ev.clientY; ev.currentTarget.setPointerCapture?.(ev.pointerId); };
+  const mover = (ev) => { if (ini.current != null) setDy(Math.max(0, ev.clientY - ini.current)); };
+  const soltar = () => { if (ini.current == null) return; ini.current = null; if (dy > 110) cerrar(); else setDy(0); };
   return (
-    <div className="ba-hoja-fondo" onClick={cerrar}>
-      <div className={`ba-hoja ${clase}`} onClick={(ev) => ev.stopPropagation()} role="dialog">
-        <span className="asa" aria-hidden="true" />
+    <div className="ba-hoja-fondo" onClick={cerrar} style={{ opacity: dy ? Math.max(0.35, 1 - dy / 400) : undefined }}>
+      <div className={`ba-hoja ${clase} ${dy ? 'arrastra' : ''}`} onClick={(ev) => ev.stopPropagation()} role="dialog" style={dy ? { transform: `translateY(${dy}px)` } : undefined}>
+        <div className="ba-asidero" onPointerDown={bajar} onPointerMove={mover} onPointerUp={soltar} onPointerCancel={soltar} aria-hidden="true"><span className="asa" /></div>
         <button className="ba-cerrar" onClick={cerrar} aria-label="Cerrar"><X size={18} /></button>
         {children}
       </div>
@@ -642,50 +646,67 @@ function Hoja({ children, cerrar, clase = '' }) {
   );
 }
 
-function HojaPlatillo({ id, perfil, cerrar, agregar }) {
+// v7: el platillo es una pantalla que ENTRA DE LADO (navegación nativa), igual al
+// video de referencia: ← y ♡ arriba, nombre y descripción, una tabla de extras
+// con "Agregar" por renglón, el platillo recortado al centro, nota para cocina y
+// el botón con el precio. Lo de quitar ingredientes va en píldoras chicas.
+const KCAL_EXTRA = { aguacate: 80, proteina: 150, agua: 40 };
+function Platillo({ id, perfil, cerrar, agregar }) {
   const p = platillo(id);
   const [quitar, setQuitar] = useState([]);
   const [extras, setExtras] = useState([]);
   const [cant, setCant] = useState(1);
-  const tog = (arr, set, v) => set(arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v]);
+  const [fav, setFav] = useState(false);
+  const [nota, setNota] = useState('');
+  const [sale, setSale] = useState(false);
+  const tog = (arr, set, v) => { toque(); set(arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v]); };
   const total = totalLinea({ id, extras, cant });
   const extrasOk = p.cat === 'bebidas' ? [] : EXTRAS.filter((x) => !(x.id === 'proteina' && !p.prot));
   const ojo = p.tiene.filter((t) => perfil.evita.includes(t));
+  const atras = () => { setSale(true); setTimeout(cerrar, 260); };
   return (
-    <Hoja cerrar={cerrar} clase="platillo">
-      <div className="ba-hoja-scroll">
-        <Img id={id} className="ba-hoja-foto" />
-        <div className="ba-hoja-pad">
-          <div className="etqs">{p.etiquetas.map((t) => <span key={t}>{t}</span>)}</div>
-          <h2>{p.nombre}</h2>
-          <p className="desc">{p.desc}</p>
-          <div className="ba-macros"><div><b>{p.kcal}</b><span>kcal</span></div><div><b>{p.prot} g</b><span>proteína</span></div><div><b>{dinero(p.precio)}</b><span>precio</span></div></div>
-          {ojo.length > 0 && <p className="ba-ojo">Lleva {ojo.join(', ').toLowerCase()}, que marcaste para evitar.</p>}
-          {p.quitar.length > 0 && (
-            <>
-              <h3 className="ba-sub">¿Le quitamos algo?</h3>
-              <div className="ba-chips">{p.quitar.map((q) => <button key={q} className={quitar.includes(q) ? 'on' : ''} onClick={() => tog(quitar, setQuitar, q)}>Sin {q.toLowerCase()}</button>)}</div>
-            </>
-          )}
-          {extrasOk.length > 0 && (
-            <>
-              <h3 className="ba-sub">Agrégale</h3>
-              <div className="ba-filas">
-                {extrasOk.map((x) => (
-                  <button key={x.id} className={extras.includes(x.id) ? 'on' : ''} onClick={() => tog(extras, setExtras, x.id)}>
-                    <span>{x.nombre}</span><small>+{dinero(x.precio)}</small><i className="ba-palomita">{extras.includes(x.id) && <Check size={13} strokeWidth={3} />}</i>
-                  </button>
-                ))}
-              </div>
-            </>
-          )}
-        </div>
+    <div className={`ba-platillo ${sale ? 'sale' : ''}`} role="dialog" aria-label={p.nombre}>
+      <header className="ba-platillo-nav">
+        <button onClick={atras} aria-label="Regresar"><ArrowLeft size={22} /></button>
+        <button className={fav ? 'fav' : ''} onClick={() => { toque(); setFav(!fav); }} aria-label="Favorito"><Heart size={21} fill={fav ? 'currentColor' : 'none'} /></button>
+      </header>
+      <div className="ba-platillo-cuerpo">
+        <h2>{p.nombre}</h2>
+        <p className="desc">{p.desc}</p>
+        <p className="datos">{datos(p)} · {p.etiquetas.join(' · ')}</p>
+        {ojo.length > 0 && <p className="ba-ojo">Lleva {ojo.join(', ').toLowerCase()}, que marcaste para evitar.</p>}
+
+        {extrasOk.length > 0 && (
+          <div className="ba-tabla" role="group" aria-label="Agrégale">
+            {extrasOk.map((x) => {
+              const on = extras.includes(x.id);
+              return (
+                <div key={x.id} className="fila">
+                  <span className="n">{x.nombre}</span>
+                  <span className="k">+{KCAL_EXTRA[x.id] || 0} kcal</span>
+                  <b>+{dinero(x.precio)}</b>
+                  <button className={on ? 'on' : ''} onClick={() => tog(extras, setExtras, x.id)}>{on ? <><Check size={13} strokeWidth={3} /> Listo</> : 'Agregar'}</button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        <div className="ba-platillo-foto"><Img id={id} /></div>
+
+        {p.quitar.length > 0 && (
+          <div className="ba-quitar">
+            <small>¿Le quitamos algo?</small>
+            <div>{p.quitar.map((q) => <button key={q} className={quitar.includes(q) ? 'on' : ''} onClick={() => tog(quitar, setQuitar, q)}>Sin {q.toLowerCase()}</button>)}</div>
+          </div>
+        )}
+        <input className="ba-nota-cocina" value={nota} onChange={(ev) => setNota(ev.target.value)} placeholder="Algo más para la cocina (opcional)" />
       </div>
-      <div className="ba-hoja-pie">
+      <footer className="ba-platillo-pie">
         <div className="ba-cant"><button onClick={() => setCant(Math.max(1, cant - 1))} aria-label="Menos"><Minus size={15} /></button><b>{cant}</b><button onClick={() => setCant(Math.min(9, cant + 1))} aria-label="Más"><Plus size={15} /></button></div>
-        <button className="ba-btn" onClick={() => agregar({ id, quitar, extras, cant })}>Agregar · {dinero(total)}</button>
-      </div>
-    </Hoja>
+        <button className="ba-btn" onClick={() => agregar({ id, quitar, extras, cant, nota: nota.trim() || undefined })}>Agregar · {dinero(total)}</button>
+      </footer>
+    </div>
   );
 }
 
