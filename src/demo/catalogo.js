@@ -129,6 +129,21 @@ export const SECTORES = [
   },
 
   {
+    id: 'reparto',
+    titulo: 'Distribución y reparto',
+    descripcion: 'Stock de la semana, pedidos que llegan por WhatsApp, repartidores y alertas de clientes que dejaron de pedir.',
+    demos: [
+      {
+        tipo: 'reparto',
+        clave: 'malta',
+        nombre: 'Malta · reparto de cerveza',
+        detalle: 'Distribuidora a restaurantes · Puebla',
+        nota: 'distribuidora de ejemplo',
+      },
+    ],
+  },
+
+  {
     id: 'realestate',
     titulo: 'Real estate',
     descripcion: 'Landing de preventa con recorrido que avanza con el scroll, disponibilidad piso por piso y agenda de visitas. En inglés, para EE.UU.',
@@ -196,6 +211,7 @@ export function destinoDe(demo) {
   if (demo.tipo === 'modelos') return `/modelos/${demo.clave}`;
   if (demo.tipo === 'autocinema') return `/autocinema/${demo.clave}`;
   if (demo.tipo === 'florerias') return `/florerias/${demo.clave}`;
+  if (demo.tipo === 'reparto') return `/reparto/${demo.clave}`;
   if (demo.tipo === 'realestate') return `/realestate/${demo.clave}`;
   if (demo.tipo === 'comida') return `/comida/${demo.clave}`;
   return `/demo/${demo.clave}`;

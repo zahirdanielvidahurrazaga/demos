@@ -30,6 +30,7 @@ const SorteosDemo = lazy(() => import('./demo/sorteos/SorteosDemo'));
 const ModelosDemo = lazy(() => import('./demo/modelos/ModelosDemo'));
 const AutocinemaDemo = lazy(() => import('./demo/autocinema/AutocinemaDemo'));
 const FloreriasDemo = lazy(() => import('./demo/florerias/FloreriasDemo'));
+const RepartoDemo = lazy(() => import('./demo/reparto/RepartoDemo'));
 const ClinicaDemo = lazy(() => import('./demo/clinica/ClinicaDemo'));
 const RealEstateDemo = lazy(() => import('./demo/realestate/RealEstateDemo'));
 const BuenBocadoDemo = lazy(() => import('./demo/bocado/BuenBocadoDemo'));
@@ -79,6 +80,8 @@ export default function AppDemos() {
                 <Route path="/autocinema/:negocio" element={<AutocinemaDemo />} />
                 {/* Florería: también sin base de datos. */}
                 <Route path="/florerias/:negocio" element={<FloreriasDemo />} />
+                {/* Reparto de cerveza a restaurantes: también sin base de datos. */}
+                <Route path="/reparto/:negocio" element={<RepartoDemo />} />
                 {/* Clínica (nutrición, médico, dentista): también sin base de datos. */}
                 <Route path="/clinica/:negocio" element={<ClinicaDemo />} />
                 {/* Real estate (EE.UU., en inglés y sin marca KaiZen): solo scroll, sin base de datos. */}
