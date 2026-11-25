@@ -220,7 +220,7 @@
   .bx-cab nav button { padding: 0 12px; font-size: 13.5px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .bx *, .bx-fondo i { animation: none !important; transition: none !important; }
+  .bx:not(.bx-forzado) *, .bx-fondo i { animation: none !important; transition: none !important; }
   .bx-titulo { opacity: 1; transform: none; }
 }
 
@@ -302,7 +302,7 @@
   .bx-accion .dibujos { grid-template-columns: 1fr; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .bx-sello .giro, .bx-accion .bb-bolsita * { animation: none !important; }
+  .bx:not(.bx-forzado) :is(.bx-sello .giro, .bx-accion .bb-bolsita *) { animation: none !important; }
 }
 
 /* teléfono (19-nov): número de sección pegado al título, nada se sale de lado */

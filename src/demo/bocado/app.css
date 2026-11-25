@@ -276,7 +276,7 @@
 .ba-semana .info { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .ba-semana .info b { font-size: 14.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ba-semana .info span { font-size: 12px; color: var(--s); }
-.ba-semana select { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; }
+.ba-semana button.dia { text-align: left; font: inherit; color: inherit; }
 .ba-semana svg { flex: none; color: var(--s); }
 .ba-semana .dia.est-listo, .ba-semana .dia.est-camino { background: var(--lima); }
 .ba-resumen { margin: 22px 0 14px; padding: 18px 20px; border-radius: 22px; background: var(--verde); color: var(--f); display: grid; gap: 4px; }
@@ -315,7 +315,8 @@
 .ba-aviso div { min-width: 0; }
 .ba-aviso small { display: block; font-size: 11px; color: var(--s); }
 .ba-aviso span:not(.ic) { display: block; font: 600 13.5px/1.3 var(--x); }
-@media (prefers-reduced-motion: reduce) { .ba *, .ba *::before { animation: none !important; transition: none !important; } }
+/* 25-nov: ya NO se apaga todo con "reducir movimiento" (las pantallas entraban de golpe y se sentía trabado); solo lo que se repite sin parar */
+@media (prefers-reduced-motion: reduce) { .ba .rayos, .ba .hojita, .ba-carga .mono :is(.brazo, .mano) { animation: none !important; } }
 
 .ba-hoja-pie .ba-btn { padding: 0 16px; }
 
@@ -755,3 +756,97 @@ img.recorte { object-fit: contain !important; background: none !important; borde
   box-shadow: none !important; background: rgba(48, 64, 28, .06) !important; }
 .ba-horas button:disabled { background: transparent !important; }
 .ba-pedido { box-shadow: var(--raya) !important; }
+
+/* ── carga v3 (25-nov): la bolsita se llena — ingredientes que caen, rebote, % y qué empaca */
+.ba-carga.v3 { position: relative; gap: 0; justify-content: center; }
+.ba-carga.v3 .ba-wm { margin-bottom: 6px; }
+.ba-carga-escena { position: relative; width: 220px; height: 210px; display: grid; place-items: end center; color: var(--lima); }
+.ba-carga-escena .bolsa { position: relative; z-index: 2; transform-origin: 50% 100%; margin-bottom: 8px; }
+.ba-carga-escena .ing { position: absolute; z-index: 1; left: 50%; top: 58px; margin-left: -19px; color: var(--lima); will-change: transform; }
+.ba-carga-escena .sombra { position: absolute; bottom: 2px; left: 50%; width: 96px; height: 10px; margin-left: -48px; border-radius: 50%; background: #0f1a0a; filter: blur(4px); }
+.ba-carga-barra { width: min(240px, 66%); margin-top: 18px; }
+.ba-carga-barra .fila { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-bottom: 9px; color: var(--lima); }
+.ba-carga-barra .fila span { font: 600 13px var(--x); opacity: .9; animation: ba-sube-l .35s ease both; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ba-carga-barra .fila b { font: 900 26px/1 'Outfit', var(--d); letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+.ba-carga-barra .riel { position: relative; height: 6px; border-radius: 6px; background: rgba(220, 231, 190, .2); }
+.ba-carga-barra .riel i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 6px; background: var(--lima); }
+.ba-carga-barra .riel em { position: absolute; top: 50%; width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%; background: var(--verde); box-shadow: inset 0 0 0 2px rgba(220, 231, 190, .45); transition: background .25s, box-shadow .25s, transform .3s cubic-bezier(.3, 1.6, .5, 1); }
+.ba-carga-barra .riel em.si { background: var(--lima); box-shadow: inset 0 0 0 2px var(--lima), 0 0 0 3px var(--verde); transform: scale(1.15); }
+.ba-carga.v3 .lema { margin-top: 22px; }
+@media (prefers-reduced-motion: reduce) {
+  .ba-carga .ba-wm i, .ba-carga .ba-wm span, .ba-carga .lema { opacity: 1 !important; transform: none !important; }
+}
+
+/* ── elegir platillo del día (25-nov): hoja propia, ya no el selector del sistema */
+.ba-elegir { padding: 30px 18px calc(18px + var(--abajo)); }
+.ba-elegir-dia { display: block; font: 700 11.5px var(--x); letter-spacing: .08em; text-transform: uppercase; color: var(--s); }
+.ba-elegir h2 { margin-top: 4px !important; margin-bottom: 14px !important; }
+.ba-elegir-lista { display: grid; gap: 8px; overflow-y: auto; scrollbar-width: none; min-height: 0; padding-bottom: 4px; }
+.ba-elegir-lista::-webkit-scrollbar { display: none; }
+.ba-elegir-lista button { display: flex; align-items: center; gap: 12px; padding: 8px 14px 8px 8px; border-radius: 20px; text-align: left; background: var(--f); box-shadow: inset 0 0 0 1.5px var(--l); transition: box-shadow .2s, background .2s, transform .15s; }
+.ba-elegir-lista button:active { transform: scale(.98); }
+.ba-elegir-lista button.on { box-shadow: inset 0 0 0 1.5px var(--t); background: var(--b); }
+.ba-elegir-lista img { flex: none; width: 52px; height: 52px; border-radius: 14px; object-fit: contain; }
+.ba-elegir-lista .t { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.ba-elegir-lista .t b { font: 700 15px var(--x); color: var(--t); }
+.ba-elegir-lista .t small { font-size: 12px; color: var(--s); }
+
+/* ── Inicio con pedido en curso (25-nov): más aire, secciones con título, tarjeta con el platillo */
+.ba-inicio.con-pedido .arriba { gap: 8px; margin-bottom: 18px; }
+.ba-inicio .ba-bloque { margin: 0 0 24px; }
+.ba-inicio .ba-sub { margin: 0 0 10px 4px; }
+.ba-pedido { padding: 16px 18px 18px; border-radius: 26px; }
+.ba-pedido .medio { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 10px 0 14px; min-height: 64px; }
+.ba-pedido .medio .grande, .ba-pedido .medio .nombre { margin: 0; min-width: 0; }
+.ba-pedido .medio .grande { flex-direction: column; align-items: flex-start; gap: 2px; }
+.ba-pedido .medio .grande b { font-size: 50px; }
+.ba-pedido .medio img { flex: none; width: 76px; height: 64px; object-fit: contain; filter: drop-shadow(0 8px 10px rgba(18, 31, 13, .18)); }
+.ba-pedido .ba-pasos { gap: 8px; }
+.ba-pedido .ba-pasos span { font-size: 11px; margin-top: 7px; }
+
+/* ── "¡Listo!" del registro (25-nov): halo con rayitos, hojitas y regalos como cupones */
+.ba-regalo .centro { gap: 6px; }
+.ba-regalo .halo { position: relative; width: 200px; height: 200px; display: grid; place-items: center; margin-bottom: 6px; }
+.ba-regalo .rayos { position: absolute; inset: 0; width: 100%; height: 100%; stroke: var(--t); stroke-width: 2.2; stroke-linecap: round; animation: ba-gira-lento 18s linear infinite, ba-crece .6s .15s cubic-bezier(.3, 1.5, .5, 1) both; }
+@keyframes ba-gira-lento { to { transform: rotate(360deg); } }
+.ba-regalo .sello { width: 140px; height: 140px; background: var(--lima) !important; box-shadow: inset 0 0 0 1.5px var(--t) !important; }
+.ba-regalo .hojita { position: absolute; top: 20%; left: 50%; width: 12px; height: 7px; border-radius: 12px 0; background: var(--verde); opacity: 0; animation: ba-hojita 2.6s ease-in infinite; }
+.ba-regalo .hojita.h0 { --x: -78px; animation-delay: .3s; } .ba-regalo .hojita.h1 { --x: 70px; animation-delay: .9s; }
+.ba-regalo .hojita.h2 { --x: -40px; animation-delay: 1.5s; } .ba-regalo .hojita.h3 { --x: 88px; animation-delay: 2.1s; } .ba-regalo .hojita.h4 { --x: -92px; animation-delay: 1.2s; }
+@keyframes ba-hojita { 0% { opacity: 0; transform: translate(calc(var(--x) * .4), -20px) rotate(0); } 15% { opacity: 1; } 100% { opacity: 0; transform: translate(var(--x), 150px) rotate(220deg); } }
+.ba-regalo .etq { font: 700 11px var(--x); letter-spacing: .12em; text-transform: uppercase; color: var(--verde); margin-top: 6px; }
+.ba-regalo h1 { margin-top: 2px; }
+.ba-regalo p { margin-bottom: 8px; }
+.ba-regalo .dones { grid-template-columns: 1fr; gap: 10px; margin-top: 10px; }
+.ba-regalo .dones div { position: relative; flex-direction: row; align-items: center; gap: 14px; padding: 14px 16px; text-align: left; border-radius: 20px; background: var(--f) !important; box-shadow: var(--raya) !important; animation: ba-sube-l .5s cubic-bezier(.2, .8, .2, 1) both; }
+.ba-regalo .dones div:nth-child(1) { animation-delay: .35s; } .ba-regalo .dones div:nth-child(2) { animation-delay: .5s; }
+.ba-regalo .dones div::before, .ba-regalo .dones div::after { content: ''; position: absolute; left: 58px; width: 12px; height: 12px; border-radius: 50%; background: var(--f); box-shadow: inset 0 0 0 1.5px var(--t); }
+.ba-regalo .dones div::before { top: -6px; clip-path: inset(50% 0 0 0); } .ba-regalo .dones div::after { bottom: -6px; clip-path: inset(0 0 50% 0); }
+.ba-regalo .dones .ic { flex: none; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: var(--lima); color: var(--t); }
+.ba-regalo .dones .t { display: flex; flex-direction: column; padding-left: 10px; border-left: 1.5px dashed rgba(46, 51, 32, .35); }
+.ba-regalo .dones b { font: 800 17px/1.1 var(--d); letter-spacing: -.02em; color: var(--noche); }
+.ba-regalo .dones small { font-size: 12.5px; color: var(--s); }
+
+/* ── cambio de pestaña (25-nov): la pantalla entra del lado al que vas y el ícono da un saltito */
+.ba-cuerpo.va-der > .ba-pantalla { animation: ba-tab-der .38s cubic-bezier(.2, .8, .2, 1); }
+.ba-cuerpo.va-izq > .ba-pantalla { animation: ba-tab-izq .38s cubic-bezier(.2, .8, .2, 1); }
+@keyframes ba-tab-der { from { opacity: 0; transform: translateX(26px); } }
+@keyframes ba-tab-izq { from { opacity: 0; transform: translateX(-26px); } }
+.ba-tabs button.on svg { animation: ba-tab-salto .42s cubic-bezier(.3, 1.6, .5, 1); }
+@keyframes ba-tab-salto { 0% { transform: scale(.8) translateY(2px); } 60% { transform: scale(1.12) translateY(-2px); } 100% { transform: none; } }
+
+/* ── salida de la carga (25-nov): el verde se cierra en círculo hacia la bolsita y la app aparece debajo */
+.ba-telon { position: absolute; inset: 0; z-index: 100; display: flex; pointer-events: none; animation: ba-telon .65s cubic-bezier(.65, 0, .25, 1) forwards; }
+.ba-telon .ba-carga { flex: 1; }
+.ba-telon .ba-carga * { animation: none !important; }
+@keyframes ba-telon { from { clip-path: circle(120% at 50% 47%); } to { clip-path: circle(0% at 50% 47%); } }
+.ba.saliendo > :not(.ba-telon) { animation: ba-revela .65s cubic-bezier(.2, .8, .2, 1) both; }
+@keyframes ba-revela { from { transform: scale(.94); opacity: .4; } }
+
+/* ── carga: figuras de fondo, onda al atrapar y lema sin letra a mano (25-nov) */
+.ba-carga.v3 { overflow: hidden; }
+.ba-carga-fondo { position: absolute; inset: 0; pointer-events: none; color: var(--lima); }
+.ba-carga-fondo svg { position: absolute; overflow: visible; will-change: transform; }
+.ba-carga.v3 > :not(.ba-carga-fondo) { position: relative; z-index: 1; }
+.ba-carga-escena .onda { position: absolute; z-index: 0; left: 50%; top: 92px; width: 150px; height: 150px; margin: -75px 0 0 -75px; border-radius: 50%; box-shadow: inset 0 0 0 2px var(--lima); }
+.ba-carga.v3 .lema { font: 600 12px var(--x) !important; letter-spacing: .16em; text-transform: uppercase; color: var(--lima) !important; opacity: .75 !important; }

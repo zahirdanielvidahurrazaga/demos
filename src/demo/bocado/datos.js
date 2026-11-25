@@ -173,20 +173,21 @@ export function sembrar() {
   p.estado = 'recogido';
   return { dia: hoyISO(), pedidos: [p], plan: null, puntos: 340, carrito: [], cupones: [] };
 }
-export function leer() {
+// `clave`: la app del recorrido de la Expo guarda APARTE (sufijo _expo) para no pisar la de "Pruébala tú".
+export function leer(clave = CLAVE) {
   try {
-    const e = JSON.parse(localStorage.getItem(CLAVE));
+    const e = JSON.parse(localStorage.getItem(clave));
     if (e && e.dia === hoyISO()) return e;
   } catch { /* sin almacenamiento: se siembra */ }
   return sembrar();
 }
 export const PERFIL_VACIO = { listo: false, nombre: '', correo: '', telefono: '', objetivo: 'Comer más sano', evita: [], modo: 'recoger', direccion: DIRECCION_DEMO, avisos: false, miembro: false, desde: null };
-export function leerPerfil() {
-  try { return { ...PERFIL_VACIO, ...JSON.parse(localStorage.getItem(CLAVE_PERFIL)) }; } catch { return { ...PERFIL_VACIO }; }
+export function leerPerfil(clave = CLAVE_PERFIL) {
+  try { return { ...PERFIL_VACIO, ...JSON.parse(localStorage.getItem(clave)) }; } catch { return { ...PERFIL_VACIO }; }
 }
-export function guardarPerfil(p) {
-  try { localStorage.setItem(CLAVE_PERFIL, JSON.stringify(p)); } catch { /* modo privado */ }
+export function guardarPerfil(p, clave = CLAVE_PERFIL) {
+  try { localStorage.setItem(clave, JSON.stringify(p)); } catch { /* modo privado */ }
 }
-export function guardar(e) {
-  try { localStorage.setItem(CLAVE, JSON.stringify(e)); } catch { /* modo privado */ }
+export function guardar(e, clave = CLAVE) {
+  try { localStorage.setItem(clave, JSON.stringify(e)); } catch { /* modo privado */ }
 }

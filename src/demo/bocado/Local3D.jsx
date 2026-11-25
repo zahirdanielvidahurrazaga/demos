@@ -191,17 +191,22 @@ function Planta({ pos, esc = 1 }) {
 }
 
 // Cámara que vuela a la zona elegida; si la persona arrastra, manda ella.
-function Camara({ zona, controles }) {
+function Camara({ zona, controles, fijo }) {
   const { camera, gl } = useThree();
   const vuela = useRef(true);
   // En pantalla vertical (teléfono) la cámara se aleja para que quepa lo mismo de ancho.
   const { size } = useThree();
-  const lejos = Math.min(1.75, Math.max(1, 1.2 / (size.width / size.height)));
+  // (25-nov) tope 1.75 → 2.5: en el recorrido el local ocupa TODO el celular a lo alto y las zonas se veían muy de cerca
+  const lejos = Math.min(2.5, Math.max(1, 1.15 / (size.width / size.height)));
+  // En vertical, las zonas con `movil` usan su propio ángulo (en diagonal: la pared se ve en perspectiva y cabe).
+  const vertical = size.width / size.height < 0.8;
   const meta = useMemo(() => {
-    const mira = new THREE.Vector3(...zona.mira);
-    const pos = new THREE.Vector3(...zona.pos).sub(mira).multiplyScalar(lejos).add(mira);
+    const m = vertical && zona.movil ? zona.movil : null;
+    const mira = new THREE.Vector3(...(m?.mira || zona.mira));
+    const k = m ? (m.lejos ?? 1) : lejos;
+    const pos = new THREE.Vector3(...(m?.pos || zona.pos)).sub(mira).multiplyScalar(k).add(mira);
     return { pos, mira };
-  }, [zona, lejos]);
+  }, [zona, lejos, vertical]);
   useEffect(() => { vuela.current = true; }, [zona]);
   useEffect(() => {
     const c = new OrbitControls(camera, gl.domElement);
@@ -209,6 +214,8 @@ function Camara({ zona, controles }) {
     c.minDistance = 2.5; c.maxDistance = 30; c.maxPolarAngle = Math.PI * 0.49;
     c.target.set(...zona.mira);
     c.addEventListener('start', () => { vuela.current = false; });
+    // fijo = la cámara la manda el scroll (recorrido de la Expo): sin arrastre, el dedo baja la página
+    if (fijo) { c.enabled = false; gl.domElement.style.touchAction = 'pan-y'; }
     controles.current = c;
     return () => c.dispose();
   }, [camera, gl]);   // eslint-disable-line react-hooks/exhaustive-deps
@@ -365,7 +372,7 @@ function Escena({ zona, texturas }) {
   );
 }
 
-export default function Local3D({ zona }) {
+export default function Local3D({ zona, fijo = false, className = 'bx-lienzo' }) {
   const controles = useRef(null);
   const [texturas, setTexturas] = useState(null);
   const caja = useRef(null);
@@ -394,10 +401,10 @@ export default function Local3D({ zona }) {
   }, []);
 
   return (
-    <div ref={caja} className="bx-lienzo">
+    <div ref={caja} className={className}>
       <Canvas shadows dpr={[1, 2]} frameloop={visible ? 'always' : 'never'} gl={{ antialias: true }}
         camera={{ position: zona.pos, fov: 38, near: 0.1, far: 200 }}>
-        <Camara zona={zona} controles={controles} />
+        <Camara zona={zona} controles={controles} fijo={fijo} />
         <Escena zona={zona} texturas={texturas} />
       </Canvas>
     </div>

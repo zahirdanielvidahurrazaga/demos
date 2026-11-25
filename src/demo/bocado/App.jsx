@@ -32,10 +32,13 @@ import './app.css';
 // y agregar ya no lanza un aviso encima: la barra da un golpecito.
 // ─────────────────────────────────────────────────────────────────────────────
 
-function useEstado() {
-  const [e, setE] = useState(leer);
+// Dónde guarda esta app. La del recorrido de la Expo usa claves APARTE (25-nov): sus
+// pasos automáticos creaban un pedido "para recoger" y reiniciaban el perfil, y eso
+// pisaba lo que la persona eligió en "Pruébala tú" (p. ej. a domicilio).
+function useEstado(clave) {
+  const [e, setE] = useState(() => leer(clave));
   useEffect(() => {
-    const f = (ev) => { if (ev.key === CLAVE) setE(leer()); };
+    const f = (ev) => { if (ev.key === clave) setE(leer(clave)); };
     window.addEventListener('storage', f);
     return () => window.removeEventListener('storage', f);
   }, []);
@@ -44,23 +47,23 @@ function useEstado() {
       const copia = structuredClone(prev);
       if (!copia.cupones) copia.cupones = [];
       const sig = fn(copia) || copia;
-      guardar(sig);
+      guardar(sig, clave);
       return sig;
     });
-  }, []);
+  }, [clave]);
   return [e, cambiar];
 }
 
-function usePerfil() {
-  const [p, setP] = useState(leerPerfil);
+function usePerfil(clave) {
+  const [p, setP] = useState(() => leerPerfil(clave));
   useEffect(() => {
-    const f = (ev) => { if (ev.key === CLAVE_PERFIL) setP(leerPerfil()); };
+    const f = (ev) => { if (ev.key === clave) setP(leerPerfil(clave)); };
     window.addEventListener('storage', f);
     return () => window.removeEventListener('storage', f);
   }, []);
   const cambiar = useCallback((cambios) => {
-    setP((prev) => { const sig = { ...prev, ...cambios }; guardarPerfil(sig); return sig; });
-  }, []);
+    setP((prev) => { const sig = { ...prev, ...cambios }; guardarPerfil(sig, clave); return sig; });
+  }, [clave]);
   return [p, cambiar];
 }
 
@@ -96,12 +99,22 @@ function useFiltroLiquido() {
   }, []);
 }
 
-export default function App({ marco = false, comando = null }) {
+// `aparte`: la app del recorrido de la Expo (guarda con sufijo _expo).
+export default function App({ marco = false, comando = null, aparte = false }) {
+  const claves = useMemo(() => (aparte ? { e: `${CLAVE}_expo`, perfil: `${CLAVE_PERFIL}_expo` } : { e: CLAVE, perfil: CLAVE_PERFIL }), [aparte]);
   useFiltroLiquido();
-  const [e, cambiar] = useEstado();
-  const [perfil, cambiarPerfil] = usePerfil();
+  const [e, cambiar] = useEstado(claves.e);
+  const [perfil, cambiarPerfil] = usePerfil(claves.perfil);
+  // carga: true (cargando) → 'sale' (el telón se cierra encima de la app, .65 s) → false
   const [carga, setCarga] = useState(true);
-  const [tab, setTab] = useState('inicio');
+  const terminaCarga = useCallback(() => { setCarga('sale'); setTimeout(() => setCarga(false), 650); }, []);
+  // Al cambiar de pestaña la pantalla entra del lado al que vas (como en iOS): `va`.
+  const [{ tab, va }, setNav] = useState({ tab: 'inicio', va: 'der' });
+  const setTab = useCallback((t) => setNav((n) => {
+    if (t === n.tab) return n;
+    const de = TABS.findIndex(([id]) => id === n.tab), a = TABS.findIndex(([id]) => id === t);
+    return { tab: t, va: a >= de ? 'der' : 'izq' };
+  }), []);
   const [menuCat, setMenuCat] = useState('todo');
   const [ver, setVer] = useState(null);
   const [carrito, setCarrito] = useState(null);       // null | { modo }
@@ -112,7 +125,7 @@ export default function App({ marco = false, comando = null }) {
   const cuerpo = useRef(null);
   const [arriba, setArriba] = useState(true);          // título grande (true) o compacto al bajar
 
-  useEffect(() => { const t = setTimeout(() => setCarga(false), 3200); return () => clearTimeout(t); }, []);
+  useEffect(() => { const t = setTimeout(terminaCarga, 3200); return () => clearTimeout(t); }, [terminaCarga]);
   const avisar = useCallback((txt, icono = 'bocado') => setAviso({ txt, icono, k: Date.now() }), []);
   useEffect(() => {
     if (!aviso) return undefined;
@@ -156,7 +169,7 @@ export default function App({ marco = false, comando = null }) {
     };
     const conCarrito = () => { if (!e.carrito.length) cambiar((s) => { s.carrito.push({ id: 'mediterraneo', quitar: ['Aceitunas'], extras: ['aguacate'], cant: 1 }); }); };
     const t = comando.tipo;
-    if (t === 'bienvenida') { cambiarPerfil({ listo: false }); setCarga(true); setTimeout(() => setCarga(false), 3200); return; }
+    if (t === 'bienvenida') { cambiarPerfil({ listo: false }); setCarga(true); setTimeout(terminaCarga, 3200); return; }
     setCarga(false);
     if (!perfil.listo) cambiarPerfil({ ...PERFIL_VACIO, nombre: 'Ana Ramírez', correo: 'ana.ramirez@correo.com', telefono: '222 418 2290', listo: true, desde: hoyISO() });
     if (t === 'inicio') setTab('inicio');
@@ -211,8 +224,9 @@ export default function App({ marco = false, comando = null }) {
   const carritoN = e.carrito.reduce((s, l) => s + (l.cant || 1), 0);
 
   const conBarra = carritoN > 0 && ['inicio', 'menu'].includes(tab);
-  const raiz = `ba ${marco ? 'en-marco' : ''} ${conBarra ? 'con-carrito' : ''}`;
-  if (carga) return <div className={raiz}><Carga /></div>;
+  const raiz = `ba ${marco ? 'en-marco' : ''} ${conBarra ? 'con-carrito' : ''} ${carga === 'sale' ? 'saliendo' : ''}`;
+  if (carga === true) return <div className={raiz}><Carga /></div>;
+  const telon = carga === 'sale' ? <div className="ba-telon" aria-hidden="true"><Carga fin /></div> : null;
   if (!perfil.listo) {
     return (
       <div className={raiz}>
@@ -221,6 +235,7 @@ export default function App({ marco = false, comando = null }) {
           cambiar((s) => { s.puntos += 100; s.cupones.push({ k: Date.now(), id: 'envio', nombre: 'Envío gratis', regalo: true }); });
           setTab('inicio');
         }} />
+        {telon}
       </div>
     );
   }
@@ -228,12 +243,12 @@ export default function App({ marco = false, comando = null }) {
   return (
     <div className={raiz}>
       <div className={`ba-nav ${arriba ? '' : 'visible'}`} aria-hidden={arriba}><b>{TITULOS[tab]}</b></div>
-      <div className="ba-cuerpo" ref={cuerpo} onScroll={(ev) => { const a = ev.currentTarget.scrollTop < 44; if (a !== arriba) setArriba(a); }}>
+      <div className={`ba-cuerpo va-${va}`} ref={cuerpo} onScroll={(ev) => { const a = ev.currentTarget.scrollTop < 44; if (a !== arriba) setArriba(a); }}>
         {tab === 'inicio' && <Inicio perfil={perfil} puntos={e.puntos} vivos={vivos} abrir={setVer} abrirPedido={setPedidoAbierto} irA={setTab} verCat={(c) => { setMenuCat(c); setTab('menu'); }} />}
         {tab === 'menu' && <Menu key={menuCat} catInicial={menuCat} abrir={setVer} agregar={agregarRapido} perfil={perfil} />}
         {tab === 'semana' && <Semana e={e} perfil={perfil} cambiar={cambiar} avisar={avisar} abrirPedido={setPedidoAbierto} />}
         {tab === 'pedidos' && <Pedidos e={e} vivos={vivos} abrirPedido={setPedidoAbierto} irA={setTab} repetir={repetir} />}
-        {tab === 'yo' && <Yo e={e} perfil={perfil} cambiar={cambiar} cambiarPerfil={cambiarPerfil} avisar={avisar} abrirMembresia={() => setMembresia(true)} />}
+        {tab === 'yo' && <Yo claves={claves} e={e} perfil={perfil} cambiar={cambiar} cambiarPerfil={cambiarPerfil} avisar={avisar} abrirMembresia={() => setMembresia(true)} />}
       </div>
 
       {conBarra && !carrito && !ver && (
@@ -247,6 +262,7 @@ export default function App({ marco = false, comando = null }) {
       {carrito && <HojaCarrito e={e} perfil={perfil} modoInicial={carrito.modo} cambiar={cambiar} cerrar={() => setCarrito(null)} confirmar={confirmar} />}
       {pedidoAbierto && <HojaPedido p={e.pedidos.find((p) => p.id === pedidoAbierto)} perfil={perfil} cerrar={() => setPedidoAbierto(null)} cambiar={cambiar} avisar={avisar} />}
 
+      {telon}
       {membresia && <HojaMembresia cerrar={() => setMembresia(false)} unirme={() => { cambiarPerfil({ miembro: true }); setMembresia(false); avisar(`Ya eres parte de ${MEMBRESIA.nombre}`); }} />}
 
       {aviso && (
@@ -279,15 +295,101 @@ function Barra({ tab, irA }) {
 }
 
 // ── CARGA: la bolsita cae, le brota la hoja, saluda y entra el nombre ──────
-function Carga() {
+// Barra con % movida por JS (25-nov): con "reducir movimiento" las animaciones de
+// CSS no corren y la pantalla parecía trabada; la barra siempre avanza.
+// v3 (25-nov, Zahir: "mejora mucho más la pantalla de carga"): LA BOLSITA SE LLENA.
+// Caen cinco ingredientes dibujados en línea, ella los atrapa con un rebote, abajo
+// dice qué está empacando y el %; al 100 da un brinco. Todo con rAF (no CSS).
+const DURA_CARGA = 3100;
+const LINEA = { fill: 'none', stroke: 'currentColor', strokeWidth: 2.2, strokeLinecap: 'round', strokeLinejoin: 'round' };
+const INGREDIENTES = [
+  { n: 'Lechuga fresca', x: -46, giro: -40, svg: <><path d="M6 30C6 14 18 4 34 4c0 16-10 28-28 26z" {...LINEA} /><path d="M8 28 28 10M15 21l-2-7M21 16l5 1" {...LINEA} /></> },
+  { n: 'Jitomate', x: 40, giro: 50, svg: <><circle cx="19" cy="19" r="13" {...LINEA} /><circle cx="19" cy="19" r="8" {...LINEA} /><path d="M19 11v16M11 19h16" {...LINEA} /></> },
+  { n: 'Aguacate', x: -30, giro: 30, svg: <><path d="M19 4c6 0 9 8 11 14 3 9-2 16-11 16S5 27 8 18c2-6 5-14 11-14z" {...LINEA} /><circle cx="19" cy="23" r="5.5" {...LINEA} /></> },
+  { n: 'Limón', x: 46, giro: -60, svg: <><circle cx="19" cy="19" r="13" {...LINEA} /><path d="M19 9v20M10.5 14l17 10M10.5 24l17-10" {...LINEA} /></> },
+  { n: 'Garbanzo', x: -8, giro: 90, svg: <><circle cx="13" cy="21" r="7" {...LINEA} /><circle cx="25" cy="15" r="6" {...LINEA} /><circle cx="25" cy="27" r="5" {...LINEA} /></> },
+];
+const CAE = 0.15; // cuánto (de 0 a 1) dura la caída de cada uno
+// Fondo (25-nov, "animaciones de elementos gráficos"): figuras en línea que flotan y giran
+// despacio alrededor de la bolsa. [x %, y %, tamaño, figura, fase]
+const FIGURAS = [
+  [10, 14, 30, 'hoja', 0], [84, 10, 22, 'aro', 1.3], [90, 36, 18, 'cruz', 2.1], [6, 44, 16, 'punto', 0.6],
+  [14, 74, 26, 'garabato', 2.8], [86, 70, 28, 'hoja', 1.9], [74, 88, 16, 'cruz', 0.9], [22, 92, 20, 'aro', 3.4],
+  [50, 6, 14, 'punto', 1.1], [94, 54, 14, 'punto', 2.5],
+];
+const FIGURA = {
+  hoja: <><path d="M5 27C5 13 15 4 29 4c0 14-9 25-24 23z" {...LINEA} /><path d="M7 25 24 9" {...LINEA} /></>,
+  aro: <circle cx="16" cy="16" r="11" {...LINEA} />,
+  cruz: <path d="M16 6v20M6 16h20" {...LINEA} />,
+  punto: <><circle cx="10" cy="16" r="3" fill="currentColor" /><circle cx="22" cy="16" r="3" fill="currentColor" /></>,
+  garabato: <path d="M3 18c4-8 8 8 12 0s8 8 12 0" {...LINEA} />,
+};
+function Carga({ fin = false }) {
+  const [k, setK] = useState(fin ? 1 : 0); // avance de 0 a 1 (`fin` = ya llena, para el telón de salida)
+  useEffect(() => {
+    if (fin) return undefined;
+    const t0 = performance.now(); let raf = 0;
+    const paso = (ahora) => {
+      const v = Math.min(1, (ahora - t0) / DURA_CARGA);
+      setK(v);
+      if (v < 1) raf = requestAnimationFrame(paso);
+    };
+    raf = requestAnimationFrame(paso);
+    return () => cancelAnimationFrame(raf);
+  }, [fin]);
+  const pct = Math.round(100 * (1 - (1 - k) ** 1.6));
+  const inicio = (i) => 0.1 + i * 0.15; // cada ingrediente empieza a caer aquí
+  // ¿cuál cayó al último? → su nombre abajo y el rebote de la bolsa
+  const caidos = INGREDIENTES.filter((_, i) => k >= inicio(i) + CAE).length;
+  const desde = caidos ? k - (inicio(caidos - 1) + CAE) : 1;
+  const rebote = caidos && desde < 0.09 ? Math.sin((desde / 0.09) * Math.PI) : 0;
+  const brinco = k > 0.93 ? Math.sin(Math.min(1, (k - 0.93) / 0.07) * Math.PI) : 0;
+  const texto = k >= 1 ? '¡Listo! Buen provecho' : caidos ? `Empacando ${INGREDIENTES[caidos - 1].n.toLowerCase()}` : 'Preparando tu bolsa';
+  const t = k * DURA_CARGA / 1000; // segundos
+  const onda = caidos && desde < 0.2 ? desde / 0.2 : null; // aro que sale de la bolsa al atrapar
   return (
-    <div className="ba-carga">
+    <div className="ba-carga v3">
+      <div className="ba-carga-fondo" aria-hidden="true">
+        {FIGURAS.map(([x, y, tam, fig, fase], i) => {
+          const entra = Math.min(1, Math.max(0, (t - i * 0.08) / 0.5));
+          return (
+            <svg key={i} viewBox="0 0 32 32" width={tam} height={tam}
+              style={{ left: `${x}%`, top: `${y}%`, opacity: entra * 0.42, transform: `translate(-50%, ${Math.sin(t * 1.4 + fase) * 7}px) rotate(${(i % 2 ? 1 : -1) * t * 22 + fase * 40}deg) scale(${0.6 + entra * 0.4})` }}>
+              {FIGURA[fig]}
+            </svg>
+          );
+        })}
+      </div>
       <div className="ba-wm">
         <span>el buen</span>
         {'bocad'.split('').map((l, i) => <i key={i} style={{ animationDelay: `${0.15 + i * 0.06}s` }}>{l}</i>)}
         <i style={{ animationDelay: '.45s' }}><OSonrisa /></i>
       </div>
-      <Bolsita size={176} tinta="kiwi" className="mono" />
+      <div className="ba-carga-escena" aria-hidden="true">
+        {onda != null && <i className="onda" style={{ transform: `scale(${0.4 + onda * 1.2})`, opacity: (1 - onda) * 0.55 }} />}
+        {INGREDIENTES.map((g, i) => {
+          const f = (k - inicio(i)) / CAE; // 0 arriba → 1 dentro de la bolsa
+          if (f <= 0 || f >= 1.05) return null;
+          const c = Math.min(1, f) ** 2; // cae acelerando
+          return (
+            <svg key={g.n} className="ing" viewBox="0 0 38 38" width="38" height="38"
+              style={{ transform: `translate(${g.x * (1 - c)}px, ${-112 + c * 112}px) rotate(${g.giro * (1 - c)}deg) scale(${1 - c * 0.45})`, opacity: f > 0.85 ? Math.max(0, 1 - (f - 0.85) / 0.2) : Math.min(1, f * 3) }}>
+              {g.svg}
+            </svg>
+          );
+        })}
+        <div className="bolsa" style={{ transform: `translateY(${-brinco * 18}px) scale(${1 + rebote * 0.05}, ${1 - rebote * 0.07})` }}>
+          <Bolsita size={150} tinta="kiwi" className="mono" />
+        </div>
+        <i className="sombra" style={{ transform: `scaleX(${1 - brinco * 0.3})`, opacity: 0.35 - brinco * 0.15 }} />
+      </div>
+      <div className="ba-carga-barra" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label="Cargando">
+        <div className="fila"><span key={texto}>{texto}</span><b>{pct}%</b></div>
+        <div className="riel">
+          <i style={{ width: `${pct}%` }} />
+          {INGREDIENTES.map((g, i) => <em key={g.n} className={i < caidos ? 'si' : ''} style={{ left: `${(1 - (1 - inicio(i) - CAE) ** 1.6) * 100}%` }} />)}
+        </div>
+      </div>
       <p className="lema">come rico, a tu hora</p>
     </div>
   );
@@ -356,13 +458,19 @@ function Registro({ perfil, terminar }) {
   if (paso === 7) {
     return (
       <div className="ba-paso ba-regalo">
+        {/* 25-nov: más festiva — halo con rayitos que gira, hojitas que caen y los regalos como cupones */}
         <div className="centro">
-          <div className="sello"><Bolsita size={96} /></div>
-          <h1>Listo, {p.nombre.split(' ')[0]}.</h1>
-          <p>Tu cuenta está creada. Para empezar, te regalamos:</p>
+          <div className="halo" aria-hidden="true">
+            <svg className="rayos" viewBox="0 0 200 200">{Array.from({ length: 16 }, (_, i) => <line key={i} x1="100" y1="14" x2="100" y2={i % 2 ? 26 : 32} transform={`rotate(${i * 22.5} 100 100)`} />)}</svg>
+            {[0, 1, 2, 3, 4].map((i) => <i key={i} className={`hojita h${i}`} />)}
+            <div className="sello"><Bolsita size={104} /></div>
+          </div>
+          <small className="etq">Regalo de bienvenida</small>
+          <h1>¡Listo, {p.nombre.split(' ')[0]}!</h1>
+          <p>Tu cuenta ya está creada. Para tu primera vez:</p>
           <div className="dones">
-            <div><b>100</b><span>bocados</span></div>
-            <div><b>Envío</b><span>gratis en tu primer pedido</span></div>
+            <div><span className="ic"><Gift size={18} /></span><span className="t"><b>100 bocados</b><small>Ya están en tu cuenta</small></span></div>
+            <div><span className="ic"><Bike size={18} /></span><span className="t"><b>Envío gratis</b><small>En tu primer pedido a domicilio</small></span></div>
           </div>
         </div>
         <div className="ba-paso-pie"><button className="ba-btn ancho" onClick={() => terminar(p)}>Empezar a pedir</button></div>
@@ -532,14 +640,15 @@ function Inicio({ perfil, puntos, vivos, abrir, abrirPedido, irA, verCat }) {
   const proximo = vivos[0];
   const nombre = perfil.nombre.split(' ')[0] || 'tú';
   return (
-    <div className="ba-pantalla ba-inicio">
+    <div className={`ba-pantalla ba-inicio ${proximo ? 'con-pedido' : ''}`}>
       <header className="arriba">
-        <Sello size={92} className="ba-sello" />
+        <Sello size={proximo ? 70 : 92} className="ba-sello" />
         <p>Hola, {nombre}. <button className="ba-puntos-chip" onClick={() => irA('yo')}>{puntos} bocados</button></p>
       </header>
 
-      {proximo && <div className="ba-bloque"><TarjetaPedido p={proximo} onClick={() => abrirPedido(proximo.id)} /></div>}
+      {proximo && <div className="ba-bloque"><h3 className="ba-sub">Tu pedido</h3><TarjetaPedido p={proximo} onClick={() => abrirPedido(proximo.id)} /></div>}
 
+      {proximo && <h3 className="ba-sub">Explora</h3>}
       <div className="ba-explora">
         <button className="con-foto" onClick={() => abrir(del.id)}>
           <span><b>El del día</b><small>{del.nombre} · {dinero(del.precio)}</small></span>
@@ -573,11 +682,14 @@ function TarjetaPedido({ p, onClick }) {
         <span>{p.modo === 'domicilio' ? <Bike size={14} /> : <Store size={14} />} {p.dia === hoyISO() ? 'Hoy' : `${diaLargo(p.dia)} ${numDia(p.dia)}`} · {hhmm(p.hora)}</span>
         <span className="estado">{ESTADOS[p.estado].txt}</span>
       </div>
-      {p.estado === 'listo'
-        ? <div className="grande"><small>Tu casilla</small><b>{p.casilla}</b></div>
-        : p.estado === 'camino'
-          ? <div className="grande"><small>Llega en</small><b>12<i> min</i></b></div>
-          : <div className="nombre">{p.lineas.map((l) => platillo(l.id).nombre).join(' + ')}</div>}
+      <div className="medio">
+        {p.estado === 'listo'
+          ? <div className="grande"><small>Tu casilla</small><b>{p.casilla}</b></div>
+          : p.estado === 'camino'
+            ? <div className="grande"><small>Llega en</small><b>12<i> min</i></b></div>
+            : <div className="nombre">{p.lineas.map((l) => platillo(l.id).nombre).join(' + ')}</div>}
+        <Img id={p.lineas[0].id} />
+      </div>
       <div className="ba-pasos">{pasos.map((t, i) => <div key={t} className={i <= paso ? 'on' : ''}><i /><span>{t}</span></div>)}</div>
     </button>
   );
@@ -878,6 +990,7 @@ function Semana({ e, perfil, cambiar, avisar, abrirPedido }) {
   const plan = PLANES.find((x) => x.id === 'semana');
   const [eleccion, setEleccion] = useState(() => Object.fromEntries(dias.map((d) => [d, delDia(d)])));
   const [hora, setHora] = useState(13 * 60);
+  const [cambiando, setCambiando] = useState(null); // día cuyo platillo se está eligiendo
   const base = dias.reduce((s, d) => s + totalLinea({ id: eleccion[d], extras: ['agua'], cant: 1 }), 0);
   const normal = base + (perfil.modo === 'domicilio' ? NEGOCIO.envio * 5 : 0);
   const delPlan = e.pedidos.filter((p) => p.plan && p.estado !== 'cancelado').sort((a, b) => a.dia.localeCompare(b.dia));
@@ -914,17 +1027,33 @@ function Semana({ e, perfil, cambiar, avisar, abrirPedido }) {
       <header className="ba-cab"><div><small>Plan semana</small><h1>Arma tu semana</h1></div></header>
       <div className="ba-semana">
         {dias.map((d) => (
-          <label key={d} className="dia">
+          <button key={d} className="dia" onClick={() => setCambiando(d)} aria-label={`Cambiar el platillo del ${diaLargo(d)}`}>
             <div className="d"><small>{diaCorto(d)}</small><b>{numDia(d)}</b></div>
             <Img id={eleccion[d]} />
             <div className="info"><b>{platillo(eleccion[d]).nombre}</b><span>Cambiar</span></div>
-            <select value={eleccion[d]} onChange={(ev) => setEleccion({ ...eleccion, [d]: ev.target.value })} aria-label={`Platillo del ${diaLargo(d)}`}>
-              {PLATILLOS.filter((p) => p.cat !== 'bebidas').map((p) => <option key={p.id} value={p.id}>{p.nombre}</option>)}
-            </select>
             <ChevronRight size={16} />
-          </label>
+          </button>
         ))}
       </div>
+      {/* 25-nov: hoja PROPIA de la app (antes un <select> que abría el selector del sistema) */}
+      {cambiando && (
+        <Hoja cerrar={() => setCambiando(null)} clase="ba-elegir">
+          <small className="ba-elegir-dia">{diaLargo(cambiando)}</small>
+          <h2>¿Qué se te antoja?</h2>
+          <div className="ba-elegir-lista">
+            {PLATILLOS.filter((p) => p.cat !== 'bebidas').map((p) => {
+              const on = eleccion[cambiando] === p.id;
+              return (
+                <button key={p.id} className={on ? 'on' : ''} onClick={() => { setEleccion({ ...eleccion, [cambiando]: p.id }); toque(); setTimeout(() => setCambiando(null), 180); }}>
+                  <Img id={p.id} />
+                  <span className="t"><b>{p.nombre}</b><small>{p.kcal} kcal · {p.prot} g proteína</small></span>
+                  <i className="ba-palomita">{on && <Check size={13} strokeWidth={3} />}</i>
+                </button>
+              );
+            })}
+          </div>
+        </Hoja>
+      )}
       <h3 className="ba-sub">{perfil.modo === 'domicilio' ? 'Entregar a las' : 'Paso a las'}</h3>
       <div className="ba-horas cinco">{[12.5, 13, 13.5, 14, 14.5].map((h) => <button key={h} className={hora === h * 60 ? 'on' : ''} onClick={() => setHora(h * 60)}><span>{hhmm(h * 60)}</span></button>)}</div>
       <div className="ba-resumen">
@@ -971,7 +1100,7 @@ function Pedidos({ e, vivos, abrirPedido, irA, repetir }) {
 }
 
 // ── YO ──────────────────────────────────────────────────────────────────────
-function Yo({ e, perfil, cambiar, cambiarPerfil, avisar, abrirMembresia }) {
+function Yo({ e, perfil, cambiar, cambiarPerfil, avisar, abrirMembresia, claves }) {
   const siguiente = RECOMPENSAS.find((r) => r.costo > e.puntos) || RECOMPENSAS[RECOMPENSAS.length - 1];
   const canjear = (r) => {
     if (e.puntos < r.costo) return;
@@ -979,9 +1108,9 @@ function Yo({ e, perfil, cambiar, cambiarPerfil, avisar, abrirMembresia }) {
     avisar(`${r.nombre}: lista para tu próximo pedido`);
   };
   const reiniciar = () => {
-    guardar(sembrar()); guardarPerfil({ ...PERFIL_VACIO });
-    window.dispatchEvent(new StorageEvent('storage', { key: CLAVE }));
-    window.dispatchEvent(new StorageEvent('storage', { key: CLAVE_PERFIL }));
+    guardar(sembrar(), claves.e); guardarPerfil({ ...PERFIL_VACIO }, claves.perfil);
+    window.dispatchEvent(new StorageEvent('storage', { key: claves.e }));
+    window.dispatchEvent(new StorageEvent('storage', { key: claves.perfil }));
   };
   const nombre = perfil.nombre || 'Ana';
   const Fila = ({ icono: Ic, t, v, onClick }) => (

@@ -42,8 +42,8 @@ function cajaTrapecio(w, h, d, r, angosta = 0.06) {
   return g;
 }
 
-export function montarBolsita(caja, { girar = true, fondoTransparente = true } = {}) {
-  const lento = quieto();
+export function montarBolsita(caja, { girar = true, fondoTransparente = true, orbitar = true, movimiento = false } = {}) {
+  const lento = !movimiento && quieto();
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: fondoTransparente, preserveDrawingBuffer: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -64,7 +64,9 @@ export function montarBolsita(caja, { girar = true, fondoTransparente = true } =
   const camera = new THREE.PerspectiveCamera(30, 1, 0.1, 50);
   camera.position.set(0.9, 1.9, 8.6);
 
+  // orbitar:false = sin arrastre (la anfitriona flota encima de la página y no debe robarse el scroll del dedo)
   const controls = new OrbitControls(camera, renderer.domElement);
+  if (!orbitar) { controls.enabled = false; renderer.domElement.style.touchAction = 'pan-y'; }
   controls.target.set(0, 1.35, 0);
   controls.enableDamping = true;
   controls.enablePan = false;
@@ -227,12 +229,30 @@ export function montarBolsita(caja, { girar = true, fondoTransparente = true } =
   // ── interacción: mirar al cursor y brincar al tocarla
   const ray = new THREE.Raycaster(); const ptr = new THREE.Vector2();
   let salto = -1; // segundos desde que la tocaste (−1 = nada)
+  let pose = 'saluda'; let brazoZ = 0; // 'saluda' (mueve la mano) · 'senala' (brazo extendido) · 'quieta'
+  let miradaFija = null;
   const alMover = (ev) => {
+    if (miradaFija) return;
     const r = caja.getBoundingClientRect();
     mirada.x = THREE.MathUtils.clamp(((ev.clientX - r.left) / r.width - 0.5) * 2.2, -1, 1);
     mirada.y = THREE.MathUtils.clamp(((ev.clientY - r.top) / r.height - 0.42) * 2.2, -1, 1);
   };
   let abajo = null;
+  // Sin OrbitControls (orbitar:false) se gira arrastrando DE LADO: con touch-action pan-y
+  // el navegador se queda el arrastre vertical (scroll) y nos da el horizontal.
+  let giroU = 0, velU = 0, arrastra = false, ultX = 0;
+  const alArrastrar = (ev) => {
+    if (!arrastra) return;
+    const dx = ev.clientX - ultX; ultX = ev.clientX;
+    velU = dx * 0.012; giroU += velU;
+  };
+  const finArrastre = () => { arrastra = false; };
+  if (!orbitar) {
+    renderer.domElement.addEventListener('pointerdown', (ev) => { arrastra = true; ultX = ev.clientX; velU = 0; });
+    window.addEventListener('pointermove', alArrastrar, { passive: true });
+    window.addEventListener('pointerup', finArrastre);
+    window.addEventListener('pointercancel', finArrastre);
+  }
   const alBajar = (ev) => { abajo = [ev.clientX, ev.clientY]; };
   const alSoltar = (ev) => {
     if (!abajo || Math.hypot(ev.clientX - abajo[0], ev.clientY - abajo[1]) > 6) return;
@@ -273,9 +293,15 @@ export function montarBolsita(caja, { girar = true, fondoTransparente = true } =
     cuerpo.scale.set(1 + (1 - brinco) * 0.012, 1 - (1 - brinco) * 0.018, 1);
     piernas.forEach((p, i) => { p.position.y = Y0 + 0.02 + (salto >= 0 ? sy * 0.9 : 0); p.rotation.x = salto >= 0 ? 0 : Math.sin(t * 2.2 + i * Math.PI) * 0.05; });
     mono.rotation.z = Math.sin(t * 1.1) * 0.025;
-    if (girar) mono.rotation.y = Math.sin(t * 0.45) * 0.45;
+    // al soltar sigue un poco por inercia y luego regresa sola de frente
+    if (!arrastra) { velU *= Math.exp(-dt * 4); giroU += velU; if (Math.abs(velU) < 0.003) giroU *= Math.exp(-dt * 1.4); }
+    if (girar) mono.rotation.y = Math.sin(t * 0.45) * 0.45 + giroU;
+    else mono.rotation.y = giroU;
     if (!tocando && girar) camera.position.lerp(vistaInicial, 1 - Math.exp(-dt * 1.5));
-    brazo.rotation.z = Math.sin(t * 6) * 0.32 - 0.05;
+    const metaBrazo = pose === 'saluda' ? Math.sin(t * 6) * 0.32 - 0.05 : pose === 'senala' ? -1.05 + Math.sin(t * 3) * 0.06 : -0.35;
+    brazoZ += (metaBrazo - brazoZ) * Math.min(1, dt * (pose === 'saluda' ? 20 : 6));
+    brazo.rotation.z = brazoZ;
+    if (miradaFija) { mirada.x = miradaFija[0]; mirada.y = miradaFija[1]; }
     brote.rotation.z = Math.sin(t * 2.6) * 0.07;
     hoja1.rotation.x = Math.sin(t * 3.1) * 0.12;
     hoja2.rotation.x = Math.sin(t * 2.7 + 1) * 0.12;
@@ -316,10 +342,17 @@ export function montarBolsita(caja, { girar = true, fondoTransparente = true } =
   return {
     foto: () => { renderer.render(scene, camera); return renderer.domElement.toDataURL('image/png'); },
     pausar: (si) => { visible = !si; },
+    pose: (p) => { pose = p; },
+    brincar: () => { if (salto < 0) salto = 0; },
+    // mirar(x, y) con x/y de −1 a 1; mirar(null) = vuelve a seguir el cursor
+    mirar: (x, y) => { miradaFija = x == null ? null : [x, y]; },
     quitar: () => {
       vivo = false; cancelAnimationFrame(raf); clearTimeout(reanudar);
       ro.disconnect(); io?.disconnect();
       window.removeEventListener('pointermove', alMover);
+      window.removeEventListener('pointermove', alArrastrar);
+      window.removeEventListener('pointerup', finArrastre);
+      window.removeEventListener('pointercancel', finArrastre);
       controls.dispose();
       desechables.forEach((d) => d.dispose?.());
       entorno.dispose(); pmrem.dispose();
