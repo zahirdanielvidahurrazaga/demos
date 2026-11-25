@@ -2,6 +2,7 @@
 //
 //   node supabase/demos/accesos.mjs nuevo "GYM Manhattan" gimnasio/manhattan
 //   node supabase/demos/accesos.mjs nuevo "Zahir (ventas)" --dias 365       ← sin demos = todas + índice
+//   node supabase/demos/accesos.mjs nuevo "Maestro" --codigo PALABRA --dias 365  ← código hecho a mano
 //   node supabase/demos/accesos.mjs lista            (vigentes; --todos incluye vencidos y apagados)
 //   node supabase/demos/accesos.mjs ver CODIGO       (sus visitas)
 //   node supabase/demos/accesos.mjs extender CODIGO [dias=7]
@@ -18,7 +19,7 @@ const DIAS = 7;
 
 const lit = (s) => (s == null ? 'null' : `'${String(s).replace(/'/g, "''")}'`);
 const normalizar = (c) => String(c || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
-const bonito = (c) => `${c.slice(0, 4)}-${c.slice(4)}`;
+const bonito = (c) => (c.length === 8 ? `${c.slice(0, 4)}-${c.slice(4)}` : c);
 const fecha = (f) => (f ? new Date(f).toLocaleString('es-MX', { timeZone: 'America/Mexico_City', dateStyle: 'medium', timeStyle: 'short' }) : '—');
 
 function opciones(args) {
@@ -43,7 +44,7 @@ function dias(valor, porDefecto) {
 
 function pedirCodigo(c) {
   const codigo = normalizar(c);
-  if (codigo.length !== 8) { console.error('Falta el código (8 caracteres, con o sin guion).'); process.exit(1); }
+  if (codigo.length < 8 || codigo.length > 16) { console.error('Falta el código (8 a 16 letras/números, con o sin guion).'); process.exit(1); }
   return codigo;
 }
 
@@ -51,10 +52,13 @@ async function nuevo(args) {
   const { libres: [prospecto, ...demos], op } = opciones(args);
   if (!prospecto) { console.error('uso: nuevo "<prospecto>" [demo/ruta …] [--dias 7] [--nota "…"]'); process.exit(1); }
   for (const d of demos) {
-    if (!/^(demo|pedidos|gimnasio|sorteos|modelos|autocinema|florerias|pos|clinica|sema|realestate|reparto|comida)\/[a-z0-9-]+$/.test(d)) { console.error(`Demo no válida: ${d} (ej. gimnasio/manhattan)`); process.exit(1); }
+    if (!/^(demo|pedidos|gimnasio|sorteos|modelos|autocinema|florerias|pos|clinica|realestate|reparto|comida)\/[a-z0-9-]+$/.test(d)) { console.error(`Demo no válida: ${d} (ej. gimnasio/manhattan)`); process.exit(1); }
   }
   const n = dias(op.dias, DIAS);
-  const codigo = Array.from({ length: 8 }, () => ALFABETO[randomInt(ALFABETO.length)]).join('');
+  // --codigo PALABRA: uno hecho a mano (8 a 16 letras/números); si no, al azar.
+  const codigo = op.codigo && op.codigo !== true
+    ? pedirCodigo(op.codigo)
+    : Array.from({ length: 8 }, () => ALFABETO[randomInt(ALFABETO.length)]).join('');
   const arreglo = demos.length ? `array[${demos.map(lit).join(',')}]::text[]` : 'null';
   const [fila] = await consultar(`
     insert into demo_accesos (codigo, prospecto, demos, vence, nota)

@@ -19,8 +19,9 @@ const LLAVE = 'kaizen_acceso';
 // link personal sirve al menos mientras la pestaña siga abierta.
 let enMemoria = '';
 
-export const normalizarCodigo = (c) => String(c || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8);
-export const codigoBonito = (c) => (c.length > 4 ? `${c.slice(0, 4)}-${c.slice(4)}` : c);
+export const normalizarCodigo = (c) => String(c || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 16);
+// Los generados (8) se enseñan XXXX-XXXX; los hechos a mano (hasta 16) tal cual.
+export const codigoBonito = (c) => (c.length > 4 && c.length <= 8 ? `${c.slice(0, 4)}-${c.slice(4)}` : c);
 
 export function leerCodigo() {
   try { return localStorage.getItem(LLAVE) || enMemoria; } catch { return enMemoria; }
@@ -50,7 +51,7 @@ function primeraVez(codigo, ruta) {
 //   motivo: 'invalido' · 'vencido' · 'espera' · 'red'
 export async function verificar(codigo, ruta) {
   const limpio = normalizarCodigo(codigo);
-  if (limpio.length !== 8) return { ok: false, motivo: 'invalido' };
+  if (limpio.length < 8) return { ok: false, motivo: 'invalido' };
   const { data, error } = await supabase.rpc('demo_entrar', {
     p_codigo: limpio, p_ruta: ruta, p_registrar: primeraVez(limpio, ruta),
   });

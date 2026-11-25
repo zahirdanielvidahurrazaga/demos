@@ -52,7 +52,7 @@ export default function Candado({ motivo: motivoInicial, codigoInicial = '', rut
 
   async function entrar(e) {
     e.preventDefault();
-    if (codigo.length !== 8 || enviando) { campo.current?.focus(); return; }
+    if (codigo.length < 8 || enviando) { campo.current?.focus(); return; }
     setEnviando(true);
     const r = await verificar(codigo, ruta);
     setEnviando(false);
@@ -61,7 +61,7 @@ export default function Candado({ motivo: motivoInicial, codigoInicial = '', rut
   }
 
   const etiqueta = { fontSize: '0.7rem', fontWeight: 600, letterSpacing: '0.16em', textTransform: 'uppercase', color: C.tenue };
-  const listo = codigo.length === 8;
+  const listo = codigo.length >= 8;
 
   return (
     <div style={{
@@ -105,7 +105,7 @@ export default function Candado({ motivo: motivoInicial, codigoInicial = '', rut
               placeholder="XXXX-XXXX"
               aria-label="Código de acceso"
               autoCapitalize="characters" autoComplete="off" autoCorrect="off" spellCheck={false}
-              inputMode="text" maxLength={9}
+              inputMode="text" maxLength={17}
               style={{
                 flex: '1 1 220px', minWidth: 0, padding: '15px 20px', borderRadius: 999,
                 border: `1px solid ${C.borde}`, background: C.elevado, color: C.fuerte,

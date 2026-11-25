@@ -11,8 +11,9 @@
 -- ─────────────────────────────────────────────────────────────────────────────
 
 create table if not exists public.demo_accesos (
-  -- 8 caracteres sin los que se confunden (0/O, 1/I/L): 32^8 ≈ 1.1 billones.
-  codigo    text primary key check (codigo ~ '^[A-HJKMNP-Z2-9]{8}$'),
+  -- Los generados: 8 caracteres sin los que se confunden (0/O, 1/I/L).
+  -- Desde 24-nov-2026 también se aceptan hechos a mano: 8 a 16 letras/números.
+  codigo    text primary key constraint demo_accesos_codigo_check check (codigo ~ '^[A-Z0-9]{8,16}$'),
   prospecto text not null,
   -- Rutas que abre, como 'gimnasio/manhattan'. NULL = todas (incluye el índice).
   demos     text[],
@@ -21,6 +22,10 @@ create table if not exists public.demo_accesos (
   nota      text,
   creado    timestamptz not null default now()
 );
+
+-- Para bases creadas antes del 24-nov-2026 (regla vieja de 8 exactos).
+alter table public.demo_accesos drop constraint if exists demo_accesos_codigo_check;
+alter table public.demo_accesos add constraint demo_accesos_codigo_check check (codigo ~ '^[A-Z0-9]{8,16}$');
 
 create table if not exists public.demo_visitas (
   id      bigserial primary key,
